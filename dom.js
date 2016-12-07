@@ -38,10 +38,6 @@ class Node {
     node_cache.push(this);
   }
 
-  set_tag(tag) {
-    this.tag = tag;
-  }
-
   set_selector(selector) {
     let classes = [];
     let parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
@@ -214,7 +210,7 @@ export function e(...args) {
   switch (args.length) {
   case 1:
     // tag only, eg. e('hr')
-    node.set_tag(args[0]);
+    node.tag = args[0];
 
     break
 
@@ -224,7 +220,7 @@ export function e(...args) {
     // or e('div', 'Hello, world')
     // or e('div', [ e('p', 'Hello, world') ])
     // or e('div', { id: 'main' })
-    node.set_tag(args[0]);
+    node.tag = args[0];
     arg1 = args[1];
 
     switch (typeof arg1) {
@@ -259,7 +255,7 @@ export function e(...args) {
     // three args, first the tag, second a selector or properties, third children
     // eg. e('div', '#main', [ e('p', 'Hello') ])
     // or e('div', { id: 'main' }, [])
-    node.set_tag(args[0]);
+    node.tag = args[0];
     node.set_children(args[2]);
     arg1 = args[1];
 
@@ -282,7 +278,7 @@ export function e(...args) {
   case 4:
     // four arguments. first tag, second selector, third properties, forth children
     // eg e('div', '#main', { class: 'foo' }, [ e('div') ])
-    node.set_tag(args[0]);
+    node.tag = args[0];
     node.set_selector(args[1]);
     node.set_properties(args[2]);
     node.set_children(args[3]);
