@@ -1,4 +1,4 @@
-import {e} from './node'
+import {e} from './dom'
 
 let helpers = [
   'a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio',

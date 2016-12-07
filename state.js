@@ -16,19 +16,19 @@ export let $any = { predict_any: true };
 
 function _update(obj, ...args) {
   if (args.length == 2) { 
-    // 一个路径和一个操作
+    // the last path node
     let [path, op] = args;
     if (path === $any) {
-      // 匹配所有 key
+      // match all path nodes
       for (let key in obj) {
         apply_op(obj, key, op);
       }
     } else {
-      // 单一 key
+      // match one path node
       apply_op(obj, path, op);
     }
   } else if (args.length > 2) { 
-    // 寻路
+    // path finding
     _update(obj[args[0]], ...args.slice(1));
   } else {
     throw['bad path and op to update()', args];
@@ -37,13 +37,13 @@ function _update(obj, ...args) {
 
 function apply_op(obj, key, op) {
   if (op === $inc) {
-    // 自增操作
+    // self increment
     obj[key]++;
   } else if (op === $dec) {
-    // 自减操作
+    // self decrement
     obj[key]--;
   } else {
-    // 默认是赋值操作
+    // default to set
     obj[key] = op;
   }
 }

@@ -1,8 +1,8 @@
-// Node 对象缓存
+// Node object cache
 let node_cache = [];
 
-// 获取新的 Node 对象，如果缓存里有则返回，如果没有则 new 一个
 function new_node() {
+  // try fetch from cache
   let node = node_cache.pop();
   if (node) {
     return node;
@@ -65,14 +65,14 @@ class Node {
         // id, class, innerHTML
         this[key] = properties[key];
       } else if (key == 'style') {
-        // 样式
+        // styles
         this.style = properties.style;
       } else if (/^on/.test(key) && typeof properties[key] === 'function') {
-        // 事件
+        // events
         this.events = this.events || {};
         this.events[key] = properties[key];
       } else {
-        // 其他属性
+        // attributes
         this.attributes = this.attributes || {};
         this.attributes[key] = properties[key];
       }
@@ -131,9 +131,8 @@ class Node {
     }
     if (this.events !== null) {
       for (let key in this.events) {
-        // 设置事件回调，bind 当前 Node 到回调函数
-        // 这样就能在回调函数里用 this.element 等获得渲染出来的元素
-        // 当然，需要用 this 时，Node 的构造函数必须用 function 定义，不能用箭头函数
+        // set event callback, bind current Node to callback
+        // constructor must not be arrow function to get proper 'this'
         element_set_listener(element, key, this.events[key].bind(this));
       }
     }
@@ -167,13 +166,44 @@ let element_set_listener = (() => {
   }
 })();
 
+// thunk helper
+export function t(...args) {
+  if (args.length === 0) {
+    throw['no arguments to t()'];
+  }
+
+  let thunk = new Thunk();
+
+  switch (typeof args[0]) {
+  case 'string': // named thunk
+    thunk.name = args[0];
+    thunk.func = args[1];
+    thunk.args = args.slice(2);
+    break
+
+  case 'function':
+    thunk.func = args[0];
+    thunk.args = args.slice(1);
+    thunk.name = thunk.func.name;
+    break
+  }
+
+  return thunk
+}
+
+// element helper
 export function e(...args) {
+  if (args.length === 0) {
+    throw['no arguments to e()'];
+  }
+
   // Thunk
   if (typeof args[0] === 'function') {
     let thunk = new Thunk();
     thunk.func = args[0];
     thunk.args = args.slice(1);
-    thunk.name = thunk.func.name; // 可能是匿名的，不影响逻辑
+    // set thunk name from function, may be undefined
+    thunk.name = thunk.func.name; 
     return thunk;
   }
 
@@ -183,25 +213,25 @@ export function e(...args) {
 
   switch (args.length) {
   case 1:
-    // 只有一个 tag 参数，例如 e('hr')
+    // tag only, eg. e('hr')
     node.set_tag(args[0]);
 
     break
 
   case 2:
-    // 两个参数，第一个为 tag，第二个可为选择器、子结点、属性等
-    // 例 e('div', '#main .block')
-    // 或 e('div', 'Hello, world')
-    // 或 e('div', [ e('p', 'Hello, world') ])
-    // 或 e('div', { id: 'main' })
+    // two args, first the tag, second a selector or children or properties
+    // eg. e('div', '#main .block')
+    // or e('div', 'Hello, world')
+    // or e('div', [ e('p', 'Hello, world') ])
+    // or e('div', { id: 'main' })
     node.set_tag(args[0]);
     arg1 = args[1];
 
     switch (typeof arg1) {
     case 'string':
-      if (arg1[0] == '#' || arg1[0] == '.') { // 选择器
+      if (arg1[0] == '#' || arg1[0] == '.') { // selector
         node.set_selector(arg1);
-      } else { // 文本结点
+      } else { // text node
         node.set_children(arg1);
       }
       break
@@ -211,9 +241,9 @@ export function e(...args) {
       break
 
     case 'object':
-      if (Array.isArray(arg1)) { // 子结点
+      if (Array.isArray(arg1)) { // children
         node.set_children(arg1);
-      } else { // 属性
+      } else { // properties
         node.set_properties(arg1);
       }
       break
@@ -226,9 +256,9 @@ export function e(...args) {
     break
 
   case 3:
-    // 三个参数，第一个为 tag，第二个可为选择器、属性，第三个为子结点
-    // 例 e('div', '#main', [ e('p', 'Hello') ])
-    // 或 e('div', { id: 'main' }, [])
+    // three args, first the tag, second a selector or properties, third children
+    // eg. e('div', '#main', [ e('p', 'Hello') ])
+    // or e('div', { id: 'main' }, [])
     node.set_tag(args[0]);
     node.set_children(args[2]);
     arg1 = args[1];
@@ -250,8 +280,8 @@ export function e(...args) {
     break
 
   case 4:
-    // 四个参数，第一个为 tag，第二个为选择器，第三个为属性，第四个为子结点
-    // 例 e('div', '#main', { class: 'foo' }, [ e('div') ])
+    // four arguments. first tag, second selector, third properties, forth children
+    // eg e('div', '#main', { class: 'foo' }, [ e('div') ])
     node.set_tag(args[0]);
     node.set_selector(args[1]);
     node.set_properties(args[2]);
@@ -267,8 +297,7 @@ export function e(...args) {
   return node;
 }
 
-// 将 last_element 修改为 node 所对应的结构
-// last_node 是和 last_element 当前结构对应的 Node
+// patch last_element to represent node attributes, with diffing last_node
 export function patch(last_element, node, last_node) {
   // thunk
   let last_thunk;
@@ -278,42 +307,42 @@ export function patch(last_element, node, last_node) {
   }
   if (node instanceof Thunk) {
     let thunk = node;
-    // 检查是否能复用 last_thunk 的 node
+    // check last_thunk
     if (last_thunk) {
-      if (thunk.name == last_thunk.name) { // 同名组件，可能可以用
-        // 检查参数
-        if (equal(thunk.args, last_thunk.args)) { // 可以复用
-          // 复用 last_thunk 的 node
+      // same construct function
+      if (thunk.name == last_thunk.name) { 
+        // check args
+        if (equal(thunk.args, last_thunk.args)) { // reusable
+          // reuse node
           thunk.node = last_thunk.node;
-          // 有 node 就可能有 element，也复用之
+          // reuse element
           thunk.element = last_thunk.element;
         }
       }
     } 
-    // 不管是否能复用，都取 thunk 的 node
+    // get node of thunk
     node = thunk.getNode();
   }
 
-  // 如果两个 Node 是同一个，没必要修改，直接返回
-  // 如果 thunk 的 node 重用了，会在这里返回
+  // no need to patch if two Nodes is the same object
+  // if thunk's node is reuse, will return here
   if (node === last_node) {
     return [last_element, node];
   }
 
-  // 下面是一些没法修改 last_element 的情况，只能新建一个元素
+  // not patchable, build a new element
   if (
-    // 前一个 Node 不存在，没法比较差异
+    // not diffable
     (!last_node)
-    // 不同的 tag，因为元素并不能改变 tag，所以只能新建一个
+    // different tag, no way to patch
     || (node.tag != last_node.tag)
   ) {
-    // 创建新的元素
     let element = node.toElement();
-    // 插入新的，删掉旧的
+    // insert new then remove old
     last_element.parentNode.insertBefore(element, last_element);
     last_element.parentNode.removeChild(last_element);
 
-    // 循环利用 last_node 
+    // recycle Node object
     if (last_node) {
       last_node.recycle();
     }
@@ -321,55 +350,55 @@ export function patch(last_element, node, last_node) {
     return [element, node];
   }
 
-  // innerHTML 属性
+  // innerHTML
   if (node.innerHTML != last_node.innerHTML) {
     last_element.innerHTML = node.innerHTML;
   }
 
-  // 文本元素
+  // text
   if (node.text != last_node.text) {
     last_element.nodeValue = node.text;
   }
 
-  // 元素 id
+  // id
   if (node.id != last_node.id) {
     last_element.id = node.id;
   }
 
-  // 样式
+  // styles
   if (node.style && last_node.style) {
-    // 比较共同的样式，有差异就更新
+    // common styles
     for (let key in node.style) {
       if (node.style[key] != last_node.style[key]) {
         last_element.style[key] = node.style[key];
       }
     }
-    // 删掉在旧 Node 里存在，但不存在于新 Node 里的样式
+    // delete styles exist in old Node but not in new
     for (let key in last_node.style) {
       if (!(key in node.style)) {
         last_element.style[key] = null;
       }
     }
   } else if (node.style) {
-    // 只有新 Node 有样式，直接设置
+    // new Node only
     for (let key in node.style) {
       last_element.style[key] = node.style[key];
     }
   } else if (last_node.style) {
-    // 新 Node 没有样式，删掉旧 Node 里有的样式
+    // no style in new Node, delete all
     for (let key in last_node.style) {
       last_element.style[key] = null;
     }
   }
 
-  // 元素 class
+  // class
   if (node.class != last_node.class) {
     last_element.className = node.class;
   }
 
-  // 元素属性
+  // attributes
   if (node.attributes && last_node.attributes) {
-    // 和样式的处理方式类似，有不同的就更新
+    // update common attributes
     for (let key in node.attributes) {
       if (node.attributes[key] != last_node.attributes[key]) {
         let value = node.attributes[key];
@@ -378,14 +407,14 @@ export function patch(last_element, node, last_node) {
         }
       }
     }
-    // 新 Node 没有的属性，就删除
+    // delete non-exist attributes
     for (let key in last_node.attributes) {
       if (!(key in node.attributes)) {
         last_element.removeAttribute(key);
       }
     }
   } else if (node.attributes) {
-    // 只有新 Node 有属性，直接设置
+    // set new attributes only
     for (let key in node.attributes) {
       let value = node.attributes[key];
       if (value !== undefined && value !== null) {
@@ -393,17 +422,18 @@ export function patch(last_element, node, last_node) {
       }
     }
   } else if (last_node.attributes) {
-    // 新 Node 没有属性，删除旧 Node 里有的
+    // no attributes in new Node, delete all
     for (let key in last_node.attributes) {
       last_element.removeAttribute(key);
     }
   }
   
-  // 事件
-  // 事件代理没有实现成在顶级元素统一处理，元素各自 addEventListener 的
+  // events
+  // not implementing global event proxy
   if (node.events && last_node.events) {
     for (let key in node.events) {
-      // 设置事件，绑定当前 node 到回调函数
+      // set events, bind current node to callback function
+      // to enable referencing current node
       element_set_listener(last_element, key, node.events[key].bind(node));
     }
     let serial = last_element.__element_serial;
@@ -414,7 +444,7 @@ export function patch(last_element, node, last_node) {
     }
   } else if (node.events) {
     for (let key in node.events) {
-      // 设置事件，绑定当前 node 到回调函数
+      // set events, bind current node to callback function
       element_set_listener(last_element, key, node.events[key].bind(node));
     }
   } else if (last_node.events) {
@@ -424,36 +454,36 @@ export function patch(last_element, node, last_node) {
     }
   }
 
-  // 子元素
+  // children
   if (node.children && last_node.children) {
-    // 新旧 Node 的子 Node 的数量可能不一样，先处理共有的数目
+    // patch common amount of children
     let common_length = Math.min(node.children.length, last_node.children.length);
     let child_elements = last_element.childNodes;
     for (let i = 0; i < common_length; i++) {
-      // 递归调用 patch 函数，传入子元素和子 Node
+      // recursive patch
       patch(child_elements[i], node.children[i], last_node.children[i]);
     }
-    // 如果新 Node 的子 Node 比较多，插入
+    // insert new children
     for (let i = common_length, l = node.children.length; i < l; i++) {
       last_element.appendChild(node.children[i].toElement());
     }
-    // 如果旧 Node 的子 Node 比较多，删除
+    // delete
     for (let i = common_length, l = last_node.children.length; i < l; i++) {
       last_element.removeChild(last_element.childNodes[common_length]);
     }
   } else if (node.children) {
-    // 只有新 Node 有子 Node
+    // insert only
     for (let i = 0, l = node.children.length; i < l; i++) {
       last_element.appendChild(node.children[i].toElement());
     }
   } else if (last_node.children) {
-    // 新 Node 没有子 Node，删掉所有子元素
+    // delete only
     while (last_element.firstChild) {
       last_element.removeChild(last_element.firstChild);
     }
   }
 
-  // 回收利用 last_node 
+  // recycle Node object
   last_node.recycle();
 
   return [last_element, node];
