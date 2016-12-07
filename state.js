@@ -21,7 +21,14 @@ export function update(obj, ...args) {
     }
   } else if (args.length > 2) { 
     // path finding
-    update(obj[args[0]], ...args.slice(1));
+    let path = args[0];
+    if (path === $any) {
+      for (let key in obj) {
+        update(obj[key], ...args.slice(1));
+      }
+    } else {
+      update(obj[path], ...args.slice(1));
+    }
   } else {
     throw['bad path and op to update()', args];
   }
@@ -62,4 +69,8 @@ export function make_debug_updater(obj, after, before) {
   }
 }
 
-// persistent update TODO
+// path-copying update
+
+export function copy_update(obj, ...args) {
+  //TODO
+}

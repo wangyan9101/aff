@@ -1,6 +1,6 @@
-import dom from './dom'
-import state from './state'
-import tags from './tags'
+import * as dom from './dom'
+import * as state from './state'
+import * as tags from './tags'
 
 module.exports = {
   dom: dom,
