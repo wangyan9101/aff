@@ -497,7 +497,7 @@ export function make_patcher(initial_element, node_constructor) {
   }
 }
 
-function equal(a, b) {
+export function equal(a, b) {
   let type_a = typeof a;
   let type_b = typeof b;
   if (type_a !== type_b) {
