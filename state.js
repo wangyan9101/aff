@@ -32,6 +32,7 @@ export function update(obj, ...args) {
   } else {
     throw['bad path and op to update()', args];
   }
+  return obj
 }
 
 function apply_op(obj, key, op) {
