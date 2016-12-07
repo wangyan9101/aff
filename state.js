@@ -1,20 +1,12 @@
-export function make_updater(state, render) {
-  return function (...args) {
-    //console.log('%c BEFORE %o', 'background: #666; color: white', 
-    //  JSON.parse(JSON.stringify(state)));
-    //console.log('%c CHANGE %o', 'background: #888; color: white', args);
-    _update(state, ...args);
-    //console.log('%c AFTER  %o', 'background: #AAA; color: white',
-    //  JSON.parse(JSON.stringify(state)));
-    render();
-  }
-}
+// operations and predictions
 
 export let $inc = { op_inc: true };
 export let $dec = { op_dec: true };
 export let $any = { predict_any: true };
 
-function _update(obj, ...args) {
+// update
+
+export function update(obj, ...args) {
   if (args.length == 2) { 
     // the last path node
     let [path, op] = args;
@@ -29,7 +21,7 @@ function _update(obj, ...args) {
     }
   } else if (args.length > 2) { 
     // path finding
-    _update(obj[args[0]], ...args.slice(1));
+    update(obj[args[0]], ...args.slice(1));
   } else {
     throw['bad path and op to update()', args];
   }
@@ -48,3 +40,26 @@ function apply_op(obj, key, op) {
   }
 }
 
+export function make_updater(obj, after, before) {
+  return function(...args) {
+    before && before();
+    update(obj, ...args);
+    after && after();
+  }
+}
+
+export function make_debug_updater(obj, after, before) {
+  return function(...args) {
+    console.log('%c BEFORE %o', 'background: #666; color: white', 
+      JSON.parse(JSON.stringify(state)));
+    console.log('%c CHANGE %o', 'background: #888; color: white',
+      args);
+    before && before();
+    update(obj, ...args);
+    after && after();
+    console.log('%c AFTER  %o', 'background: #AAA; color: white',
+      JSON.parse(JSON.stringify(state)));
+  }
+}
+
+// persistent update TODO
