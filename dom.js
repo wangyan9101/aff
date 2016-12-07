@@ -545,8 +545,4 @@ class Thunk {
     return this.node;
   }
 
-  setName(name) {
-    this.name = name;
-    return this;
-  }
 }
