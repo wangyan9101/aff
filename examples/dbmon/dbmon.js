@@ -21,7 +21,7 @@ function DB(database) {
         database.lastSample.nbQueries),
     ]),
     database.lastSample.topFiveQueries.map(function(query) {
-      return e(function(query) {
+      return t('Query', function(query) {
         return td({ class: 'Query ' + query.elapsedClassName }, [
           query.formatElapsed,
           div({ class: 'popover left' }, [
@@ -29,7 +29,7 @@ function DB(database) {
             div('.arrow'),
           ]),
         ]);
-      }, query).setName('Query');
+      }, query);
     }),
   ]);
 }
