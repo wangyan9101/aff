@@ -825,8 +825,18 @@ function elementSetEvent(element, type, fn) {
     events[type] = {};
     element.addEventListener(type.substr(2), function(ev) {
       let ret;
+      let lastEvType;
+      let lastFn;
       for (const subtype in events[type]) {
-        ret = events[type][subtype](ev);
+        const result = events[type][subtype](ev);
+        if (ret === undefined) {
+          ret = result;
+          lastEvType = type + ':' + subtype;
+          lastFn = events[type][subtype];
+        } else if (ret !== result) {
+          throw[`return value conflict between event handlers: ${type}:${subtype} and ${lastEvType}`,
+            events[type][subtype], lastFn];
+        }
       }
       return ret;
     });
