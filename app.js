@@ -507,6 +507,7 @@ class Thunk {
       beforeThunkCallFunc(this);
       this.node = this.func.apply(this, this.args);
       afterThunkCallFunc(this);
+      //TODO remove this
       if (this.node === null) {
         this.node = e('div', { style: { display: 'none' }});
       }
@@ -583,6 +584,8 @@ function _e(node, ...args) {
       } else {
         node.setProperties(arg);
       }
+    } else if (arg === null) {
+      // do nothing
     } else if (typeof arg === 'function') {
       _e(node, arg());
     } else {

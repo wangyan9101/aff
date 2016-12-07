@@ -191,9 +191,6 @@ test('undefined child', () => {
   expect(() => {
     let node = div(undefined);
   }).toThrowError('bad child,');
-  expect(() => {
-    let node = div(null);
-  }).toThrowError('bad child,');
 });
 
 test('empty class', () => {
@@ -278,4 +275,9 @@ test('event unset', () => {
   );
   app.update(1);
   expect(count).toBe(1);
+});
+
+test('null arg', () => {
+  let node = div(null);
+  expect(node.children).toBe(null);
 });
