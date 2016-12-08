@@ -59,17 +59,17 @@ export function make_updater(obj, after, before) {
 }
 
 export function make_debug_updater(obj, after, before) {
-  return function(...args) {
+  return make_updater(obj, () => {
+    console.log('%c AFTER  %o', 'background: #AAA; color: white',
+      JSON.parse(JSON.stringify(state)));
+    after && after();
+  }, () => {
+    before && before();
     console.log('%c BEFORE %o', 'background: #666; color: white', 
       JSON.parse(JSON.stringify(state)));
     console.log('%c CHANGE %o', 'background: #888; color: white',
       args);
-    before && before();
-    update(obj, ...args);
-    after && after();
-    console.log('%c AFTER  %o', 'background: #AAA; color: white',
-      JSON.parse(JSON.stringify(state)));
-  }
+  });
 }
 
 // path-copying update
