@@ -12,6 +12,8 @@ function new_node() {
   return new Node();
 }
 
+let element_serial = 1;
+
 class Node {
   constructor() {
     this.tag = null;
@@ -99,6 +101,8 @@ class Node {
       element = document.createTextNode(this.text);
     } else {
       element = document.createElement(this.tag);
+      element.setAttribute('aff-element-serial', element_serial);
+      element_serial++;
     }
     if (this.innerHTML !== null) {
       element.innerHTML = this.innerHTML;
@@ -305,19 +309,16 @@ export function patch(last_element, node, last_node) {
   }
   if (node instanceof Thunk) {
     let thunk = node;
-    // check last_thunk
-    if (last_thunk) {
-      // same construct function
-      if (thunk.name == last_thunk.name) { 
-        // check args
-        if (equal(thunk.args, last_thunk.args)) { // reusable
-          // reuse node
-          thunk.node = last_thunk.node;
-          // reuse element
-          thunk.element = last_thunk.element;
-        }
-      }
-    } 
+    if (
+      last_thunk 
+      && thunk.name == last_thunk.name 
+      && equal(thunk.args, last_thunk.args)
+    ) {
+      // reuse node
+      thunk.node = last_thunk.node;
+      // reuse element
+      thunk.element = last_thunk.element;
+    }
     // get node of thunk
     node = thunk.getNode();
   }
