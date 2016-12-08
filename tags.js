@@ -27,6 +27,8 @@ let helpers = [
   helpers[tag] = function(...args) {
     return e(tag, ...args);
   };
+  helpers[tag.charAt(0).toUpperCase() + tag.slice(1)] = helpers[tag];
+  helpers[tag.toUpperCase()] = helpers[tag];
   return helpers;
 }, {});
 
