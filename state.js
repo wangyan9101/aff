@@ -128,13 +128,21 @@ export function copy_update(obj, ...args) {
         }
       } else {
         // update single key
+        let key_updated = false;
         for (let k in obj) {
           if (k === key) {
             new_obj[k] = copy_update(obj[k], ...args.slice(1));
+            key_updated = true;
           } else {
             new_obj[k] = obj[k];
           }
           if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
+            all_frozen = false;
+          }
+        }
+        if (!key_updated) { // insert
+          new_obj[key] = args[1];
+          if (typeof args[1] === 'object' && !object_has_tag(args[1], 'frozen')) {
             all_frozen = false;
           }
         }
