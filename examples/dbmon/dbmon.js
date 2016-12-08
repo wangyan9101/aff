@@ -1,5 +1,5 @@
-import {table, tbody, tr, td, div, span} from './tags'
-import {make_patcher, e} from './node'
+import {table, tbody, tr, td, div, span} from '../../tags'
+import {make_patcher, e, t} from '../../dom'
 
 function DBMon(databases) {
   return div([

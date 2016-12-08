@@ -13,6 +13,8 @@
     "babel-loader": "^6.2.8",
     "babel-plugin-transform-object-rest-spread": "^6.19.0",
     "babel-preset-latest": "^6.16.0",
+    "gulp": "^3.9.1",
+    "gulp-webpack": "^1.5.0",
     "jest": "^17.0.3",
     "webpack": "^1.13.3",
     "webpack-dev-server": "^1.16.2"
