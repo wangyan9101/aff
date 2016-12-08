@@ -1,10 +1,11 @@
 import { App, t } from './app'
 import { css, $ } from './tagged'
 import { on } from './event'
-import { $func, $push, $merge } from './operations'
+import { $func, $push, $merge, $splice } from './operations'
 import { 
   div, p, none, table, tr, td, span, pre, clear, button,
 } from './tags'
+import { readOnly } from './state'
 
 export function DebugPanel(app, initState) {
 
@@ -36,7 +37,7 @@ export function DebugPanel(app, initState) {
       const ignore = logState.$path.reduce((acc, cur, i) => acc && cur == args[i], true);
       if (!ignore) {
         logState.$update($push({
-          args: args,
+          args: readOnly(args),
           tick: state.__aff_tick,
         }));
       }
@@ -228,7 +229,7 @@ function StateNode(appState, path = [], debugState) {
     () => {
       const ret = [];
       const keys = Object.keys(appState);
-      keys.sort();
+      keys.sort((a, b) => a > b);
 
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
