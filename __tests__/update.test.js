@@ -1,4 +1,5 @@
 import {update, $inc, $dec, $any, make_updater, copy_update} from '../state'
+import {object_has_tag} from '../object'
 
 test('update $inc', () => {
   let res;
@@ -165,4 +166,21 @@ test('copy update', () => {
   expect(obj.foo).toBe('foo');
   expect(obj.bar).toBe('bar');
   expect(obj.baz).toBe('baz');
+});
+
+test('copy update freezing', () => {
+  let obj = {
+    foo: 'FOO',
+  };
+  let new_obj = copy_update(obj, 'foo', 'foo');
+  expect(new_obj.foo).toBe('foo');
+  expect(object_has_tag(new_obj, 'frozen')).toBe(true);
+  new_obj = copy_update(obj, 'foo', 'FOO');
+  expect(new_obj.foo).toBe('FOO');
+  expect(object_has_tag(new_obj, 'frozen')).toBe(true);
+
+  let array = [1, 2, 3];
+  let new_array = copy_update(array, 0, 42);
+  expect(new_array[0]).toBe(42);
+  expect(object_has_tag(new_array, 'frozen')).toBe(true);
 });

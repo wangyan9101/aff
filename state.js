@@ -1,3 +1,5 @@
+import {object_add_tag, object_has_tag} from './object'
+
 // operations and predictions
 
 export let $inc = { op_inc: true };
@@ -84,10 +86,14 @@ export function copy_update(obj, ...args) {
       // copy update array
       let index = args[0];
       let new_obj = [];
+      let all_frozen = true;
       if (index === $any) {
         // update all indexes
         for (let i = 0; i < obj.length; i++) {
           new_obj.push(copy_update(obj[i], ...args.slice(1)));
+          if (typeof obj[i] === 'object' && !object_has_tag(obj[i], 'frozen')) {
+            all_frozen = false;
+          }
         }
       } else {
         // only one index
@@ -97,17 +103,28 @@ export function copy_update(obj, ...args) {
           } else {
             new_obj.push(obj[i]);
           }
+          if (typeof obj[i] === 'object' && !object_has_tag(obj[i], 'frozen')) {
+            all_frozen = false;
+          }
         }
+      }
+      if (all_frozen) {
+        object_add_tag(new_obj, 'frozen');
+        Object.freeze(new_obj);
       }
       return new_obj;
     } else {
       // copy update object
       let key = args[0];
       let new_obj = {};
+      let all_frozen = true;
       if (key === $any) {
         // update all keys
         for (let k in obj) {
           new_obj[k] = copy_update(obj[k], ...args.slice(1));
+          if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
+            all_frozen = false;
+          }
         }
       } else {
         // update single key
@@ -117,7 +134,14 @@ export function copy_update(obj, ...args) {
           } else {
             new_obj[k] = obj[k];
           }
+          if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
+            all_frozen = false;
+          }
         }
+      }
+      if (all_frozen) {
+        object_add_tag(new_obj, 'frozen');
+        Object.freeze(new_obj);
       }
       return new_obj;
     }
