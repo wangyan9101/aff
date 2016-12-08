@@ -193,8 +193,8 @@ export class MutableState extends State {
         enumerable: false,
         writable: true,
         value: function(...args) {
-          app.update(...this.$path, ...args);
-          return app.get(this.$path);
+          app.update(...state.$path, ...args);
+          return app.get(state.$path);
         },
       });
       Object.defineProperty(state, '$path', {
