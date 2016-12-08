@@ -1,4 +1,4 @@
-import {equal} from '../dom'
+import {equal} from '../equality'
 
 test('test equal', () => {
   expect(equal(1, true)).toBe(false);

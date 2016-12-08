@@ -73,5 +73,64 @@ export function make_debug_updater(obj, after, before) {
 // path-copying update
 
 export function copy_update(obj, ...args) {
-  //TODO
+  if (args.length == 0) {
+    // no update
+    return obj;
+  } else if (args.length == 1) {
+    // single op
+    return copy_apply_op(obj, args[0]);
+  } else {
+    if (Array.isArray(obj)) { 
+      // copy update array
+      let index = args[0];
+      let new_obj = [];
+      if (index === $any) {
+        // update all indexes
+        for (let i = 0; i < obj.length; i++) {
+          new_obj.push(copy_update(obj[i], ...args.slice(1)));
+        }
+      } else {
+        // only one index
+        for (let i = 0; i < obj.length; i++) {
+          if (i == index) {
+            new_obj.push(copy_update(obj[i], ...args.slice(1)));
+          } else {
+            new_obj.push(obj[i]);
+          }
+        }
+      }
+      return new_obj;
+    } else {
+      // copy update object
+      let key = args[0];
+      let new_obj = {};
+      if (key === $any) {
+        // update all keys
+        for (let k in obj) {
+          new_obj[k] = copy_update(obj[k], ...args.slice(1));
+        }
+      } else {
+        // update single key
+        for (let k in obj) {
+          if (k === key) {
+            new_obj[k] = copy_update(obj[k], ...args.slice(1));
+          } else {
+            new_obj[k] = obj[k];
+          }
+        }
+      }
+      return new_obj;
+    }
+  }
 }
+
+function copy_apply_op(obj, op) {
+  if (op === $inc) {
+    return obj + 1;
+  } else if (op === $dec) {
+    return obj - 1;
+  } else {
+    // default to return op
+    return op;
+  }
+} 

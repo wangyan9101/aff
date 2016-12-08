@@ -1,4 +1,4 @@
-import {update, $inc, $dec, $any, make_updater} from '../state'
+import {update, $inc, $dec, $any, make_updater, copy_update} from '../state'
 
 test('update $inc', () => {
   let res;
@@ -126,4 +126,43 @@ test('updater', () => {
   update('foo', 42);
   expect(before).toBe(1);
   expect(after).toBe(2);
+});
+
+test('copy update', () => {
+  expect(copy_update(1)).toBe(1);
+  expect(copy_update(true)).toBe(true);
+  expect(copy_update('foo')).toBe('foo');
+  
+  expect(copy_update(1, $inc)).toBe(2);
+  expect(copy_update(3, $dec)).toBe(2);
+  expect(copy_update(3, 42)).toBe(42);
+
+  let array = [1, 2, 3];
+  let updated = copy_update(array, 2, 42);
+  expect(array !== updated).toBe(true);
+  expect(updated[2]).toBe(42);
+  updated = copy_update(array, $any, 99);
+  expect(updated[0]).toBe(99);
+  expect(updated[1]).toBe(99);
+  expect(updated[2]).toBe(99);
+  expect(updated.length).toBe(3);
+  expect(array[0]).toBe(1);
+  expect(array[1]).toBe(2);
+  expect(array[2]).toBe(3);
+
+  let obj = {
+    foo: 'foo',
+    bar: 'bar',
+    baz: 'baz',
+  };
+  let new_obj = copy_update(obj, 'foo', 'FOO');
+  expect(new_obj.foo).toBe('FOO');
+  expect(obj.foo).toBe('foo');
+  new_obj = copy_update(obj, $any, 'QUX');
+  expect(new_obj.foo).toBe('QUX');
+  expect(new_obj.bar).toBe('QUX');
+  expect(new_obj.baz).toBe('QUX');
+  expect(obj.foo).toBe('foo');
+  expect(obj.bar).toBe('bar');
+  expect(obj.baz).toBe('baz');
 });
