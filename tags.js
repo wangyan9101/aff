@@ -32,4 +32,12 @@ let helpers = [
   return helpers;
 }, {});
 
-module.exports = helpers;
+module.exports = {
+  ...helpers,
+
+  none: e('div', {
+    style: {
+      display: 'none',
+    },
+  }),
+};

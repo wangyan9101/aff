@@ -1,5 +1,5 @@
 import {patch} from '../dom'
-import {div, p} from '../tags'
+import {div, p, none} from '../tags'
 
 test('dom', () => {
   let root = document.createElement('div');
@@ -11,6 +11,7 @@ test('dom', () => {
     n++;
     return div([
       p('yes ' + n),
+      none,
     ]);
   }
 
