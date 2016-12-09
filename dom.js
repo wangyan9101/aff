@@ -1,17 +1,5 @@
 import {equal} from './equality'
 
-// Node object cache
-let node_cache = [];
-
-function new_node() {
-  // try fetch from cache
-  let node = node_cache.pop();
-  if (node) {
-    return node;
-  }
-  return new Node();
-}
-
 let element_serial = 1;
 
 class Node {
@@ -26,20 +14,6 @@ class Node {
     this.text = null;
     this.innerHTML = null;
     this.element = null;
-  }
-
-  recycle() {
-    this.tag = null;
-    this.id = null;
-    this.style = null;
-    this.class = null;
-    this.children = null;
-    this.attributes = null;
-    this.events = null;
-    this.text = null;
-    this.innerHTML = null;
-    this.element = null;
-    node_cache.push(this);
   }
 
   set_selector(selector) {
@@ -87,7 +61,7 @@ class Node {
         this.set_children(children[i]);
       }
     } else if (typeof children === 'string' || typeof children === 'number') {
-      let child = new_node();
+      let child = new Node();
       child.text = children;
       this.children.push(child);
     } else {
@@ -209,7 +183,7 @@ export function e(...args) {
     return thunk;
   }
 
-  let node = new_node();
+  let node = new Node();
 
   let arg1;
 
@@ -340,11 +314,6 @@ export function patch(last_element, node, last_node) {
     // insert new then remove old
     last_element.parentNode.insertBefore(element, last_element);
     last_element.parentNode.removeChild(last_element);
-
-    // recycle Node object
-    if (last_node) {
-      last_node.recycle();
-    }
 
     return [element, node];
   }
@@ -481,9 +450,6 @@ export function patch(last_element, node, last_node) {
       last_element.removeChild(last_element.firstChild);
     }
   }
-
-  // recycle Node object
-  last_node.recycle();
 
   return [last_element, node];
 }
