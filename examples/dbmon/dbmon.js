@@ -1,11 +1,12 @@
 import {table, tbody, tr, td, div, span} from '../../tags'
-import {make_patcher, e, t} from '../../dom'
+import {e, t} from '../../dom'
+import {make_app} from '../../app'
 
-function DBMon(databases) {
+function DBMon(state) {
   return div([
     table({ class: 'table table-striped latest-data', }, [
       tbody([
-        databases.map(function(database) {
+        state.databases.map(function(database) {
           return e(DB, database);
         }),
       ]),
@@ -34,13 +35,16 @@ function DB(database) {
   ]);
 }
 
-let patch = make_patcher(
+let update = make_app(
   document.getElementById('app'),
-  () => DBMon(ENV.generateData().toArray()),
+  DBMon,
+  {
+    databases: ENV.generateData().toArray(),
+  },
 );
 
 function load() {
-  patch();
+  update('databases', ENV.generateData().toArray());
   Monitoring.renderRate.ping();
   setTimeout(load, ENV.timeout);
 };
