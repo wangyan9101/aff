@@ -14,8 +14,6 @@ export function make_app(element, node_func, init_state = {}) {
     }
     return state;
   }
-  patching = true;
-  [element, node] = patch(element, node_func(init_state, update), node);
-  patching = false;
+  update('__start', true);
   return update;
 }

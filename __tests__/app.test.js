@@ -6,18 +6,16 @@ test('app', () => {
   let element = document.createElement('div');
   root.appendChild(element);
 
-  let update;
-  function App(state, update) {
-    if (!state.foo) {
-      state = update('foo', 900);
-    }
-    return div('#test', [
-      state.foo,
-    ]);
-  }
-  update = make_app(
+  let update = make_app(
     element,
-    App,
+    (state) => {
+      return div('#test', [
+        state.foo,
+      ]);
+    },
+    {
+      foo: 900,
+    },
   );
 
   expect(root.querySelector('#test').textContent).toBe('900');
