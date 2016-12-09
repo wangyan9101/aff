@@ -166,6 +166,36 @@ test('copy update', () => {
   expect(obj.foo).toBe('foo');
   expect(obj.bar).toBe('bar');
   expect(obj.baz).toBe('baz');
+
+  obj = {
+    category_infos: {
+      1: {
+        name: '快餐',
+      },
+      2: {
+        name: '饮料',
+        desc: '买一瓶送一瓶',
+        goods: {
+          1: {
+            sizes: ['大', '中', '小'],
+            selected_by_size: {
+              ['大']: 1,
+              ['中']: 2,
+            },
+            stocks: 50,
+          },
+        },
+        goods_order: [
+          1, 
+        ],
+      },
+      3: {
+        name: '包点',
+      },
+    },
+  };
+  new_obj = copy_update(obj, 'category_infos', 2, 'goods', 1, 'selected_by_size', '中', $inc);
+  expect(new_obj.category_infos[2].goods[1].selected_by_size['中']).toBe(3);
 });
 
 test('copy update freezing', () => {

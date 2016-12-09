@@ -130,7 +130,7 @@ export function copy_update(obj, ...args) {
         // update single key
         let key_updated = false;
         for (let k in obj) {
-          if (k === key) {
+          if (k == key) {
             new_obj[k] = copy_update(obj[k], ...args.slice(1));
             key_updated = true;
           } else {
