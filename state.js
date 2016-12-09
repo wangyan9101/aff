@@ -141,7 +141,7 @@ export function copy_update(obj, ...args) {
           }
         }
         if (!key_updated) { // insert
-          new_obj[key] = args[1];
+          new_obj[key] = copy_update(undefined, args[1]);
           if (typeof args[1] === 'object' && !object_has_tag(args[1], 'frozen')) {
             all_frozen = false;
           }
@@ -158,7 +158,7 @@ export function copy_update(obj, ...args) {
 
 function copy_apply_op(obj, op) {
   if (op === $inc) {
-    return obj + 1;
+    return (obj || 0) + 1;
   } else if (op === $dec) {
     return obj - 1;
   } else {

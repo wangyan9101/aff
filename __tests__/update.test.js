@@ -196,6 +196,10 @@ test('copy update', () => {
   };
   new_obj = copy_update(obj, 'category_infos', 2, 'goods', 1, 'selected_by_size', '中', $inc);
   expect(new_obj.category_infos[2].goods[1].selected_by_size['中']).toBe(3);
+
+  obj = {}
+  new_obj = copy_update(obj, 'foo', $inc);
+  expect(new_obj.foo).toBe(1);
 });
 
 test('copy update freezing', () => {
