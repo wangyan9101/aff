@@ -40,4 +40,10 @@ module.exports = {
       display: 'none',
     },
   }),
+
+  clear: e('div', {
+    style: {
+      clear: 'both',
+    },
+  }),
 };
