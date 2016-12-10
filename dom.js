@@ -451,6 +451,7 @@ export function patch(last_element, node, last_node) {
     }
   }
 
+  node.element = last_element;
   return [last_element, node];
 }
 
