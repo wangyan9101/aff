@@ -180,3 +180,13 @@ function copy_apply_op(obj, op) {
     return op;
   }
 } 
+
+export function freeze_all(obj) {
+  for (let k in obj) {
+    if (typeof obj[k] == 'object') {
+      freeze_all(obj[k]);
+    }
+  }
+  object_add_tag(obj, 'frozen');
+  Object.freeze(obj);
+}
