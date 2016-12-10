@@ -34,3 +34,12 @@ test('thunk this', () => {
   let node = thunk.getNode();
   expect(_this === thunk).toBe(true);
 });
+
+test('thunk element', () => {
+  let f = (state) => div(state.foo);
+  let thunk1 = t(f, { foo: 'yes' });
+  let element = thunk1.toElement();
+  let thunk2 = t(f, { foo: 'no' });
+  let new_element, node = patch(element, thunk2, thunk1);
+  expect(thunk2.element !== null).toBe(true);
+});

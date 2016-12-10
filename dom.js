@@ -281,8 +281,9 @@ export function patch(last_element, node, last_node) {
     last_thunk = last_node;
     last_node = last_thunk.node;
   }
+  let thunk;
   if (node instanceof Thunk) {
-    let thunk = node;
+    thunk = node;
     if (
       last_thunk 
       && thunk.name == last_thunk.name 
@@ -451,7 +452,12 @@ export function patch(last_element, node, last_node) {
     }
   }
 
+  // set element
   node.element = last_element;
+  if (thunk) {
+    thunk.element = last_element;
+  }
+
   return [last_element, node];
 }
 
