@@ -243,4 +243,10 @@ test('copy_update merge', () => {
   expect(new_obj.bar).toBe(24);
   expect(new_obj.baz.qux[0]).toBe(42);
   expect(new_obj.qux).toBe(42);
+
+  obj = {};
+  new_obj = copy_update(obj, $merge({
+    foo: [1, 2, 3],
+  }));
+  expect(Array.isArray(new_obj.foo)).toBe(true);
 });

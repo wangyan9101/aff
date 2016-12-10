@@ -168,7 +168,7 @@ function copy_apply_op(obj, op) {
   } else if (op.__op_merge) {
     for (let key in op.object) {
       let o2 = op.object[key];
-      if (typeof o2 == 'object') {
+      if (typeof o2 == 'object' && !Array.isArray(o2)) {
         obj = copy_update(obj, key, $merge(o2));
       } else {
         obj = copy_update(obj, key, o2);
