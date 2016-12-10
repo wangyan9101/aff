@@ -14,6 +14,12 @@ export function make_app(element, node_func, init_state = {}) {
     }
     return state;
   }
+  function tap(fn) {
+    fn(state);
+  }
   update('__start', true);
-  return update;
+  return {
+    update: update,
+    tap: tap,
+  };
 }

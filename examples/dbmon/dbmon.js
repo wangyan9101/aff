@@ -41,7 +41,7 @@ let update = make_app(
   {
     databases: ENV.generateData().toArray(),
   },
-);
+).update;
 
 function load() {
   update('databases', ENV.generateData().toArray());

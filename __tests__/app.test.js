@@ -6,7 +6,7 @@ test('app', () => {
   let element = document.createElement('div');
   root.appendChild(element);
 
-  let update = make_app(
+  let app = make_app(
     element,
     (state) => {
       return div('#test', [
@@ -17,6 +17,7 @@ test('app', () => {
       foo: 900,
     },
   );
+  let update = app.update;
 
   expect(root.querySelector('#test').textContent).toBe('900');
 });
