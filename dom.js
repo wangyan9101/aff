@@ -484,7 +484,7 @@ class Thunk {
 
   getNode() {
     if (!this.node) {
-      this.node = this.func.apply(undefined, this.args);
+      this.node = this.func.apply(this, this.args);
     }
     return this.node;
   }
