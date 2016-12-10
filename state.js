@@ -2,9 +2,13 @@ import {object_add_tag, object_has_tag} from './object'
 
 // operations and predictions
 
-export let $inc = { op_inc: true };
-export let $dec = { op_dec: true };
-export let $any = { predict_any: true };
+export let $inc = { __op_inc: true };
+export let $dec = { __op_dec: true };
+export let $merge = (obj) => ({
+  __op_merge: true,
+  object: obj,
+});
+export let $any = { __predict_any: true };
 
 // update
 
@@ -161,6 +165,16 @@ function copy_apply_op(obj, op) {
     return (obj || 0) + 1;
   } else if (op === $dec) {
     return obj - 1;
+  } else if (op.__op_merge) {
+    for (let key in op.object) {
+      let o2 = op.object[key];
+      if (typeof o2 == 'object') {
+        obj = copy_update(obj, key, $merge(o2));
+      } else {
+        obj = copy_update(obj, key, o2);
+      }
+    }
+    return obj;
   } else {
     // default to return op
     return op;
