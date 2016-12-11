@@ -6,12 +6,22 @@ export function make_app(element, node_func, init_state = {}) {
   freeze_all(state);
   let node;
   let patching;
+  let updated;
   function update(...args) {
     state = copy_update(state, ...args);
     if (!patching) {
       patching = true;
+      updated = false;
       [element, node] = patch(element, node_func(state, update), node);
+      while (updated) {
+        // if state is updated when patching, patch again
+        updated = false;
+        [element, node] = patch(element, node_func(state, update), node);
+      }
       patching = false;
+    } else {
+      // state updated when patching
+      updated = true;
     }
     return state;
   }
