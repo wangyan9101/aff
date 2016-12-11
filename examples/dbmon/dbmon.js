@@ -39,12 +39,15 @@ let update = make_app(
   document.getElementById('app'),
   DBMon,
   {
-    databases: ENV.generateData().toArray(),
+    data: ENV.generateData().toArray(),
+    get databases() {
+      return this.data;
+    },
   },
 ).update;
 
 function load() {
-  update('databases', ENV.generateData().toArray());
+  update('data', ENV.generateData().toArray());
   Monitoring.renderRate.ping();
   setTimeout(load, ENV.timeout);
 };

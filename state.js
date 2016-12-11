@@ -138,7 +138,18 @@ export function copy_update(obj, ...args) {
             new_obj[k] = copy_update(obj[k], ...args.slice(1));
             key_updated = true;
           } else {
-            new_obj[k] = obj[k];
+            let desc = Object.getOwnPropertyDescriptor(obj, k);
+            let getter = desc.get;
+            let setter = desc.set;
+            if (getter || setter) {
+              Object.defineProperty(new_obj, k, {
+                get: getter,
+                set: setter,
+                enumerable: true,
+              });
+            } else {
+              new_obj[k] = obj[k];
+            }
           }
           if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
             all_frozen = false;
