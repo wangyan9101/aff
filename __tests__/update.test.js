@@ -250,3 +250,17 @@ test('copy_update merge', () => {
   }));
   expect(Array.isArray(new_obj.foo)).toBe(true);
 });
+
+test('foo', () => {
+  let obj = {
+    get foo() {
+      return this.bar * 2;
+    },
+    bar: 99,
+  };
+  expect(obj.foo).toBe(198);
+  let new_obj = update(obj, 'bar', 42);
+  expect(obj.foo).toBe(84);
+  new_obj = update(obj, 'bar', 100);
+  expect(obj.foo).toBe(200);
+});
