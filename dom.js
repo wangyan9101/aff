@@ -298,6 +298,11 @@ export function patch(last_element, node, last_node) {
     node = thunk.getNode();
   }
 
+  // Thunk.getNode may return another Thunk, patch recursively
+  if (node instanceof Thunk || last_node instanceof Thunk) {
+    return patch(last_element, node, last_node);
+  }
+
   // no need to patch if two Nodes is the same object
   // if thunk's node is reuse, will return here
   if (node === last_node) {
