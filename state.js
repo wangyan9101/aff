@@ -22,6 +22,9 @@ export let $merge = (spec) => ({
   __is_op: true,
   op: 'merge',
   apply(obj) {
+    if (Array.isArray(spec)) {
+      return copy_update(obj, ...spec);
+    }
     for (let key in spec) {
       let o2 = spec[key];
       if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {

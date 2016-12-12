@@ -134,6 +134,7 @@ test('copy_update merge', () => {
     foo: [1, 2, 3],
     bar: [3, 4, 5],
     baz: [9, 8, 7],
+    qux: [2, 4, 6],
   };
   new_obj = copy_update(obj, $merge({
     foo: $reduce((acc, cur) => {
@@ -142,6 +143,7 @@ test('copy_update merge', () => {
     }, []),
     bar: $map(v => v + 1),
     baz: $filter(v => v < 9),
+    qux: $merge([$any, $inc]),
   }));
   expect(new_obj.foo[0]).toBe(2);
   expect(new_obj.foo[1]).toBe(3);
@@ -152,6 +154,9 @@ test('copy_update merge', () => {
   expect(new_obj.baz[0]).toBe(8);
   expect(new_obj.baz[1]).toBe(7);
   expect(new_obj.baz[2]).toBe(undefined);
+  expect(new_obj.qux[0]).toBe(3);
+  expect(new_obj.qux[1]).toBe(5);
+  expect(new_obj.qux[2]).toBe(7);
 });
 
 test('copy update with getter', () => {
