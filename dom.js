@@ -46,6 +46,13 @@ class Node {
         this.events = this.events || {};
         this.events[key] = properties[key];
       } else {
+        if (
+          (this.tag == 'input' && key == 'checked' && !properties[key])
+          || (this.tag == 'input' && key == 'disabled' && !properties[key])
+          || (this.tag == 'button' && key == 'disabled' && !properties[key])
+        ) {
+          continue
+        }
         // attributes
         this.attributes = this.attributes || {};
         this.attributes[key] = properties[key];
@@ -94,7 +101,11 @@ class Node {
     }
     if (this.children !== null) {
       for (let i = 0, l = this.children.length; i < l; i++) {
-        element.appendChild(this.children[i].toElement());
+        if (!this.children[i].toElement) {
+          element.appendChild(empty_node.toElement());
+        } else {
+          element.appendChild(this.children[i].toElement());
+        }
       }
     }
     if (this.attributes !== null) {
@@ -117,6 +128,14 @@ class Node {
   }
 
 }
+
+let empty_node = e('div', {
+  style: {
+    backgroundColor: 'yellow',
+    color: 'red',
+    fontWeight: 'bold',
+  },
+}, 'EMPTY NODE, FIX ME');
 
 let element_events = {};
 let element_set_listener = (() => {
@@ -185,7 +204,7 @@ export function e(...args) {
 
   let node = new Node();
 
-  let arg1;
+  let arg1, arg2;
 
   switch (args.length) {
   case 1:
@@ -232,25 +251,29 @@ export function e(...args) {
     break
 
   case 3:
-    // three args, first the tag, second a selector or properties, third children
+    // three args, first the tag, second a selector or properties, third children or properties
     // eg. e('div', '#main', [ e('p', 'Hello') ])
     // or e('div', { id: 'main' }, [])
     node.tag = args[0];
-    node.set_children(args[2]);
-    arg1 = args[1];
 
+    arg1 = args[1];
     switch (typeof arg1) {
     case 'string':
       node.set_selector(arg1);
       break
-
     case 'object':
       node.set_properties(arg1);
       break
-
     default:
       throw['bad argument at index 1 to e()', args];
       break
+    }
+
+    arg2 = args[2];
+    if (typeof arg2 == 'object' && !Array.isArray(arg2) && !(arg2 instanceof Node) && !(arg2 instanceof Thunk)) {
+      node.set_properties(arg2);
+    } else {
+      node.set_children(arg2);
     }
 
     break
@@ -315,6 +338,10 @@ export function patch(last_element, node, last_node) {
     (!last_node)
     // different tag, no way to patch
     || (node.tag != last_node.tag)
+    // hacks for input / button with checked / disabled changed
+    || (node.tag == 'input' && node.attributes['checked'] != last_node.attributes['checked'])
+    || (node.tag == 'input' && node.attributes['disabled'] != last_node.attributes['disabled'])
+    || (node.tag == 'button' && node.attributes['disabled'] != last_node.attributes['disabled'])
   ) {
     let element = node.toElement();
     // insert new then remove old
