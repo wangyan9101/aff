@@ -24,7 +24,7 @@ export let $merge = (spec) => ({
   apply(obj) {
     for (let key in spec) {
       let o2 = spec[key];
-      if (typeof o2 == 'object' && !Array.isArray(o2)) {
+      if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {
         obj = copy_update(obj, key, $merge(o2));
       } else {
         obj = copy_update(obj, key, o2);
@@ -63,6 +63,11 @@ export let $del_at = (i) => $reduce((acc, cur, index) => {
   return acc;
 }, [], 'del_at');
 
+export let $map = (fn) => $reduce((acc, cur, index) => {
+  acc.push(fn(cur));
+  return acc;
+}, [], 'map');
+
 export let $filter = (fn) => ({
   __is_op: true,
   op: 'filter',
@@ -86,7 +91,7 @@ export let $filter = (fn) => ({
         return o2;
       }
     } else {
-      throw['cannot filter', obj];
+      return fn(obj);
     }
   },
 });
