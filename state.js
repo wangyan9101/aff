@@ -91,7 +91,7 @@ export function copy_update(obj, ...args) {
         }
         if (!key_updated) { // insert
           new_obj[key] = copy_update(undefined, ...args.slice(1));
-          if (typeof args[1] === 'object' && !object_has_tag(args[1], 'frozen')) {
+          if (typeof obj[key] === 'object' && !object_has_tag(obj[key], 'frozen')) {
             all_frozen = false;
           }
         }
