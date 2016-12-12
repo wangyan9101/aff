@@ -339,9 +339,9 @@ export function patch(last_element, node, last_node) {
     // different tag, no way to patch
     || (node.tag != last_node.tag)
     // hacks for input / button with checked / disabled changed
-    || (node.tag == 'input'  && node.attributes && last_.attributes && node.attributes['checked'] != last_node.attributes['checked'])
-    || (node.tag == 'input'  && node.attributes && last_.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
-    || (node.tag == 'button' && node.attributes && last_.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
+    || (node.tag == 'input'  && node.attributes && last_node.attributes && node.attributes['checked'] != last_node.attributes['checked'])
+    || (node.tag == 'input'  && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
+    || (node.tag == 'button' && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
   ) {
     let element = node.toElement();
     // insert new then remove old
