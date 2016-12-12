@@ -118,7 +118,7 @@ export function copy_update(obj, ...args) {
         // update all indexes
         for (let i = 0; i < obj.length; i++) {
           new_obj.push(copy_update(obj[i], ...args.slice(1)));
-          if (typeof obj[i] === 'object' && !object_has_tag(obj[i], 'frozen')) {
+          if (typeof new_obj[i] === 'object' && !object_has_tag(new_obj[i], 'frozen')) {
             all_frozen = false;
           }
         }
@@ -130,7 +130,7 @@ export function copy_update(obj, ...args) {
           } else {
             new_obj.push(obj[i]);
           }
-          if (typeof obj[i] === 'object' && !object_has_tag(obj[i], 'frozen')) {
+          if (typeof new_obj[i] === 'object' && !object_has_tag(new_obj[i], 'frozen')) {
             all_frozen = false;
           }
         }
@@ -149,7 +149,7 @@ export function copy_update(obj, ...args) {
         // update all keys
         for (let k in obj) {
           new_obj[k] = copy_update(obj[k], ...args.slice(1));
-          if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
+          if (typeof new_obj[k] === 'object' && !object_has_tag(new_obj[k], 'frozen')) {
             all_frozen = false;
           }
         }
@@ -174,13 +174,13 @@ export function copy_update(obj, ...args) {
               new_obj[k] = obj[k];
             }
           }
-          if (typeof obj[k] === 'object' && !object_has_tag(obj[k], 'frozen')) {
+          if (typeof new_obj[k] === 'object' && !object_has_tag(new_obj[k], 'frozen')) {
             all_frozen = false;
           }
         }
         if (!key_updated) { // insert
           new_obj[key] = copy_update(undefined, ...args.slice(1));
-          if (typeof obj[key] === 'object' && !object_has_tag(obj[key], 'frozen')) {
+          if (typeof new_obj[key] === 'object' && !object_has_tag(new_obj[key], 'frozen')) {
             all_frozen = false;
           }
         }

@@ -1,6 +1,6 @@
 {
   "name": "affjs",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "minimal, pure js frontend framework",
   "main": "index.js",
   "scripts": {
