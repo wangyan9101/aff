@@ -30,6 +30,7 @@ test('thunk this', () => {
   let _this;
   let thunk = t(function() {
     _this = this;
+    return none;
   });
   let node = thunk.getNode();
   expect(_this === thunk).toBe(true);

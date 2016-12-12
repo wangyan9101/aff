@@ -497,6 +497,9 @@ class Thunk {
   getNode() {
     if (!this.node) {
       this.node = this.func.apply(this, this.args);
+      if (!this.node) {
+        throw['constructor of ' + (this.name || 'anonymous') + ' returned null value', this];
+      }
     }
     return this.node;
   }
