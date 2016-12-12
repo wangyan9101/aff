@@ -8,6 +8,7 @@ let helpers = [
   'element', 'em', 'embed',
   'fieldset', 'figcaption', 'figure', 'font', 'footer', 'form', 'frame', 'frameset',
   'head', 'header', 'hgroup', 'hr', 'html',
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7',
   'i', 'iframe', 'image', 'img', 'input', 'ins', 'isindex',
   'kbd', 'keygen',
   'label', 'legend', 'li', 'link', 'listing',
