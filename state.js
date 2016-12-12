@@ -8,6 +8,19 @@ export let $merge = (obj) => ({
   __op_merge: true,
   object: obj,
 });
+export let $push = (obj) => ({
+  __op_push: true,
+  object: obj,
+});
+export let $del_at = (i) => ({
+  __op_del_at: true,
+  i: i,
+});
+export let $array_filter = (fn) => ({
+  __op_array_filter: true,
+  fn: fn,
+});
+
 export let $any = { __predict_any: true };
 
 // path-copying update
@@ -120,6 +133,27 @@ function copy_apply_op(obj, op) {
       }
     }
     return obj;
+  } else if (op.__op_push) {
+    let o2 = [];
+    o2.push(...obj);
+    o2.push(op.object);
+    return o2;
+  } else if (op.__op_del_at) {
+    let o2 = [];
+    for (let i = 0; i < obj.length; i++) {
+      if (i != op.i) {
+        o2.push(obj[i]);
+      }
+    }
+    return o2;
+  } else if (op.__op_array_filter) {
+    let o2 = [];
+    for (let i = 0; i < obj.length; i++) {
+      if (op.fn(obj[i])) {
+        o2.push(obj[i]);
+      }
+    }
+    return o2;
   } else {
     // default to return op
     return op;
