@@ -193,3 +193,17 @@ test('copy update $filter', () => {
   expect(new_obj.foo.length).toBe(1);
   expect(new_obj.foo[0]).toBe('B');
 });
+
+test('frozen', () => {
+  expect(object_has_tag({}, 'frozen')).toBe(false);
+  let obj = {};
+  expect(object_has_tag(obj, 'frozen')).toBe(false);
+  obj = copy_update(obj, 'foo', 'bar');
+  expect(object_has_tag(obj, 'frozen')).toBe(true);
+  obj = copy_update(obj, 'bar', {
+    bar: 'bar',
+  });
+  expect(object_has_tag(obj, 'frozen')).toBe(false);
+  obj = copy_update(obj, 'bar', 'bar', 'BAR');
+  expect(object_has_tag(obj, 'frozen')).toBe(true);
+});
