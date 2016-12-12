@@ -1,4 +1,4 @@
-import {update, $inc, $dec, $any, $merge, make_updater, copy_update} from '../state'
+import {$inc, $dec, $any, $merge, copy_update} from '../state'
 import {object_has_tag} from '../object'
 
 test('copy update', () => {
