@@ -6,6 +6,7 @@ gulp.task('default', function() {
 
 [
   'dbmon',
+  'todomvc',
 ].map(what => {
   gulp.task(what, function() {
     return gulp.src('examples/' + what + '/main.js')
