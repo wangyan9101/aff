@@ -6,7 +6,7 @@ import {e} from '../../dom'
 import {make_app} from '../../app'
 import {$any, $push, $merge, $del_at, $array_filter} from '../../state'
 
-let init_state = {
+let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   todos: [
     {
       completed: false,
@@ -35,7 +35,14 @@ function Header() {
   ]);
 }
 
-function App(state, update) {
+let toggle_all = () => {
+  app.tap((state) => {
+    let all_completed = state.todos.reduce((b, c) => b && c.completed, true);
+    update('todos', $any, 'completed', all_completed ? false : true);
+  });
+};
+
+function App(state) {
   console.log(state);
   return div([
     section('.todoapp', [
@@ -44,10 +51,7 @@ function App(state, update) {
       state.todos.length > 0 ? section('.main', [
         input('.toggle-all', {
           type: 'checkbox',
-          onclick() {
-            let all_completed = state.todos.reduce((b, c) => b && c.completed, true);
-            update('todos', $any, 'completed', all_completed ? false : true);
-          },
+          onclick: toggle_all,
         }),
         label({
           for: 'toggle-all',
@@ -161,4 +165,9 @@ let app = make_app(
   init_state,
 );
 
-let update = app.update;
+function update(...args) {
+  app.update(...args);
+  app.tap((state) => {
+    window.localStorage.setItem('todos', JSON.stringify(state));
+  });
+}
