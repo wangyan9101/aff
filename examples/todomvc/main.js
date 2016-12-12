@@ -134,7 +134,7 @@ function Footer(todos, filter) {
     todos.reduce((b, c) => b || c.completed, false) ? button({
       class: 'clear-completed',
       onclick() {
-        update('todos', $array_filter(todo => !todo.completed));
+        update('todos', $filter(todo => !todo.completed));
       },
     }, 'Clear completed') : none,
   ]);

@@ -1,4 +1,4 @@
-import {$inc, $dec, $any, $merge, copy_update} from '../state'
+import {$inc, $dec, $any, $merge, $filter, $reduce, copy_update} from '../state'
 import {object_has_tag} from '../object'
 
 test('copy update', () => {
@@ -143,4 +143,45 @@ test('copy update extra path', () => {
   expect(new_obj.foo !== undefined).toBe(true);
   expect(typeof new_obj.foo === 'object').toBe(true);
   expect(Object.keys(new_obj.foo).length).toBe(0);
+});
+
+test('copy update $filter', () => {
+  let obj = {
+    foo: {
+      a: 'A',
+      b: 'B',
+      c: 'C',
+    },
+  };
+  let new_obj = copy_update(obj, 'foo', $filter((v) => v != 'A'));
+  expect(new_obj.foo.a).toBe(undefined);
+  expect(new_obj.foo.b).toBe('B');
+  expect(new_obj.foo.c).toBe('C');
+  new_obj = copy_update(obj, 'foo', $filter((v, k) => k != 'c'));
+  expect(new_obj.foo.a).toBe('A');
+  expect(new_obj.foo.b).toBe('B');
+  expect(new_obj.foo.c).toBe(undefined);
+
+  obj = {
+    foo: [
+      'A', 'B', 'C',
+    ],
+  };
+  new_obj = copy_update(obj, 'foo', $filter(v => v != 'B'));
+  expect(new_obj.foo.length).toBe(2);
+  expect(new_obj.foo[0]).toBe('A');
+  expect(new_obj.foo[1]).toBe('C');
+  new_obj = copy_update(obj, 'foo', $filter((v, k) => k != 2));
+  expect(new_obj.foo.length).toBe(2);
+  expect(new_obj.foo[0]).toBe('A');
+  expect(new_obj.foo[1]).toBe('B');
+  new_obj = copy_update(obj, 'foo', $reduce((acc, cur, key) => {
+    if (cur == 'A' || key == 2) {
+      return acc;
+    }
+    acc.push(cur);
+    return acc;
+  }, []))
+  expect(new_obj.foo.length).toBe(1);
+  expect(new_obj.foo[0]).toBe('B');
 });

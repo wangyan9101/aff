@@ -1,25 +1,97 @@
 import {object_add_tag, object_has_tag} from './object'
 
-// operations and predictions
+// operations 
 
-export let $inc = { __op_inc: true };
-export let $dec = { __op_dec: true };
-export let $merge = (obj) => ({
-  __op_merge: true,
-  object: obj,
+export let $inc = {
+  __is_op: true,
+  op: 'inc',
+  apply(obj) {
+    return (obj || 0) + 1;
+  },
+};
+
+export let $dec = {
+  __is_op: true,
+  op: 'dec',
+  apply(obj) {
+    return obj - 1;
+  },
+};
+
+export let $merge = (spec) => ({
+  __is_op: true,
+  op: 'merge',
+  apply(obj) {
+    for (let key in spec) {
+      let o2 = spec[key];
+      if (typeof o2 == 'object' && !Array.isArray(o2)) {
+        obj = copy_update(obj, key, $merge(o2));
+      } else {
+        obj = copy_update(obj, key, o2);
+      }
+    }
+    return obj;
+  },
 });
-export let $push = (obj) => ({
-  __op_push: true,
-  object: obj,
+
+export let $push = (elem) => ({
+  __is_op: true,
+  op: 'push',
+  apply(obj) {
+    let o2 = [];
+    o2.push(...obj);
+    o2.push(elem);
+    return o2;
+  },
 });
-export let $del_at = (i) => ({
-  __op_del_at: true,
-  i: i,
+
+export let $reduce = (fn, accumulated, what = 'reduce') => ({
+  __is_op: true,
+  op: what,
+  apply(obj) {
+    for (let key in obj) {
+      accumulated = fn(accumulated, obj[key], key);
+    }
+    return accumulated;
+  },
 });
-export let $array_filter = (fn) => ({
-  __op_array_filter: true,
-  fn: fn,
+
+export let $del_at = (i) => $reduce((acc, cur, index) => {
+  if (index != i) {
+    acc.push(cur);
+  }
+  return acc;
+}, [], 'del_at');
+
+export let $filter = (fn) => ({
+  __is_op: true,
+  op: 'filter',
+  apply(obj) {
+    if (typeof obj == 'object') {
+      if (Array.isArray(obj)) {
+        let o2 = [];
+        for (let i = 0; i < obj.length; i++) {
+          if (fn(obj[i], i)) {
+            o2.push(obj[i]);
+          }
+        }
+        return o2;
+      } else {
+        let o2 = {};
+        for (let k in obj) {
+          if (fn(obj[k], k)) {
+            o2[k] = obj[k];
+          }
+        }
+        return o2;
+      }
+    } else {
+      throw['cannot filter', obj];
+    }
+  },
 });
+
+// predictions
 
 export let $any = { __predict_any: true };
 
@@ -31,7 +103,11 @@ export function copy_update(obj, ...args) {
     return obj;
   } else if (args.length == 1) {
     // single op
-    return copy_apply_op(obj, args[0]);
+    if (args[0].__is_op) {
+      return args[0].apply(obj);
+    } else {
+      return args[0];
+    }
   } else {
     if (Array.isArray(obj)) { 
       // copy update array
@@ -117,48 +193,6 @@ export function copy_update(obj, ...args) {
     }
   }
 }
-
-function copy_apply_op(obj, op) {
-  if (op === $inc) {
-    return (obj || 0) + 1;
-  } else if (op === $dec) {
-    return obj - 1;
-  } else if (op.__op_merge) {
-    for (let key in op.object) {
-      let o2 = op.object[key];
-      if (typeof o2 == 'object' && !Array.isArray(o2)) {
-        obj = copy_update(obj, key, $merge(o2));
-      } else {
-        obj = copy_update(obj, key, o2);
-      }
-    }
-    return obj;
-  } else if (op.__op_push) {
-    let o2 = [];
-    o2.push(...obj);
-    o2.push(op.object);
-    return o2;
-  } else if (op.__op_del_at) {
-    let o2 = [];
-    for (let i = 0; i < obj.length; i++) {
-      if (i != op.i) {
-        o2.push(obj[i]);
-      }
-    }
-    return o2;
-  } else if (op.__op_array_filter) {
-    let o2 = [];
-    for (let i = 0; i < obj.length; i++) {
-      if (op.fn(obj[i])) {
-        o2.push(obj[i]);
-      }
-    }
-    return o2;
-  } else {
-    // default to return op
-    return op;
-  }
-} 
 
 export function freeze_all(obj) {
   for (let k in obj) {
