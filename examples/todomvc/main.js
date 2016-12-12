@@ -4,7 +4,7 @@ import {
 } from '../../tags'
 import {e} from '../../dom'
 import {make_app} from '../../app'
-import {$any, $push, $merge, $del_at, $array_filter} from '../../state'
+import {$any, $push, $merge, $del_at, $filter} from '../../state'
 
 let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   todos: [
