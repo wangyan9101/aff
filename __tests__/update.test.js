@@ -121,6 +121,14 @@ test('copy_update merge', () => {
     foo: [1, 2, 3],
   }));
   expect(Array.isArray(new_obj.foo)).toBe(true);
+
+  obj = {};
+  new_obj = copy_update(obj, $merge({
+    foo: 'FOO',
+    bar: 'BAR',
+  }));
+  expect(new_obj.foo).toBe('FOO');
+  expect(new_obj.bar).toBe('BAR');
 });
 
 test('copy update with getter', () => {
