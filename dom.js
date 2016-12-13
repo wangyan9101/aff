@@ -37,6 +37,7 @@ class Node {
     for (let key in properties) {
       if (key == 'id' || key == 'class' || key == 'innerHTML') {
         // id, class, innerHTML
+        // TODO class的array和dict表示法
         this[key] = properties[key];
       } else if (key == 'style') {
         // styles
@@ -236,7 +237,7 @@ export function e(...args) {
       break
 
     case 'object':
-      if (Array.isArray(arg1)) { // children
+      if (Array.isArray(arg1) || (arg1 instanceof Node) || (arg1 instanceof Thunk)) { // children
         node.set_children(arg1);
       } else { // properties
         node.set_properties(arg1);
