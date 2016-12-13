@@ -43,7 +43,6 @@ let toggle_all = () => {
 };
 
 function App(state) {
-  console.log(state);
   return div([
     section('.todoapp', [
       e(Header),
@@ -163,6 +162,13 @@ let app = make_app(
   document.getElementById('app'),
   App,
   init_state,
+  (state, ...args) => {
+    console.log('before', JSON.parse(JSON.stringify(state)));
+    console.log('change', args);
+  },
+  (state, ...args) => {
+    console.log('after ', JSON.parse(JSON.stringify(state)));
+  },
 );
 
 function update(...args) {
