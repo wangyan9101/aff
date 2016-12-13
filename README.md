@@ -1,14 +1,14 @@
 ## 目录
 
-[环境安装配置](#环境安装配置)
+[环境安装配置](#1)
 
-[基本用例：霓虹helloworld](#基本用例：霓虹helloworld)
+[基本用例：霓虹 Hello, world](#2)
 
-[html标签表示法一览](#html标签表示法一览)
+[html标签表示法一览](#3)
 
-[组件](#组件)
+[组件](#4)
 
-## 环境安装配置
+<h2 id="1">环境安装配置</h2>
 
 ```bash
 # 创建目录
@@ -87,7 +87,7 @@ patch(
 
 如果编译无误，打开 http://localhost:5000/ 可看到 Hello, world!
 
-## 基本用例：霓虹helloworld
+<h2 id="2">基本用例：霓虹helloworld</h2>
 
 ```js
 let {
@@ -152,7 +152,7 @@ setInterval(() => {
 
 ![colorful helloworld](images/colorful-helloworld.gif)
 
-## html标签表示法一览
+<h2 id="3">html标签表示法一览</h2>
 
 ```js
 let {
@@ -272,7 +272,7 @@ div('#main', {
 ]);
 ```
 
-## 组件
+<h2 id="4">组件</h2>
 
 组件是一个函数，这个函数构造一个标签并返回。
 组件可以从外部传入状态，也就是外部状态可以作为函数的参数传入，返回的内容可以根据参数的不同而不同。
