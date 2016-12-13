@@ -88,6 +88,7 @@ patch(
 如果编译无误，打开 http://localhost:5000/ 可看到 Hello, world!
 
 ## 基本用例：霓虹Hello,world
+
 ```js
 let {
   tags: { div, span },
