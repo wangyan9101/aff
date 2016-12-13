@@ -1,14 +1,22 @@
 import {copy_update, freeze_all} from './state'
 import {patch} from './dom'
 
-export function make_app(element, node_func, init_state = {}) {
+export function make_app(
+  element, 
+  node_func, 
+  init_state = {},
+  before_update = () => {},
+  after_update = () => {},
+  ) {
   let state = init_state;
   freeze_all(state);
   let node;
   let patching;
   let updated;
   function update(...args) {
+    before_update(state, ...args);
     state = copy_update(state, ...args);
+    after_update(state, ...args);
     if (!patching) {
       patching = true;
       updated = false;

@@ -21,6 +21,7 @@ export let $dec = {
 export let $merge = (spec) => ({
   __is_op: true,
   op: 'merge',
+  args: [spec],
   apply(obj) {
     if (Array.isArray(spec)) {
       return copy_update(obj, ...spec);
@@ -40,6 +41,7 @@ export let $merge = (spec) => ({
 export let $push = (elem) => ({
   __is_op: true,
   op: 'push',
+  args: [elem],
   apply(obj) {
     let o2 = [];
     o2.push(...obj);
@@ -51,6 +53,7 @@ export let $push = (elem) => ({
 export let $reduce = (fn, accumulated, what = 'reduce') => ({
   __is_op: true,
   op: what,
+  args: [fn, accumulated],
   apply(obj) {
     for (let key in obj) {
       accumulated = fn(accumulated, obj[key], key);
@@ -74,6 +77,7 @@ export let $map = (fn) => $reduce((acc, cur, index) => {
 export let $filter = (fn) => ({
   __is_op: true,
   op: 'filter',
+  args: [fn],
   apply(obj) {
     if (typeof obj == 'object') {
       if (Array.isArray(obj)) {
