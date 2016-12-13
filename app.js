@@ -26,7 +26,10 @@ export function make_app(element, node_func, init_state = {}) {
     return state;
   }
   function tap(fn) {
-    fn(state);
+    let res = fn(state);
+    if (res) {
+      update(...(Array.isArray(res) ? res : [res]));
+    }
   }
   update('__start', true);
   return {

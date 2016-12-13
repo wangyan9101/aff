@@ -8,6 +8,10 @@
 
 [组件](#4)
 
+[app结构](#5)
+
+[状态更新操作一览](#6)
+
 <h2 id="1">环境安装配置</h2>
 
 ```bash
@@ -343,10 +347,135 @@ let app = make_app(
 
 ![counter](images/counter.png)
 
+<h2 id="5">app结构</h2>
+
+前面已经用过 make_app 来构造一个app了。make_app 的参数也反映了一个app结构的组成部分：
+
+一个用于初次渲染的浏览器元素，这个元素会被初次渲染替换掉，是一次性的，替换的元素不会保留这个初始元素的任何属性，包括id；
+
+根组件，将组件函数直接传入。每次重渲染都会调用它，参数是当前状态和update函数；
+
+初始状态树，一个object。
+
+make_app返回一个app对象，它的成员如下：
+
+update，用于更新状态树；
+
+tap，用于读写状态树，参数是一个function(state)，如果有返回值，将传入update，更新状态树
+
+<h2 id="6">状态更新操作一览</h2>
+
+app的update函数用于更新状态树，它的参数先是要改变的状态的路径，最后是改变的操作。
+
+状态树是一个不变的结构，更新使用 path-copying 方式生成新的状态树，以提高组件重渲染检测的效率。
+状态树的读操作和普通object一样，写操作需要用包装出来的函数。
+
+各种操作的示例如下：
+
+```js
+let {
+  state: { $inc, $dec, $merge, $push, 
+    $reduce, $del_at, $map, $filter, $any},
+  app: { make_app },
+  tags: { div },
+} = require('affjs');
+
+// 创建 app
+let app = make_app(
+  document.getElementById('app'),
+  () => div(),
+  {},
+);
+
+// 辅助
+let update = app.update;
+let state = () => {
+  let s;
+  app.tap(state => {
+    s = state;
+  });
+  return s;
+};
+let assert = console.assert;
+
+// 赋值
+update('number', 1);
+assert(state().number == 1);
+update('string', 'foo');
+assert(state().string == 'foo');
+
+// $inc 自增
+update('number', $inc);
+assert(state().number == 2);
+
+// $dec 自减
+update('number', $dec);
+assert(state().number == 1);
+
+// $merge 合并多个路径的操作
+update($merge({
+  'number': $inc,
+  'string': 'FOO',
+}));
+assert(state().number == 2);
+assert(state().string == 'FOO');
+
+// $push array.push
+update('array', [1, 2, 3]);
+assert(state().array.length == 3);
+update('array', $push(4));
+assert(state().array.length == 4);
+
+// $reduce object或array的reduce
+update('array', $reduce((acc, cur, key) => {
+  acc.push(cur * 2);
+  return acc;
+}, []));
+assert(state().array[0] == 2);
+assert(state().array[1] == 4);
+assert(state().array[2] == 6);
+assert(state().array[3] == 8);
+
+// $del_at 删除array某个index的元素
+update('array', $del_at(2));
+assert(state().array.length == 3);
+assert(state().array[0] == 2);
+assert(state().array[1] == 4);
+assert(state().array[2] == 8);
+
+// $map array的map
+update('array', $map(v => v / 2));
+assert(state().array[0] == 1);
+assert(state().array[1] == 2);
+assert(state().array[2] == 4);
+
+// $filter 对object和array，传入各个key和value，其他类型直接传入
+update('array', $filter((value, i) => {
+  return value <= 2;
+}));
+assert(state().array.length == 2);
+assert(state().array[0] == 1);
+assert(state().array[1] == 2);
+update('number', $filter(n => n * 2));
+assert(state().number, 4);
+
+// $any 匹配所有路径，这是寻路用的，不是对状态的操作
+update('array', $any, 42);
+assert(state().array[0] == 42);
+assert(state().array[1] == 42);
+
+// 自定义操作，如果object的__is_op为真，即认为是一个操作，调用其apply成员实施操作
+update('array', {
+  __is_op: true,
+  apply(obj) {
+    return obj.map(x => x * 2);
+  },
+});
+assert(state().array[0] == 84);
+assert(state().array[1] == 84);
+```
+
 # 未完待续
-## app
-## 状态
-## 状态更新操作一览
 ## 跟踪状态变化
 ## 默认状态
 ## 衍生状态
