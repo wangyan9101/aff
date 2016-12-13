@@ -139,4 +139,4 @@ setInterval(() => {
 }, 100);
 ```
 
-![colorful helloworld](images/colorful-helloworld.png)
+![colorful helloworld](images/colorful-helloworld.gif)
