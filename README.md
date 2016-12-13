@@ -261,4 +261,83 @@ div('#main', {
 ]);
 ```
 
+## 组件
+
+组件是一个函数，这个函数构造一个标签并返回。
+组件可以从外部传入状态，也就是外部状态可以作为函数的参数传入，返回的内容可以根据参数的不同而不同。
+
+组件函数是一个纯函数，它的输出取决于它的输入。
+一个组件函数，和它的输入，也就是一个实参列表，可以称为一个thunk（不知道这个术语有没有好的翻译？）。
+thunk是渲染优化的基本单位，因为框架如果发现参数不变，那它的输出就不变，那就可以重新使用上一次函数的返回值，而不需要重新调用。
+同理，如果发现参数改变了，组件函数会被重新调用，根据返回值再重新渲染界面。
+
+组件函数也可以返回一个thunk。thunk可以作为标签的子元素。thunk就像一种自定义标签。
+
+thunk 用 dom.t 函数构造。示例：
+
+```js
+let {
+  dom: { t },
+  tags: { button, div },
+  app: { make_app },
+  state: { $inc, $dec },
+} = require('affjs');
+
+// 一个按钮组件
+let Button = (text, onclick) => button({
+  onclick: onclick,
+  style: {
+    border: '3px solid #666',
+    borderRadius: '5px',
+    backgroundColor: 'white',
+  },
+}, text);
+
+// App也是一个组件，它将被传入make_app函数并调用
+// 调用的参数是内部的state，以及app的update函数
+let App = (state, update) => {
+  // 计数加一
+  let inc = () => {
+    update('counter', $inc);
+  };
+  // 计数减一
+  let dec = () => {
+    update('counter', $dec);
+  };
+  // 构造App
+  return div([
+    // 一个 Button 的 thunk
+    t(Button, '++', inc),
+    // 另一个 thunk
+    t(Button, '--', dec),
+
+    // 不用thunk，直接调用Button也可以，但App每次调用，都会调用Button，
+    // 而用thunk就只是生成一个对象，可以优化渲染效率
+    Button('++', inc),
+    Button('--', dec),
+
+    // 显示计数状态
+    div(state.counter),
+  ]);
+};
+
+let app = make_app(
+  document.getElementById('app'),
+  App,
+  {
+    counter: 0,
+  },
+);
+```
+
+![counter](images/counter.png)
+
 # 未完待续
+## app
+## 状态更新操作
+## 跟踪状态变化
+## 默认状态
+## 衍生状态
+## 引用浏览器元素
+## 单页多app结构
+## 可跨app复用的组件
