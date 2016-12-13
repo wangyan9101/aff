@@ -1,6 +1,4 @@
-# 快速上手指南
-
-### 环境安装配置
+## 环境安装配置
 
 ```bash
 # 创建目录
@@ -78,3 +76,65 @@ patch(
 ```
 
 如果编译无误，打开 http://localhost:5000/ 可看到 Hello, world!
+
+## 基本用例：霓虹 Hello, world
+```js
+let {
+  tags: { div, span },
+  app: { make_app },
+  state: { $inc },
+} = require('affjs');
+
+let colors = [
+  '#f26522',
+  '#7fb80e',
+  '#33a3dc',
+  '#8552a1',
+  '#ffe600',
+  '#426ab3',
+  '#d71345',
+  '#00ae9d',
+  '#ef5b9c',
+];
+
+// 初始状态，一个app使用唯一的对象保存所有状态
+let init_state = {
+  animation_tick: 0,
+};
+
+// App组件，所有组件都表示为函数
+let App = (state) => div({
+  // 样式定义
+  style: {
+    fontSize: '32px',
+  },
+}, [
+  // 字符串分解成单个字符，并构造span
+  'Hello, world!'.split('').map((c, i) => {
+    let color_index = state.animation_tick - i;
+    let color = color_index < 0 ? 'transparent' : colors[color_index % colors.length];
+    // 返回的span作为div的子元素
+    return span({
+      style: {
+        color: color,
+        textShadow: '0 0 10px ' + color,
+      },
+    }, c);
+  }),
+]);
+
+// 生成app
+let app = make_app(
+  // 初始渲染的元素
+  document.getElementById('app'),
+  // 根组件
+  App,
+  // 初始状态
+  init_state,
+);
+
+setInterval(() => {
+  // 更新状态，触发app重新渲染
+  app.update('animation_tick', $inc);
+}, 100);
+```
