@@ -1,6 +1,6 @@
 {
   "name": "affjs",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "description": "minimal, pure js frontend framework",
   "main": "index.js",
   "scripts": {
@@ -19,5 +19,6 @@
     "jsdom": "^9.8.3",
     "webpack": "^1.13.3",
     "webpack-dev-server": "^1.16.2"
-  }
+  },
+  "main": "lib/affjs.js"
 }
