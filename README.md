@@ -140,3 +140,123 @@ setInterval(() => {
 ```
 
 ![colorful helloworld](images/colorful-helloworld.gif)
+
+## html标签表示法一览
+
+```js
+let {
+  tags: { div, p, button },
+} = require('affjs');
+
+// 单个空标签
+// <div></div>
+div();
+// <p></p>
+p();
+
+// 选择器
+// <div id="main"></div>
+div('#main'); 
+// <div class="foo"></div>
+div('.foo'); 
+// <div class="foo bar baz"></div>
+div('.foo .bar .baz'); 
+// <div id="main" class="foo bar baz"></div>
+div('#main .foo .bar. baz');
+
+// 嵌套标签
+// 使用 array 表示
+// <div>
+//   <div></div>
+//   <div id="foo"></div>
+//   <div>
+//     <div class="bar"></div>
+//   </div>
+// </div>
+div([
+  div(),
+  div('#foo'),
+  div([
+    div('.bar'),
+  ]),
+]);
+// 如果只有一个子元素，可以直接嵌套
+// <div>
+//   <div>
+//     <p></p>
+//   </div>
+// </div>
+div(div(p()));
+// 文本子元素，直接用字符串或数字表示，注意#或.开头的字符串会被认为是选择器
+// <p>Hello, world!</p>
+p('Hello, world!');
+// <div><p>Hello, world!</p></div>
+div(p('Hello, world!'));
+
+// 属性
+// id 和 class 的第二种表示法
+// <div id="main" class="foo bar baz"></div>
+div({
+  id: 'main',
+  class: 'foo bar baz',
+});
+// innerHTML
+// <div><p>hello</p></div>
+div({
+  innerHTML: '<p>hello</p>',
+});
+// 样式
+// <div style="color: black; font-size: 16px;"></div>
+div({
+  style: {
+    color: 'black',
+    fontSize: '16px',
+  },
+});
+// 事件
+button({
+  onclick: () => {
+    // ...
+  },
+});
+button({
+  onclick() {
+    // ...
+  }
+});
+// 其他key，都表示attr
+// <div foo="FOO" bar="BAR"></div>
+div({
+  foo: 'FOO',
+  bar: 'BAR',
+});
+
+// 两个参数，有几种组合
+// 选择器 + 子元素
+div('#main', [
+  p('hello, world!');
+]);
+// 选择器 + 属性
+div('#main', {
+  class: 'foo bar baz',
+  style: {
+    position: 'fixed',
+  },
+});
+// 属性 + 子元素
+div({
+  id: 'main',
+  onclick() {
+    // ...
+  },
+}, [
+  p('hello, world!'),
+]);
+
+// 三个参数，代表选择器 + 属性 + 子元素
+div('#main', {
+  class: 'container',
+}, [
+  p('hello'),
+]);
+```
