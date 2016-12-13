@@ -494,18 +494,6 @@ export function patch(last_element, node, last_node) {
   return [last_element, node];
 }
 
-export function make_patcher(initial_element, node_constructor) {
-  let element = initial_element;
-  let node;
-  return function() {
-    [element, node] = patch(
-      element,
-      node_constructor(),
-      node,
-    );
-  }
-}
-
 class Thunk {
   constructor() {
     this.func = null;
