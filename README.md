@@ -138,3 +138,5 @@ setInterval(() => {
   app.update('animation_tick', $inc);
 }, 100);
 ```
+
+![colorful helloworld](images/colorful-helloworld.png)
