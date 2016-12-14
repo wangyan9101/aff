@@ -4,7 +4,8 @@
   "description": "minimal, pure js frontend framework",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "jest --watch"
   },
   "keywords": [],
   "author": "reus",
