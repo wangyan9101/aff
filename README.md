@@ -303,10 +303,38 @@ let Button = (text, onclick) => button({
   onclick: onclick,
   style: {
     border: '3px solid #666',
-    borderRadius: '5px',
+    borderRadius: '10px',
     backgroundColor: 'white',
+    width: '50px',
+    height: '50px',
   },
 }, text);
+
+// 一个布局组件，在圆周上均匀分布所有子元素
+let Layout = (radius, elems) => {
+  return div({
+    style: {
+      width: radius * 2 + 'px',
+      height: radius * 2 + 'px',
+      border: '1px dotted #09C',
+      borderRadius: '50%',
+      margin: radius / 2 + 'px auto',
+      position: 'relative',
+    },
+  }, elems.map((elem, i) => {
+    let theta = 2 * 3.14 * (i / elems.length);
+    let x = radius * Math.cos(theta) + radius;
+    let y = radius * Math.sin(theta) + radius;
+    return div({
+      style: {
+        position: 'absolute',
+        left: x + 'px',
+        top: y + 'px',
+        transform: 'translate(-50%, -50%)',
+      },
+    }, elem);
+  }));
+};
 
 // App也是一个组件，它将被传入make_app函数并调用
 // 调用的参数是内部的state，以及app的update函数
@@ -320,19 +348,32 @@ let App = (state, update) => {
     update('counter', $dec);
   };
   // 构造App
-  return div([
+  return Layout(100, [
     // 一个 Button 的 thunk
-    t(Button, '++', inc),
+    t(Button, '＋', inc),
     // 另一个 thunk
-    t(Button, '--', dec),
+    t(Button, '－', dec),
 
     // 不用thunk，直接调用Button也可以，但App每次调用，都会调用Button，
     // 而用thunk就只是生成一个对象，可以优化渲染效率
-    Button('++', inc),
-    Button('--', dec),
+    Button('＋＋', inc),
+    Button('－－', dec),
 
     // 显示计数状态
-    div(state.counter),
+    div({
+      style: {
+        border: '3px solid #666',
+        display: 'inline-block',
+        borderRadius: '50%',
+        width: '25px',
+        height: '25px',
+        textAlign: 'center',
+        backgroundColor: 'white',
+      },
+    }, state.counter),
+
+    // 凑够6个元素
+    'CLICK',
   ]);
 };
 
@@ -486,3 +527,4 @@ assert(state().array[1] == 84);
 ## 引用浏览器元素
 ## 路由
 ## 单页多app结构
+## 服务器端渲染
