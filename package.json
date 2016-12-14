@@ -1,11 +1,12 @@
 {
   "name": "affjs",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "minimal, pure js frontend framework",
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "jest --watch"
+    "dev": "jest --watch",
+    "build": "gulp"
   },
   "keywords": [],
   "author": "reus",

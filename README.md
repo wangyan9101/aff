@@ -361,7 +361,11 @@ make_app返回一个app对象，它的成员如下：
 
 update，用于更新状态树；
 
-tap，用于读写状态树，参数是一个function(state)，如果有返回值，将传入update，更新状态树
+tap，用于读写状态树，参数是一个function(state)，如果有返回值，将传入update，更新状态树；
+
+state，当前状态；
+
+html，当前app元素的innerHTML
 
 <h2 id="6">状态更新操作一览</h2>
 

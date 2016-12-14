@@ -19,5 +19,12 @@ test('app', () => {
   );
   let update = app.update;
 
+  // render
   expect(root.querySelector('#test').textContent).toBe('900');
+
+  // state
+  app.update('foo', 42);
+  expect(root.querySelector('#test').textContent).toBe('42');
+  expect(app.state.foo).toBe(42);
+  expect(app.html).toBe('42');
 });

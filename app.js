@@ -43,5 +43,11 @@ export function make_app(
   return {
     update: update,
     tap: tap,
+    get state() {
+      return state;
+    },
+    get html() {
+      return element.innerHTML;
+    },
   };
 }
