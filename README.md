@@ -560,6 +560,7 @@ app.update('foo', $map(v => v * 2));
 这两个回调也可以通过继承 affjs.app.App 类并覆盖 beforeUpdate 和 afterUpdate 方法实现。不过代码就多一些。
 
 # 未完待续
+## 状态回滚与重放
 ## 默认状态
 ## 衍生状态
 ## 引用浏览器元素
