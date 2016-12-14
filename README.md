@@ -6,6 +6,7 @@
 * [组件](#4)
 * [app结构](#5)
 * [状态更新操作一览](#6)
+* [跟踪状态变化](#7)
 
 <h2 id="1">环境安装配置</h2>
 
@@ -515,11 +516,52 @@ assert(state().array[0] == 84);
 assert(state().array[1] == 84);
 ```
 
+<h2 id="7">跟踪状态变化</h2>
+
+make_app 的第四和第五个参数是两个回调，可以在状态更新前和更新后执行一些操作。
+
+例如可以在console打印出更新前的状态、更新的操作、更新后的状态。有时对debug很有用。
+
+```js
+let {
+  app: { make_app },
+  tags: { div },
+  state: { $map },
+} = require('affjs');
+
+let init_state = {
+  foo: [1, 2, 3, 4, 5],
+};
+
+let App = (state) => {
+  return div();
+}
+
+let app = make_app(
+  document.getElementById('app'),
+  App,
+  init_state,
+  // before update
+  (state, ...args) => {
+    console.log('%cBEFORE', 'background: #888; color: white', JSON.parse(JSON.stringify(state)));
+    console.log('%cUPDATE', 'background: #555; color: white', args);
+  },
+  // after update
+  (state, ...args) => {
+    console.log('%cAFTER ', 'background: #333; color: white', JSON.parse(JSON.stringify(state)));
+  },
+);
+
+app.update('foo', $map(v => v * 2));
+```
+
+这两个回调也可以通过继承 affjs.app.App 类并覆盖 beforeUpdate 和 afterUpdate 方法实现。不过代码就多一些。
+
 # 未完待续
-## 跟踪状态变化
 ## 默认状态
 ## 衍生状态
 ## 引用浏览器元素
 ## 路由
 ## 单页多app结构
 ## 服务器端渲染
+## 异步竞态问题
