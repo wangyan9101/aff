@@ -128,7 +128,7 @@ let App = (state) => div({
     return span({
       style: {
         color: color,
-        textShadow: '0 0 10px ' + color,
+        textShadow: `0 0 10px ${color}`, // 使用es6的模版字符串语法
       },
     }, c);
   }),
@@ -289,7 +289,7 @@ thunk 用 dom.t 函数构造。示例：
 ```js
 let {
   dom: { t },
-  tags: { button, div },
+  tags: { button, div, img },
   app: { make_app },
   state: { $inc, $dec },
 } = require('affjs');
@@ -307,26 +307,27 @@ let Button = (text, onclick) => button({
 }, text);
 
 // 一个布局组件，在圆周上均匀分布所有子元素
-let Layout = (radius, elems) => {
+let Layout = (radius, base_degree, elems) => {
   return div({
     style: {
-      width: radius * 2 + 'px',
-      height: radius * 2 + 'px',
+      width: `${radius * 2}px`,
+      height: `${radius * 2}px`,
       border: '1px dotted #09C',
       borderRadius: '50%',
-      margin: radius / 2 + 'px auto',
+      margin: `${radius / 2}px auto`,
       position: 'relative',
     },
   }, elems.map((elem, i) => {
-    let theta = 2 * 3.14 * (i / elems.length);
+    let degree = (i / elems.length * 360 + base_degree) % 360;
+    let theta = 2 * 3.14 * (degree / 360);
     let x = radius * Math.cos(theta) + radius;
     let y = radius * Math.sin(theta) + radius;
     return div({
       style: {
         position: 'absolute',
-        left: x + 'px',
-        top: y + 'px',
-        transform: 'translate(-50%, -50%)',
+        left: `${x}px`,
+        top: `${y}px`,
+        transform: `translate(-50%, -50%) rotate(${degree}deg)`,
       },
     }, elem);
   }));
@@ -344,7 +345,7 @@ let App = (state, update) => {
     update('counter', $dec);
   };
   // 构造App
-  return Layout(100, [
+  return Layout(100, state.animation_tick % 360, [
     // 一个 Button 的 thunk
     t(Button, '＋', inc),
     // 另一个 thunk
@@ -369,7 +370,7 @@ let App = (state, update) => {
     }, state.counter),
 
     // 凑够6个元素
-    'CLICK',
+    img({src: 'http://img.t.sinajs.cn/t4/appstyle/expression/ext/normal/b6/doge_thumb.gif'}),
   ]);
 };
 
@@ -378,11 +379,16 @@ let app = make_app(
   App,
   {
     counter: 0,
+    animation_tick: 0,
   },
 );
+
+setInterval(() => {
+  app.update('animation_tick', $inc);
+}, 50);
 ```
 
-![counter](images/counter.png)
+![counter](images/counter.gif)
 
 <h2 id="5">app结构</h2>
 
