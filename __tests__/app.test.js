@@ -26,5 +26,5 @@ test('app', () => {
   app.update('foo', 42);
   expect(root.querySelector('#test').textContent).toBe('42');
   expect(app.state.foo).toBe(42);
-  expect(app.html).toBe('42');
+  expect(app.html()).toBe('42');
 });

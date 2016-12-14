@@ -35,16 +35,16 @@ function DB(database) {
   ]);
 }
 
-let update = make_app(
+let app = make_app(
   document.getElementById('app'),
   DBMon,
   {
     databases: ENV.generateData().toArray(),
   },
-).update;
+);
 
 function load() {
-  update('databases', ENV.generateData().toArray());
+  app.update('databases', ENV.generateData().toArray());
   Monitoring.renderRate.ping();
   setTimeout(load, ENV.timeout);
 };
