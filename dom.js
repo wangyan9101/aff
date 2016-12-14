@@ -35,10 +35,29 @@ class Node {
 
   set_properties(properties) {
     for (let key in properties) {
-      if (key == 'id' || key == 'class' || key == 'innerHTML') {
-        // id, class, innerHTML
-        // TODO class的array和dict表示法
+      if (key == 'id' || key == 'innerHTML') {
+        // id, innerHTML
         this[key] = properties[key];
+      } else if (key == 'class') {
+        let property = properties.class;
+        if (typeof property == 'string') {
+          this.class = property;
+        } else if (typeof property == 'object') {
+          if (Array.isArray(property)) {
+            this.class = property.join(' ');
+          } else {
+            let classes = [];
+            for (let k in property) {
+              let v = property[k];
+              if (v) {
+                classes.push(k);
+              }
+            }
+            this.class = classes.join(' ');
+          }
+        } else {
+          throw['bad class', property];
+        }
       } else if (key == 'style') {
         // styles
         this.style = properties.style;

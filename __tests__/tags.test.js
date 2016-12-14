@@ -116,3 +116,31 @@ test('e 2', () => {
   expect(node.class).toBe('bar');
   expect(node.children.length).toBe(1);
 });
+
+test('class property', () => {
+  let node = e('div', {
+    class: 'foo bar baz',
+  });
+  expect(node.class == 'foo bar baz').toBe(true);
+  node = e('div', {
+    class: ['foo', 'bar', 'baz'],
+  });
+  expect(node.class == 'foo bar baz').toBe(true);
+  node = e('div', {
+    class: {
+      foo: true,
+      bar: true,
+      baz: true,
+      qux: false,
+      quux: false,
+    },
+  });
+  expect(node.class.split(' ').length == 3).toBe(true);
+  let res = node.class.split(' ').reduce((acc, cur) => {
+    acc[cur] = true;
+    return acc;
+  }, {});
+  expect(res.foo).toBe(true);
+  expect(res.bar).toBe(true);
+  expect(res.baz).toBe(true);
+});
