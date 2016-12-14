@@ -116,9 +116,9 @@ export function copy_update(obj, ...args) {
   } else if (args.length == 1) {
     // single op
     if (args[0].__is_op) {
-      return args[0].apply(obj);
+      return freeze_all(args[0].apply(obj));
     } else {
-      return args[0];
+      return freeze_all(args[0]);
     }
   } else {
     if (Array.isArray(obj)) { 
@@ -207,6 +207,9 @@ export function copy_update(obj, ...args) {
 }
 
 export function freeze_all(obj) {
+  if (typeof obj !== 'object' || object_has_tag(obj, 'frozen')) {
+    return obj
+  }
   for (let k in obj) {
     if (typeof obj[k] == 'object') {
       freeze_all(obj[k]);
@@ -214,4 +217,5 @@ export function freeze_all(obj) {
   }
   object_add_tag(obj, 'frozen');
   Object.freeze(obj);
+  return obj;
 }

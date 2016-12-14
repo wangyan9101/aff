@@ -231,7 +231,7 @@ test('frozen', () => {
   obj = copy_update(obj, 'bar', {
     bar: 'bar',
   });
-  expect(object_has_tag(obj, 'frozen')).toBe(false);
+  expect(object_has_tag(obj, 'frozen')).toBe(true);
   obj = copy_update(obj, 'bar', 'bar', 'BAR');
   expect(object_has_tag(obj, 'frozen')).toBe(true);
 });
