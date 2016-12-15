@@ -297,38 +297,39 @@ let {
 // 一个按钮组件
 let Button = (text, onclick) => button({
   onclick: onclick,
-  style: {
-    border: '3px solid #666',
-    borderRadius: '10px',
-    backgroundColor: 'white',
-    width: '50px',
-    height: '50px',
-  },
+  // 样式也可以用字符串来表达，模板字符串支持多行
+  style: `
+    border: 3px solid #666;
+    border-radius: 10px;
+    background-color: white;
+    width: 50px;
+    height: 50px;
+  `,
 }, text);
 
 // 一个布局组件，在圆周上均匀分布所有子元素
 let Layout = (radius, base_degree, elems) => {
   return div({
-    style: {
-      width: `${radius * 2}px`,
-      height: `${radius * 2}px`,
-      border: '1px dotted #09C',
-      borderRadius: '50%',
-      margin: `${radius / 2}px auto`,
-      position: 'relative',
-    },
+    style: `
+      width: ${radius * 2}px;
+      height: ${radius * 2}px;
+      border: 1px dotted #09C;
+      border-radius: 50%;
+      margin: ${radius / 2}px auto;
+      position: relative;
+    `,
   }, elems.map((elem, i) => {
     let degree = (i / elems.length * 360 + base_degree) % 360;
     let theta = 2 * 3.14 * (degree / 360);
     let x = radius * Math.cos(theta) + radius;
     let y = radius * Math.sin(theta) + radius;
     return div({
-      style: {
-        position: 'absolute',
-        left: `${x}px`,
-        top: `${y}px`,
-        transform: `translate(-50%, -50%) rotate(${degree}deg)`,
-      },
+      style: `
+        position: absolute;
+        left: ${x}px;
+        top: ${y}px;
+        transform: translate(-50%, -50%) rotate(${degree}deg);
+      `,
     }, elem);
   }));
 };
@@ -358,15 +359,15 @@ let App = (state, update) => {
 
     // 显示计数状态
     div({
-      style: {
-        border: '3px solid #666',
-        display: 'inline-block',
-        borderRadius: '50%',
-        width: '25px',
-        height: '25px',
-        textAlign: 'center',
-        backgroundColor: 'white',
-      },
+      style: `
+        border: 3px solid #666;
+        display: inline-block;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        background-color: white;
+      `,
     }, state.counter),
 
     // 凑够6个元素
