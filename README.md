@@ -439,99 +439,88 @@ let {
   tags: { div },
 } = require('affjs');
 
-// 创建 app
 let app = new App(
   document.getElementById('app'),
   () => div(),
   {},
 );
-
-// 辅助
-let update = app.update.bind(app);
-let state = () => {
-  let s;
-  app.tap(state => {
-    s = state;
-  });
-  return s;
-};
 let assert = console.assert;
 
 // 赋值
-update('number', 1);
-assert(state().number == 1);
-update('string', 'foo');
-assert(state().string == 'foo');
+app.update('number', 1);
+assert(app.state.number == 1);
+app.update('string', 'foo');
+assert(app.state.string == 'foo');
 
 // $inc 自增
-update('number', $inc);
-assert(state().number == 2);
+app.update('number', $inc);
+assert(app.state.number == 2);
 
 // $dec 自减
-update('number', $dec);
-assert(state().number == 1);
+app.update('number', $dec);
+assert(app.state.number == 1);
 
 // $merge 合并多个路径的操作
-update($merge({
+app.update($merge({
   'number': $inc,
   'string': 'FOO',
 }));
-assert(state().number == 2);
-assert(state().string == 'FOO');
+assert(app.state.number == 2);
+assert(app.state.string == 'FOO');
 
 // $push array.push
-update('array', [1, 2, 3]);
-assert(state().array.length == 3);
-update('array', $push(4));
-assert(state().array.length == 4);
+app.update('array', [1, 2, 3]);
+assert(app.state.array.length == 3);
+app.update('array', $push(4));
+assert(app.state.array.length == 4);
 
 // $reduce object或array的reduce
-update('array', $reduce((acc, cur, key) => {
+app.update('array', $reduce((acc, cur, key) => {
   acc.push(cur * 2);
   return acc;
 }, []));
-assert(state().array[0] == 2);
-assert(state().array[1] == 4);
-assert(state().array[2] == 6);
-assert(state().array[3] == 8);
+assert(app.state.array[0] == 2);
+assert(app.state.array[1] == 4);
+assert(app.state.array[2] == 6);
+assert(app.state.array[3] == 8);
 
 // $del_at 删除array某个index的元素
-update('array', $del_at(2));
-assert(state().array.length == 3);
-assert(state().array[0] == 2);
-assert(state().array[1] == 4);
-assert(state().array[2] == 8);
+app.update('array', $del_at(2));
+assert(app.state.array.length == 3);
+assert(app.state.array[0] == 2);
+assert(app.state.array[1] == 4);
+assert(app.state.array[2] == 8);
 
 // $map array的map
-update('array', $map(v => v / 2));
-assert(state().array[0] == 1);
-assert(state().array[1] == 2);
-assert(state().array[2] == 4);
+app.update('array', $map(v => v / 2));
+assert(app.state.array[0] == 1);
+assert(app.state.array[1] == 2);
+assert(app.state.array[2] == 4);
 
 // $filter 对object和array，传入各个key和value，其他类型直接传入
-update('array', $filter((value, i) => {
+app.update('array', $filter((value, i) => {
   return value <= 2;
 }));
-assert(state().array.length == 2);
-assert(state().array[0] == 1);
-assert(state().array[1] == 2);
-update('number', $filter(n => n * 2));
-assert(state().number, 4);
+assert(app.state.array.length == 2);
+assert(app.state.array[0] == 1);
+assert(app.state.array[1] == 2);
+app.update('number', $filter(n => n * 2));
+assert(app.state.number, 4);
 
 // $any 匹配所有路径，这是寻路用的，不是对状态的操作
-update('array', $any, 42);
-assert(state().array[0] == 42);
-assert(state().array[1] == 42);
+app.update('array', $any, 42);
+assert(app.state.array[0] == 42);
+assert(app.state.array[1] == 42);
 
 // 自定义操作，如果object的__is_op为真，即认为是一个操作，调用其apply成员实施操作
-update('array', {
+app.update('array', {
   __is_op: true,
   apply(obj) {
     return obj.map(x => x * 2);
   },
 });
-assert(state().array[0] == 84);
-assert(state().array[1] == 84);
+assert(app.state.array[0] == 84);
+assert(app.state.array[1] == 84);
 ```
 
 <h2 id="7">跟踪状态变化</h2>
