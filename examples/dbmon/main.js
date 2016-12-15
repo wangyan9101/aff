@@ -1,6 +1,6 @@
 import {table, tbody, tr, td, div, span} from '../../tags'
 import {e, t} from '../../dom'
-import {make_app} from '../../app'
+import {App} from '../../app'
 
 function DBMon(state) {
   return div([
@@ -35,7 +35,7 @@ function DB(database) {
   ]);
 }
 
-let app = make_app(
+let app = new App(
   document.getElementById('app'),
   DBMon,
   {

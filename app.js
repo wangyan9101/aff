@@ -53,7 +53,3 @@ export class App {
 
 }
 
-export function make_app(element, node_func, init_state) {
-  return new App(element, node_func, init_state);
-}
-

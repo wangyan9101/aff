@@ -3,7 +3,7 @@ import {
   input, none, ul, li, button, strong, label,
 } from '../../tags'
 import {e} from '../../dom'
-import {make_app} from '../../app'
+import {App} from '../../app'
 import {$any, $push, $merge, $del_at, $filter} from '../../state'
 
 let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
@@ -42,7 +42,7 @@ let toggle_all = () => {
   });
 };
 
-function App(state) {
+function Main(state) {
   return div([
     section('.todoapp', [
       e(Header),
@@ -158,22 +158,13 @@ let Info = footer('.info', [
   ]),
 ]);
 
-let app = make_app(
+let app = new App(
   document.getElementById('app'),
-  App,
+  Main,
   init_state,
-  (state, ...args) => {
-    console.log('before', JSON.parse(JSON.stringify(state)));
-    console.log('change', args);
-  },
-  (state, ...args) => {
-    console.log('after ', JSON.parse(JSON.stringify(state)));
-  },
 );
 
 function update(...args) {
   app.update(...args);
-  app.tap((state) => {
-    window.localStorage.setItem('todos', JSON.stringify(state));
-  });
+  window.localStorage.setItem('todos', JSON.stringify(app.state));
 }

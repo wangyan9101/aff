@@ -1,4 +1,4 @@
-import {make_app} from '../app'
+import {App} from '../app'
 import {div} from '../tags'
 
 test('app', () => {
@@ -6,7 +6,7 @@ test('app', () => {
   let element = document.createElement('div');
   root.appendChild(element);
 
-  let app = make_app(
+  let app = new App(
     element,
     (state) => {
       return div('#test', [
