@@ -14,6 +14,8 @@ class Node {
     this.text = null;
     this.innerHTML = null;
     this.element = null;
+
+    this.online_callback = null;
   }
 
   set_selector(selector) {
@@ -62,9 +64,13 @@ class Node {
         // styles
         this.style = properties.style;
       } else if (/^on/.test(key) && typeof properties[key] === 'function') {
-        // events
-        this.events = this.events || {};
-        this.events[key] = properties[key];
+        if (key == 'online') {
+          this.online_callback = properties[key];
+        } else {
+          // events
+          this.events = this.events || {};
+          this.events[key] = properties[key];
+        }
       } else {
         if (
           (this.tag == 'input' && key == 'checked' && !properties[key])
@@ -149,6 +155,9 @@ class Node {
       }
     }
     this.element = element;
+    if (this.online_callback) {
+      this.online_callback(element);
+    }
     return element;
   }
 

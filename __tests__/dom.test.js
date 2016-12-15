@@ -44,3 +44,18 @@ test('thunk element', () => {
   let new_element, node = patch(element, thunk2, thunk1);
   expect(thunk2.element !== null).toBe(true);
 });
+
+test('online', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+
+  let called = false;
+  patch(element, div({
+    online: (elem) => {
+      called = true;
+      expect(elem.innerHTML).toBe('foobar');
+    },
+  }, 'foobar'));
+  expect(called).toBe(true);
+});
