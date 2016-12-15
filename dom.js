@@ -112,8 +112,12 @@ class Node {
       element.id = this.id;
     }
     if (this.style !== null) {
-      for (let key in this.style) {
-        element.style[key] = this.style[key];
+      if (typeof this.style == 'object') {
+        for (let key in this.style) {
+          element.style[key] = this.style[key];
+        }
+      } else {
+        element.style = this.style;
       }
     }
     if (this.class !== null) {
@@ -387,28 +391,45 @@ export function patch(last_element, node, last_node) {
   }
 
   // styles
-  if (node.style && last_node.style) {
-    // common styles
-    for (let key in node.style) {
-      if (node.style[key] != last_node.style[key]) {
+  let style_type = typeof node.style;
+  let last_style_type = typeof last_node.style;
+  if (style_type != last_style_type || style_type == 'string') {
+    // not diffable
+    if (style_type == 'object') {
+      // remove all existing style
+      last_element.style = null;
+      // reset
+      for (let key in node.style) {
         last_element.style[key] = node.style[key];
       }
+    } else {
+      // set string style
+      last_element.style = node.style;
     }
-    // delete styles exist in old Node but not in new
-    for (let key in last_node.style) {
-      if (!(key in node.style)) {
+  } else {
+    if (node.style && last_node.style) {
+      // common styles
+      for (let key in node.style) {
+        if (node.style[key] != last_node.style[key]) {
+          last_element.style[key] = node.style[key];
+        }
+      }
+      // delete styles exist in old Node but not in new
+      for (let key in last_node.style) {
+        if (!(key in node.style)) {
+          last_element.style[key] = null;
+        }
+      }
+    } else if (node.style) {
+      // new Node only
+      for (let key in node.style) {
+        last_element.style[key] = node.style[key];
+      }
+    } else if (last_node.style) {
+      // no style in new Node, delete all
+      for (let key in last_node.style) {
         last_element.style[key] = null;
       }
-    }
-  } else if (node.style) {
-    // new Node only
-    for (let key in node.style) {
-      last_element.style[key] = node.style[key];
-    }
-  } else if (last_node.style) {
-    // no style in new Node, delete all
-    for (let key in last_node.style) {
-      last_element.style[key] = null;
     }
   }
 
