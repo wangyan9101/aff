@@ -15,6 +15,7 @@ let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   ],
   filter: 'All',
 };
+let app;
 
 function Header() {
   return header('.header', [
@@ -24,7 +25,7 @@ function Header() {
       autofocus: 'autofocus',
       onkeypress(e) {
         if (e.keyCode == 13) {
-          update('todos', $push({
+          app.update('todos', $push({
             completed: false,
             content: this.element.value,
           }));
@@ -38,7 +39,7 @@ function Header() {
 let toggle_all = () => {
   app.tap((state) => {
     let all_completed = state.todos.reduce((b, c) => b && c.completed, true);
-    update('todos', $any, 'completed', all_completed ? false : true);
+    app.update('todos', $any, 'completed', all_completed ? false : true);
   });
 };
 
@@ -79,17 +80,17 @@ function TodoList(todos, filter) {
           type: 'checkbox',
           checked: todo.completed ? 'checked' : false,
           onclick() {
-            update('todos', i, 'completed', this.element.checked);
+            app.update('todos', i, 'completed', this.element.checked);
           },
         }),
         label({
           ondblclick() {
-            update('todos', i, 'editing', true);
+            app.update('todos', i, 'editing', true);
           },
         }, todo.content),
         button('.destroy', {
           onclick() {
-            update('todos', $del_at(i));
+            app.update('todos', $del_at(i));
           },
         }),
       ]),
@@ -99,7 +100,7 @@ function TodoList(todos, filter) {
           if (e.keyCode != 13) {
             return false;
           }
-          update('todos', i, $merge({
+          app.update('todos', i, $merge({
             'content': this.element.value,
             'editing': false,
           }));
@@ -133,7 +134,7 @@ function Footer(todos, filter) {
     todos.reduce((b, c) => b || c.completed, false) ? button({
       class: 'clear-completed',
       onclick() {
-        update('todos', $filter(todo => !todo.completed));
+        app.update('todos', $filter(todo => !todo.completed));
       },
     }, 'Clear completed') : none,
   ]);
@@ -142,11 +143,11 @@ function Footer(todos, filter) {
 window.onhashchange = () => {
   let hash = window.location.hash;
   if (hash == '#/active') {
-    update('filter', 'Active');
+    app.update('filter', 'Active');
   } else if (hash == '#/completed') {
-    update('filter', 'Completed');
+    app.update('filter', 'Completed');
   } else {
-    update('filter', 'All');
+    app.update('filter', 'All');
   }
 };
 
@@ -158,13 +159,20 @@ let Info = footer('.info', [
   ]),
 ]);
 
-let app = new App(
+class Application extends App {
+  constructor(...args) {
+    super(...args);
+  }
+
+  afterUpdate(state, ...args) {
+    window.localStorage.setItem('todos', JSON.stringify(state));
+  }
+}
+
+app = new Application(
   document.getElementById('app'),
   Main,
   init_state,
 );
 
-function update(...args) {
-  app.update(...args);
-  window.localStorage.setItem('todos', JSON.stringify(app.state));
-}
+window.onhashchange();
