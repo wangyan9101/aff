@@ -631,10 +631,9 @@ function Main(state) {
       },
     }),
 
-    // 显示历史颜色，点击切换状态
-    // 切换颜色时，会触发重新渲染，虽然用到的数据并不在状态树内
-    // 因为第一次渲染时，app变量仍为undefined，所以用三元运算符做一个判断
-    app ? div({
+    // 显示历史颜色，点击切换回历史状态
+    // 这里用到的数据不在状态树内，但恰好创建snapshot后就更新了颜色状态，触发了重渲染
+    div({
       style: `
         margin: 0 auto;
         text-align: center;
@@ -654,7 +653,7 @@ function Main(state) {
         // 直接将app的状态更新为历史状态
         app.update(snapshot);
       },
-    }))) : none,
+    }))),
   ]);
 }
 
