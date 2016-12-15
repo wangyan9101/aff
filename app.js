@@ -2,15 +2,28 @@ import {copy_update, freeze_all} from './state'
 import {patch} from './dom'
 
 export class App {
-  constructor(element, node_func, init_state = {}) {
-    this.element = element;
-    this.node_func = node_func;
-    this.state = init_state;
-    freeze_all(this.state);
+  constructor(...args) {
     this.node = null;
     this.patching = false;
     this.updated = false;
-    this.update('__initialized', true);
+    this.init(...args);
+  }
+
+  init(...args) {
+    for (let i = 0; i < args.length; i++) {
+      let arg = args[i];
+      if (arg instanceof HTMLElement) {
+        this.element = arg;
+      } else if (typeof arg == 'function') {
+        this.node_func = arg;
+      } else {
+        this.state = arg;
+        freeze_all(this.state);
+      }
+    }
+    if (this.element && this.node_func && this.state) {
+      this.update('__initialized', true);
+    }
   }
 
   beforeUpdate() {
