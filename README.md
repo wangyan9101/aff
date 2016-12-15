@@ -8,6 +8,7 @@
 * [状态更新操作一览](#6)
 * [跟踪状态变化](#7)
 * [状态回滚与重放](#8)
+* [默认及衍生状态](#9)
 
 <h2 id="1">环境安装配置</h2>
 
@@ -116,7 +117,7 @@ let init_state = {
 
 // 根组件，所有组件都表示为函数
 let Main = (state) => div({
-  // 样式定义，object表示法
+  // 样式定义，用一个object表示
   style: {
     fontSize: '32px',
   },
@@ -127,7 +128,7 @@ let Main = (state) => div({
     let color = color_index < 0 ? 'transparent' : colors[color_index % colors.length];
     // 返回的span作为div的子元素
     return span({
-      // 样式定义，string表示法，使用es6的模板语法
+      // 样式定义，也可以用string表示，下面使用的是es6的模板语法
       style: `
         color: ${color};
         text-shadow: 0 0 10px ${color}; 
@@ -664,14 +665,14 @@ app = new AppWithSnapshot(
 );
 ```
 
-![counter](images/state-trace.png)
+![counter](images/snapshot.gif)
 
 这个例子的目的并不是要实现这种交互，而是说明可以如何处理状态。
-不变的数据结构在实现“时间机器”这种功能方面是十分容易的。
+不变的数据结构在实现 "时间机器" 这种功能方面是十分容易的。
+
+<h2 id="9">默认及衍生状态</h2>
 
 # 未完待续
-## 默认状态
-## 衍生状态
 ## 引用浏览器元素
 ## 样式表示方法及技巧
 ## 拖放
