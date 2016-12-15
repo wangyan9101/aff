@@ -246,7 +246,7 @@ div({
 // 两个参数，有几种组合
 // 选择器 + 子元素
 div('#main', [
-  p('hello, world!');
+  p('hello, world!'),
 ]);
 // 选择器 + 属性
 div('#main', {
@@ -437,7 +437,7 @@ let app = new App(
 );
 
 // 辅助
-let update = app.update;
+let update = app.update.bind(app);
 let state = () => {
   let s;
   app.tap(state => {
@@ -526,9 +526,8 @@ assert(state().array[1] == 84);
 
 <h2 id="7">跟踪状态变化</h2>
 
-make_app 的第四和第五个参数是两个回调，可以在状态更新前和更新后执行一些操作。
-
-例如可以在console打印出更新前的状态、更新的操作、更新后的状态。有时对debug很有用。
+继承App类，并覆盖beforeUpdate和afterUpdate方法，可以在状态更新前后，执行一些动作。
+例如打印更新前后的状态，和更新操作的内容。这样可以方便地跟踪状态的变化，debug时可能用得上。
 
 ```js
 let {
@@ -537,7 +536,6 @@ let {
   state: { $map },
 } = require('affjs');
 
-// 继承App类，覆盖beforeUpdate和afterUpdate方法
 class StateTracingApp extends App {
   constructor(...args) {
     super(...args);
