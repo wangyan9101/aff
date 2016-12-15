@@ -297,10 +297,9 @@ let {
   state: { $inc, $dec },
 } = require('affjs');
 
-// 一个按钮组件
+// 一个按钮组件，文字和点击事件都作为参数，从外部传入
 let Button = (text, onclick) => button({
   onclick: onclick,
-  // 样式也可以用字符串来表达，模板字符串支持多行
   style: `
     border: 3px solid #666;
     border-radius: 10px;
@@ -337,19 +336,31 @@ let Layout = (radius, base_degree, elems) => {
   }));
 };
 
+// 初始化app
+let app = new App(
+  // 在这个元素处渲染
+  document.getElementById('app'),
+  // 初始状态
+  {
+    counter: 0,
+    animation_tick: 0,
+  },
+);
+
 // Main也是一个组件
-// 调用的参数是内部的state，以及App的update方法
-let Main = (state, update) => {
+// state参数是app当前的状态
+let Main = (state) => {
   // 计数加一
   let inc = () => {
-    update('counter', $inc);
+    app.update('counter', $inc);
   };
   // 计数减一
   let dec = () => {
-    update('counter', $dec);
+    app.update('counter', $dec);
   };
   // 构造根组件
   return Layout(100, state.animation_tick % 360, [
+
     // 一个 Button 的 thunk
     t(Button, '＋', inc),
     // 另一个 thunk
@@ -375,18 +386,14 @@ let Main = (state, update) => {
 
     // 凑够6个元素
     img({src: 'http://img.t.sinajs.cn/t4/appstyle/expression/ext/normal/b6/doge_thumb.gif'}),
+
   ]);
 };
 
-let app = new App(
-  document.getElementById('app'),
-  Main,
-  {
-    counter: 0,
-    animation_tick: 0,
-  },
-);
+// 继续初始化app，初始元素、初始状态、组件函数都设定好之后，app就开始渲染了
+app.init(Main);
 
+// 更新animation_tick，驱动动画
 setInterval(() => {
   app.update('animation_tick', $inc);
 }, 50);
@@ -396,23 +403,22 @@ setInterval(() => {
 
 <h2 id="5">App类</h2>
 
-App类的构造函数有三个参数：
+App类的构造函数会根据参数类型的不同，初始化不同的成员
 
-用于初次渲染的浏览器元素，这个元素会被初次渲染替换掉，是一次性的，替换的元素不会保留这个初始元素的任何属性，包括id；
+* 如果类型为 HTMLElement，也就是浏览器DOM元素，会作为首次渲染所使用的元素
+* 如果类型为函数，会作为根组件函数，每次重新渲染都会调用
+* 其他类型都作为初始状态，一般为object类型
 
-根组件，将组件函数直接传入。每次重渲染都会调用它，调用时传入App的当前状态和update方法
-
-初始状态树，一个object。
+如果构造函数的参数没有提供所有这三种参数，则推迟首次渲染。
+可以使用 init 方法继续初始化过程，对参数的处理和构造函数一样。
+三种参数集齐后，App将开始渲染。
 
 App类常用的方法及属性如下：
 
-update(...path, operation)，用于更新状态树；
-
-tap(function(state))，用于读写状态树，如果传入的函数有返回值，返回值将传入update方法，更新状态树；
-
-html()，返回根组件的innerHTML；
-
-state，当前状态；
+* update(...path, operation)，用于更新状态树
+* tap(function(state))，用于读写状态树，如果传入的函数有返回值，返回值将传入update方法，更新状态树
+* html()，返回根组件的innerHTML
+* state，当前状态
 
 <h2 id="6">状态更新操作一览</h2>
 
@@ -594,9 +600,26 @@ let init_state = {
   b: 0,
 };
 
-let app;
+// App的子类，增加snapshot方法
+class AppWithSnapshot extends App {
+  constructor(...args) {
+    super(...args);
+    this.snapshots = [];
+  }
 
-function Main(state, update) {
+  snapshot() {
+    // 将当前状态保存
+    this.snapshots.push(this.state);
+  }
+}
+
+// 半初始化，因为Main组件要用到app的方法，所以先生成
+let app = new AppWithSnapshot(
+  document.getElementById('app'),
+  init_state,
+);
+
+function Main(state) {
   return div([
     // 点击时颜色随机变化的圆
     div({
@@ -611,7 +634,7 @@ function Main(state, update) {
         // 更新前创建快照
         app.snapshot();
         // 随机颜色
-        update($merge({
+        app.update($merge({
           r: Math.ceil(Math.random() * 255),
           g: Math.ceil(Math.random() * 255),
           b: Math.ceil(Math.random() * 255),
@@ -646,23 +669,8 @@ function Main(state, update) {
   ]);
 }
 
-class AppWithSnapshot extends App {
-  constructor(...args) {
-    super(...args);
-    this.snapshots = [];
-  }
-
-  snapshot() {
-    // 将当前状态保存
-    this.snapshots.push(this.state);
-  }
-}
-
-app = new AppWithSnapshot(
-  document.getElementById('app'),
-  Main,
-  init_state,
-);
+// 完成app的初始化
+app.init(Main);
 ```
 
 ![counter](images/snapshot.gif)
