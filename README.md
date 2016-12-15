@@ -668,6 +668,65 @@ app.init(Main);
 
 <h2 id="9">默认及衍生状态</h2>
 
+设置默认状态，最简单的方法是写在 init_state 里：
+
+```js
+let init_state = {
+  sort_by: 'timestamp',
+};
+```
+
+或者写在组件函数里：
+
+```js
+let List = (state) => {
+  if (!state.sort_by) {
+    // 注意要将update方法的返回值赋值给state变量，不然state还是指向旧状态
+    state = app.update('sort_by', 'timestamp');
+  }
+  return div();
+};
+```
+
+衍生状态，指将某些状态通过一定运算得出的状态，可以在init_state里用getter实现：
+
+```js
+let init_state = {
+  r: 0,
+  g: 0,
+  b: 0,
+  // 在组件里可以用 state.rgb 获得计算出来的值
+  get rgb() {
+    return `rgb(${this.r}, ${this.g}, ${this.b})`;
+  },
+};
+```
+
+但上面的方法只适合计算量少的，因为每次更新状态，都新建一个对象，这些属性会被重新计算。
+如果计算量很大，应该用下面的方法：
+
+```js
+function Main(state) {
+  return div([
+
+    // 一个命名 thunk，它的组件函数的参数是 r, g, b
+    // 实参为 state.r, state.g, state.b
+    // 所以如果这三个值发生了变化，这个组件会重新渲染，然后更新 state.rgb
+    // 如果三个值没有变化，框架会认为这个组件不需要重新渲染，也就避免了重复计算
+    // 这个thunk就相当于 state.r, state.g, state.b 的 observer
+    // 注意thunk必须命名，否则框架没法判断是否相同，只能保守地认为不同，就每次都会触发计算了
+    // thunk的命名可以通过第一个字符串参数，或者命名函数实现
+
+    t('computed rgb', (r, g, b) => {
+      app.update('rgb', `rgb(${r}, ${g}, ${b})`);
+      return none;
+    }, state.r, state.g, state.b),
+
+    // ...
+  ]);
+}
+```
+
 # 未完待续
 ## redux风格的状态管理
 ## 引用浏览器元素
