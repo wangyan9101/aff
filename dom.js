@@ -404,7 +404,9 @@ export function patch(last_element, node, last_node) {
       }
     } else {
       // set string style
-      last_element.style = node.style;
+      if (node.style != last_node.style) {
+        last_element.style = node.style;
+      }
     }
   } else {
     if (node.style && last_node.style) {

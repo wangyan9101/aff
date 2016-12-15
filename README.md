@@ -92,7 +92,7 @@ patch(
 ```js
 let {
   tags: { div, span },
-  app: { make_app },
+  app: { App },
   state: { $inc },
 } = require('affjs');
 
@@ -113,9 +113,9 @@ let init_state = {
   animation_tick: 0,
 };
 
-// App组件，所有组件都表示为函数
-let App = (state) => div({
-  // 样式定义
+// 根组件，所有组件都表示为函数
+let Main = (state) => div({
+  // 样式定义，object表示法
   style: {
     fontSize: '32px',
   },
@@ -126,20 +126,21 @@ let App = (state) => div({
     let color = color_index < 0 ? 'transparent' : colors[color_index % colors.length];
     // 返回的span作为div的子元素
     return span({
-      style: {
-        color: color,
-        textShadow: `0 0 10px ${color}`, // 使用es6的模版字符串语法
-      },
+      // 样式定义，string表示法，使用es6的模板语法
+      style: `
+        color: ${color};
+        text-shadow: 0 0 10px ${color}; 
+      `,
     }, c);
   }),
 ]);
 
 // 生成app
-let app = make_app(
+let app = new App(
   // 初始渲染的元素
   document.getElementById('app'),
   // 根组件
-  App,
+  Main,
   // 初始状态
   init_state,
 );
