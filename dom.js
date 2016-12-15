@@ -125,8 +125,9 @@ class Node {
     }
     if (this.children !== null) {
       for (let i = 0, l = this.children.length; i < l; i++) {
-        if (!this.children[i].toElement) {
-          element.appendChild(empty_node.toElement());
+        if (!this.children[i] || !this.children[i].toElement) {
+          element.appendChild(warning(`RENDER ERROR: cannot render ${this.children[i]}`).toElement());
+          console.warn('cannot render', this.children[i]);
         } else {
           element.appendChild(this.children[i].toElement());
         }
@@ -153,13 +154,13 @@ class Node {
 
 }
 
-let empty_node = e('div', {
+let warning = (text) => e('div', {
   style: {
     backgroundColor: 'yellow',
     color: 'red',
     fontWeight: 'bold',
   },
-}, 'EMPTY NODE, FIX ME');
+}, text);
 
 let element_events = {};
 let element_set_listener = (() => {
@@ -367,7 +368,13 @@ export function patch(last_element, node, last_node) {
     || (node.tag == 'input'  && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
     || (node.tag == 'button' && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
   ) {
-    let element = node.toElement();
+    let element;
+    if (!node || !node.toElement) {
+      element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
+      console.warn('cannot render', node);
+    } else {
+      element = node.toElement();
+    }
     // insert new then remove old
     last_element.parentNode.insertBefore(element, last_element);
     last_element.parentNode.removeChild(last_element);
@@ -509,7 +516,12 @@ export function patch(last_element, node, last_node) {
     }
     // insert new children
     for (let i = common_length, l = node.children.length; i < l; i++) {
-      last_element.appendChild(node.children[i].toElement());
+      if (!node.children[i] || !node.children[i].toElement) {
+        last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
+        console.warn('cannot render', node.children[i]);
+      } else {
+        last_element.appendChild(node.children[i].toElement());
+      }
     }
     // delete
     for (let i = common_length, l = last_node.children.length; i < l; i++) {
@@ -518,7 +530,12 @@ export function patch(last_element, node, last_node) {
   } else if (node.children) {
     // insert only
     for (let i = 0, l = node.children.length; i < l; i++) {
-      last_element.appendChild(node.children[i].toElement());
+      if (!node.children[i] || !node.children[i].toElement) {
+        last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
+        console.warn('cannot render', node.children[i]);
+      } else {
+        last_element.appendChild(node.children[i].toElement());
+      }
     }
   } else if (last_node.children) {
     // delete only
@@ -547,7 +564,13 @@ class Thunk {
 
   toElement() {
     if (!this.element) {
-      this.element = this.getNode().toElement();
+      let node = this.getNode();
+      if (!node || !node.toElement) {
+        this.element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
+        console.warn('cannot render', node);
+      } else {
+        this.element = node.toElement();
+      }
     }
     return this.element;
   }
