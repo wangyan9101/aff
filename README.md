@@ -4,7 +4,7 @@
 * [基本用例：霓虹 Hello, world](#2)
 * [html标签表示法一览](#3)
 * [组件](#4)
-* [app结构](#5)
+* [App类](#5)
 * [状态更新操作一览](#6)
 * [跟踪状态变化](#7)
 
@@ -291,7 +291,7 @@ thunk 用 dom.t 函数构造。示例：
 let {
   dom: { t },
   tags: { button, div, img },
-  app: { make_app },
+  app: { App },
   state: { $inc, $dec },
 } = require('affjs');
 
@@ -335,9 +335,9 @@ let Layout = (radius, base_degree, elems) => {
   }));
 };
 
-// App也是一个组件，它将被传入make_app函数并调用
-// 调用的参数是内部的state，以及app的update函数
-let App = (state, update) => {
+// Main也是一个组件
+// 调用的参数是内部的state，以及App的update方法
+let Main = (state, update) => {
   // 计数加一
   let inc = () => {
     update('counter', $inc);
@@ -346,15 +346,15 @@ let App = (state, update) => {
   let dec = () => {
     update('counter', $dec);
   };
-  // 构造App
+  // 构造根组件
   return Layout(100, state.animation_tick % 360, [
     // 一个 Button 的 thunk
     t(Button, '＋', inc),
     // 另一个 thunk
     t(Button, '－', dec),
 
-    // 不用thunk，直接调用Button也可以，但App每次调用，都会调用Button，
-    // 而用thunk就只是生成一个对象，可以优化渲染效率
+    // 不用thunk，直接调用Button也可以，但每次构造Main，都会直接调用
+    // 而用thunk就只是生成一个对象，选择性地调用Button，可以优化渲染效率
     Button('＋＋', inc),
     Button('－－', dec),
 
@@ -376,9 +376,9 @@ let App = (state, update) => {
   ]);
 };
 
-let app = make_app(
+let app = new App(
   document.getElementById('app'),
-  App,
+  Main,
   {
     counter: 0,
     animation_tick: 0,
@@ -392,29 +392,29 @@ setInterval(() => {
 
 ![counter](images/counter.gif)
 
-<h2 id="5">app结构</h2>
+<h2 id="5">App类</h2>
 
-前面已经用过 make_app 来构造一个app了。make_app 的参数也反映了一个app结构的组成部分：
+App类的构造函数有三个参数：
 
-一个用于初次渲染的浏览器元素，这个元素会被初次渲染替换掉，是一次性的，替换的元素不会保留这个初始元素的任何属性，包括id；
+用于初次渲染的浏览器元素，这个元素会被初次渲染替换掉，是一次性的，替换的元素不会保留这个初始元素的任何属性，包括id；
 
-根组件，将组件函数直接传入。每次重渲染都会调用它，参数是当前状态和update函数；
+根组件，将组件函数直接传入。每次重渲染都会调用它，调用时传入App的当前状态和update方法
 
 初始状态树，一个object。
 
-make_app返回一个app对象，它的成员如下：
+App类常用的方法及属性如下：
 
-update，用于更新状态树；
+update(...path, operation)，用于更新状态树；
 
-tap，用于读写状态树，参数是一个function(state)，如果有返回值，将传入update，更新状态树；
+tap(function(state))，用于读写状态树，如果传入的函数有返回值，返回值将传入update方法，更新状态树；
+
+html()，返回根组件的innerHTML；
 
 state，当前状态；
 
-html，当前app元素的innerHTML
-
 <h2 id="6">状态更新操作一览</h2>
 
-app的update函数用于更新状态树，它的参数先是要改变的状态的路径，最后是改变的操作。
+App的update方法用于更新状态树，它的参数先是要改变的状态的路径，最后是改变的操作。
 
 状态树是一个不变的结构，更新使用 path-copying 方式生成新的状态树，以提高组件重渲染检测的效率。
 状态树的读操作和普通object一样，写操作需要用包装出来的函数。
@@ -425,12 +425,12 @@ app的update函数用于更新状态树，它的参数先是要改变的状态�
 let {
   state: { $inc, $dec, $merge, $push, 
     $reduce, $del_at, $map, $filter, $any},
-  app: { make_app },
+  app: { App },
   tags: { div },
 } = require('affjs');
 
 // 创建 app
-let app = make_app(
+let app = new App(
   document.getElementById('app'),
   () => div(),
   {},
@@ -532,40 +532,44 @@ make_app 的第四和第五个参数是两个回调，可以在状态更新前�
 
 ```js
 let {
-  app: { make_app },
+  app: { App },
   tags: { div },
   state: { $map },
 } = require('affjs');
+
+// 继承App类，覆盖beforeUpdate和afterUpdate方法
+class StateTracingApp extends App {
+  constructor(...args) {
+    super(...args);
+  }
+
+  // 将在状态更新前执行
+  beforeUpdate(state, ...args) {
+    console.log('%cBEFORE', 'background: #888; color: white', JSON.parse(JSON.stringify(state)));
+    console.log('%cUPDATE', 'background: #555; color: white', args);
+  }
+
+  // 将在状态更新后执行
+  afterUpdate(state, ...args) {
+    console.log('%cAFTER ', 'background: #333; color: white', JSON.parse(JSON.stringify(state)));
+  }
+}
 
 let init_state = {
   foo: [1, 2, 3, 4, 5],
 };
 
-let App = (state) => {
-  return div();
-}
-
-let app = make_app(
+let app = new StateTracingApp(
   document.getElementById('app'),
-  App,
+  () => div(),
   init_state,
-  // before update
-  (state, ...args) => {
-    console.log('%cBEFORE', 'background: #888; color: white', JSON.parse(JSON.stringify(state)));
-    console.log('%cUPDATE', 'background: #555; color: white', args);
-  },
-  // after update
-  (state, ...args) => {
-    console.log('%cAFTER ', 'background: #333; color: white', JSON.parse(JSON.stringify(state)));
-  },
 );
 
+// 更新状态
 app.update('foo', $map(v => v * 2));
 ```
 
 ![counter](images/state-trace.png)
-
-这两个回调也可以通过继承 affjs.app.App 类并覆盖 beforeUpdate 和 afterUpdate 方法实现。不过代码就多一些。
 
 # 未完待续
 ## 状态回滚与重放
