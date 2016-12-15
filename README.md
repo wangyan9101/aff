@@ -7,6 +7,7 @@
 * [App类](#5)
 * [状态更新操作一览](#6)
 * [跟踪状态变化](#7)
+* [状态回滚与重放](#8)
 
 <h2 id="1">环境安装配置</h2>
 
@@ -571,8 +572,104 @@ app.update('foo', $map(v => v * 2));
 
 ![counter](images/state-trace.png)
 
+<h2 id="8">状态回滚与重放</h2>
+
+因为状态树都是不变的数据结构，所以可以保存下某个时刻的状态，在需要时回滚。
+或者记录一系列的状态，按照时间顺序重新置入App实例内，可用于debug中。
+也可以保存子状态树，它们也是保持不变的。
+
+例子如下：
+
+```js
+let {
+  app: { App },
+  tags: { div, none },
+  state: { $merge },
+} = require('affjs');
+
+let init_state = {
+  r: 0,
+  g: 0,
+  b: 0,
+};
+
+let app;
+
+function Main(state, update) {
+  return div([
+    // 点击时颜色随机变化的圆
+    div({
+      style: `
+        background-color: rgb(${state.r}, ${state.g}, ${state.b});
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 0 auto;
+      `,
+      onclick() {
+        // 更新前创建快照
+        app.snapshot();
+        // 随机颜色
+        update($merge({
+          r: Math.ceil(Math.random() * 255),
+          g: Math.ceil(Math.random() * 255),
+          b: Math.ceil(Math.random() * 255),
+        }));
+      },
+    }),
+
+    // 显示历史颜色，点击切换状态
+    // 切换颜色时，会触发重新渲染，虽然用到的数据并不在状态树内
+    // 因为第一次渲染时，app变量仍为undefined，所以用三元运算符做一个判断
+    app ? div({
+      style: `
+        margin: 0 auto;
+        text-align: center;
+        margin-top: 20px;
+        max-width: 150px;
+      `,
+    }, app.snapshots.map(snapshot => div({
+      style: `
+        background-color: rgb(${snapshot.r}, ${snapshot.g}, ${snapshot.b});
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 5px;
+      `,
+      onclick() {
+        // 直接将app的状态更新为历史状态
+        app.update(snapshot);
+      },
+    }))) : none,
+  ]);
+}
+
+class AppWithSnapshot extends App {
+  constructor(...args) {
+    super(...args);
+    this.snapshots = [];
+  }
+
+  snapshot() {
+    // 将当前状态保存
+    this.snapshots.push(this.state);
+  }
+}
+
+app = new AppWithSnapshot(
+  document.getElementById('app'),
+  Main,
+  init_state,
+);
+```
+
+![counter](images/state-trace.png)
+
+这个例子的目的并不是要实现这种交互，而是说明可以如何处理状态。
+不变的数据结构在实现“时间机器”这种功能方面是十分容易的。
+
 # 未完待续
-## 状态回滚与重放
 ## 默认状态
 ## 衍生状态
 ## 引用浏览器元素
