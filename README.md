@@ -10,6 +10,7 @@
 * [状态回滚与重放](#8)
 * [默认及衍生状态](#9)
 * [引用浏览器元素](#10)
+* [路由](#11)
 
 <h2 id="1">环境安装配置</h2>
 
@@ -772,8 +773,93 @@ app.init(Main);
 注意到 online 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发online事件。
 这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
 
+<h2 id="11">路由</h2>
+
+这个框架并没有实现路由机制，因为和现有的路由库结合使用已经足够简单，不需要再做什么了。
+
+以 riot-router 为例：
+
+```js
+let {
+  app: { App },
+  tags: { div, a },
+  state: { $merge },
+} = require('affjs');
+import route from 'riot-route';
+
+// 子组件
+let Index = () => div(`INDEX`);
+let Foo = (a1, a2) => div(`FOO route args: ${a1} ${a2}`);
+let Bar = (a1) => div(`BAR route args: ${a1}`);
+let Baz = (a1, a2) => div(`BAZ route args: ${a1} ${a2}`);
+
+// 根组件
+let Main = (state) => {
+  return div([
+    // 几个路由切换链接
+    [
+      '/',
+      '/foo/1/FOO',
+      '/bar/x',
+    ].map(url => a({
+      style: `
+        background-color: #09C;
+        color: white;
+        cursor: pointer;
+        margin: 0 5px;
+        padding: 0 20px;
+      `,
+      onclick() {
+        route(url);
+      },
+    }, url)),
+
+    // 根据当前路由key，返回不同的内容
+    // 还可以直接将 Foo, Bar, Baz 等放入路由定义，可以少一处重复，但有时未必是一个key对应一个组件，牺牲一点DRY增加一点灵活性
+    {
+      index: Index,
+      foo: Foo,
+      bar: Bar,
+      baz: Baz,
+    }[state.route_key](...state.route_args),
+  ]);
+};
+
+let app = new App(
+  document.getElementById('app'),
+  Main,
+  {
+    // 当前路由
+    route_key: 'index',
+    // 当前路由参数
+    route_args: [],
+  },
+);
+
+// 路由定义
+let routes = {
+  index: '/',
+  foo: '/foo/*/*',
+  bar: '/bar/*',
+  baz: '/baz-*-*',
+};
+for (let key in routes) {
+  route(routes[key], (...args) => {
+    // 将key和参数放入状态树
+    app.update($merge({
+      route_key: key,
+      route_args: args,
+    }));
+  });
+}
+// 首次访问时，执行一下路由
+route.exec();
+window.onhashchange = route.exec;
+```
+
+![route](images/route.gif)
+
 # 未完待续
-## 路由
 ## 服务器端渲染
 ## 异步竞态问题
 ## 单页多app结构
