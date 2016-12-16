@@ -14,6 +14,7 @@
 * [路由](#11)
 * [异步竞态问题](#12)
 * [应对状态树结构变更](#13)
+* [小技巧集锦](#14)
 
 <h2 id="0">框架理念</h2>
 
@@ -924,3 +925,42 @@ window.onhashchange = route.exec;
 封装成函数，就没有这种直观性了。
 
 对状态的读操作，因为并没有封装，就直接是读对象，所以只能手工改动了。或者在旧路径埋一个会抛异常的getter，有读操作就出错，提示需要修改。
+
+<h2 id="14">小技巧集锦</h2>
+
+<h3>响应式css / 适配分辨率</h3>
+
+```js
+let screen_width = window.screen.width;
+
+let screen;
+if (screen_width <= 320) {
+  screen = 'i5';
+} else if (screen_width <= 375) {
+  screen = 'i6';
+} else if (screen_width <= 414) {
+  screen = 'i6s';
+}
+
+let style = `
+  margin-left: ${{
+    i5: 20,
+    i6: 30,
+    i6s: 40,
+  }[screen] || 50}px;
+`;
+```
+
+<h3>开发环境和线上环境使用不同init_state</h3>
+
+```js
+let dev_state = {
+  __env: 'dev',
+};
+
+let production_state = {
+  __env: 'production',
+};
+
+let init_state = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? dev_state : production_state;
+```
