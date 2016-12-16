@@ -9,6 +9,7 @@
 * [跟踪状态变化](#7)
 * [状态回滚与重放](#8)
 * [默认及衍生状态](#9)
+* [引用浏览器元素](#a)
 
 <h2 id="1">环境安装配置</h2>
 
@@ -727,10 +728,52 @@ function Main(state) {
 }
 ```
 
+<h2 id="a">引用浏览器元素</h2>
+
+在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
+在事件回调外、组件函数内，是拿不到元素的引用的，因为这个时候还没有创建元素。
+可以添加 online 事件回调，会在元素创建后调用。
+
+```js
+let {
+  app: { App },
+  tags: { div, button },
+  state: { $inc },
+} = require('affjs');
+
+let app = new App(
+  document.getElementById('app'),
+  {
+    count: 0,
+  },
+);
+
+let Main = (state) => {
+  return div([
+    button({
+      // 点击回调
+      onclick() {
+        console.log('onclick', this.element);
+        app.update('count', $inc);
+      },
+      // 元素创建回调
+      online(elem) {
+        console.log('online', elem);
+      },
+    }, `CLICK ME ${state.count}`),
+  ]);
+};
+
+app.init(Main);
+```
+
+![element](images/element.png)
+
+注意到 online 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发online事件。
+
 # 未完待续
-## redux风格的状态管理
-## 引用浏览器元素
 ## 路由
 ## 服务器端渲染
 ## 异步竞态问题
 ## 单页多app结构
+## 应对状态树结构变更
