@@ -56,7 +56,7 @@ module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules(?!\/affjs)/,
         loader: 'babel-loader',
       },
     ],
@@ -89,8 +89,8 @@ index.html 入口 html
 
 main.js 入口js
 ```js
-let {patch} = require('affjs').dom;
-let {p} = require('affjs').tags;
+import { patch } from 'affjs/dom'
+import { p } from 'affjs/tags'
 
 patch(
   document.getElementById('app'),
@@ -108,11 +108,9 @@ patch(
 <h2 id="2">基本用例：霓虹helloworld</h2>
 
 ```js
-let {
-  tags: { div, span },
-  app: { App },
-  state: { $inc },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { div, span } from 'affjs/tags'
+import { $inc } from 'affjs/state'
 
 let colors = [
   '#f26522',
@@ -174,9 +172,7 @@ setInterval(() => {
 <h2 id="3">html标签表示法一览</h2>
 
 ```js
-let {
-  tags: { div, p, button },
-} = require('affjs');
+import { div, p, button } from 'affjs/tags'
 
 // 单个空标签
 // <div></div>
@@ -306,12 +302,10 @@ thunk是渲染优化的基本单位，因为框架如果发现参数不变，那
 thunk 用 dom.t 函数构造。示例：
 
 ```js
-let {
-  dom: { t },
-  tags: { button, div, img },
-  app: { App },
-  state: { $inc, $dec },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { button, div, img } from 'affjs/tags'
+import { t } from 'affjs/dom'
+import { $inc, $dec } from 'affjs/state'
 
 // 一个按钮组件，文字和点击事件都作为参数，从外部传入
 let Button = (text, onclick) => button({
@@ -448,12 +442,10 @@ App的update方法的参数先是要改变的状态的路径，最后是改变�
 各种操作的示例如下：
 
 ```js
-let {
-  state: { $inc, $dec, $merge, $push, 
-    $reduce, $del_at, $map, $filter, $any},
-  app: { App },
-  tags: { div },
-} = require('affjs');
+import { $inc, $dec, $merge, $push, $reduce, 
+  $del_at, $map, $filter, $any } from 'affjs/state'
+import { App } from 'affjs/app'
+import { div } from 'affjs/tags'
 
 let app = new App(
   document.getElementById('app'),
@@ -545,11 +537,9 @@ assert(app.state.array[1] == 84);
 例如打印更新前后的状态，和更新操作的内容。这样可以方便地跟踪状态的变化，debug时可能用得上。
 
 ```js
-let {
-  app: { App },
-  tags: { div },
-  state: { $map },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { div } from 'affjs/tags'
+import { $map } from 'affjs/state'
 
 class StateTracingApp extends App {
   constructor(...args) {
@@ -593,11 +583,9 @@ app.update('foo', $map(v => v * 2));
 例子如下：
 
 ```js
-let {
-  app: { App },
-  tags: { div, none },
-  state: { $merge },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { div, none } from 'affjs/tags'
+import { $merge } from 'affjs/state'
 
 let init_state = {
   r: 0,
@@ -761,11 +749,9 @@ patch的过程中，如果触发了状态更新，那patch完成后，会再次�
 可以添加 online 事件回调，会在元素创建后调用。
 
 ```js
-let {
-  app: { App },
-  tags: { div, button },
-  state: { $inc },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { div, button } from 'affjs/tags'
+import { $inc } from 'affjs/state'
 
 let app = new App(
   document.getElementById('app'),
@@ -805,11 +791,9 @@ app.init(Main);
 以 riot-router 为例：
 
 ```js
-let {
-  app: { App },
-  tags: { div, a },
-  state: { $merge },
-} = require('affjs');
+import { App } from 'affjs/app'
+import { div, a } from 'affjs/tags'
+import { $merge } from 'affjs/state'
 import route from 'riot-route';
 
 // 子组件
