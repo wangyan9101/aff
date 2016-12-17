@@ -963,6 +963,8 @@ let style = `
 标签的style属性是没办法表达伪类的。可以在旁边用一个style标签写：
 
 ```js
+import { div, style } from 'affjs/tags'
+
 div('.foo')
 style(`
   .foo:hover {
@@ -971,7 +973,10 @@ style(`
 `)
 ```
 
-渲染出来，就是一个<style></style>，里面是css定义。
+渲染出来，就是一个`<style></style>`，里面是css定义。
+注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
+
+也可以全部样式都这样写，加上scoped属性。
 
 <h3>开发环境和线上环境使用不同init_state</h3>
 
