@@ -964,3 +964,20 @@ let production_state = {
 
 let init_state = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? dev_state : production_state;
 ```
+
+<h3>用 local storage 保存状态</h3>
+
+```js
+let init_state = JSON.parse(window.localStorage.getItem('state')) || {
+  // ...
+};
+
+function saveState() {
+  window.localStorage.setItem('state', JSON.stringify(app.state));
+  return false;
+}
+
+setInterval(saveState, 60000);
+window.onbeforeunload = saveState;
+// 或者其他适当的时机
+```
