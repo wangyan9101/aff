@@ -14,6 +14,7 @@
 * [路由](#11)
 * [异步竞态问题](#12)
 * [应对状态树结构变更](#13)
+* [例子：todomvc 和 dbmon](#15)
 * [小技巧集锦](#14)
 
 <h2 id="0">框架理念</h2>
@@ -909,6 +910,17 @@ window.onhashchange = route.exec;
 封装成函数，就没有这种直观性了。
 
 对状态的读操作，因为并没有封装，就直接是读对象，所以只能手工改动了。或者在旧路径埋一个会抛异常的getter，有读操作就出错，提示需要修改。
+
+<h2 id="15">例子：todomvc 和 dbmon</h2>
+
+[todomvc](http://todomvc.com/) 和 [dbmon](http://mathieuancelin.github.io/js-repaint-perfs/) 是各类前端框架实现得比较多的例子。
+在 examples 目录下也有用本框架实现它们的示例代码：
+
+todomvc: https://github.com/reusee/aff/blob/master/examples/todomvc/main.js
+
+dbmon: https://github.com/reusee/aff/blob/master/examples/dbmon/main.js
+
+和其他框架对比，代码行数属于比较少的一类，而且也不需要特别做什么优化。dbmon 的 fps，和优化版的 react、vue 处在同一水平。
 
 <h2 id="14">小技巧集锦</h2>
 
