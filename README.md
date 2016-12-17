@@ -911,6 +911,10 @@ window.onhashchange = route.exec;
 
 对状态的读操作，因为并没有封装，就直接是读对象，所以只能手工改动了。或者在旧路径埋一个会抛异常的getter，有读操作就出错，提示需要修改。
 
+之前考虑过整个状态树都转化为 getter-setter 的形式，每个结点记住自己在状态树的路径，这样不论传递到哪里，都可以通过直接赋值来更新。
+读操作也可以插入钩子来做些什么。不过这种方式成本太大了，每次更新过程中，除了路径上的对象要重新创建，每个对象的每个属性都要重新调用一次Object.defineProperty。
+而且这样全部属性都是 getter-setter 的对象，在浏览器 console 里显示时也不是很直观。于是作罢。
+
 <h2 id="15">例子：todomvc 和 dbmon</h2>
 
 [todomvc](http://todomvc.com/) 和 [dbmon](http://mathieuancelin.github.io/js-repaint-perfs/) 是各类前端框架实现得比较多的例子。
