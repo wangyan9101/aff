@@ -1,13 +1,13 @@
-import {table, tbody, tr, td, div, span} from '../../tags'
-import {e, t} from '../../dom'
-import {App} from '../../app'
+import { table, tbody, tr, td, div, span } from '../../tags'
+import { t } from '../../dom'
+import { App } from '../../app'
 
 function DBMon(state) {
   return div([
-    table({ class: 'table table-striped latest-data', }, [
+    table('.table .table-striped .latest-data', [
       tbody([
         state.databases.map(function(database) {
-          return e(DB, database);
+          return t(DB, database);
         }),
       ]),
     ]),
@@ -16,17 +16,17 @@ function DBMon(state) {
 
 function DB(database) {
   return tr({}, [
-    td({ class: 'dbname' }, database.dbname),
-    td({ class: 'query-count' }, [
+    td('.dbname', database.dbname),
+    td('.query-count', [
       span({ class: database.lastSample.countClassName }, 
         database.lastSample.nbQueries),
     ]),
     database.lastSample.topFiveQueries.map(function(query) {
       return t('Query', function(query) {
-        return td({ class: 'Query ' + query.elapsedClassName }, [
+        return td('.Query .' + query.elapsedClassName, [
           query.formatElapsed,
-          div({ class: 'popover left' }, [
-            div({ class: 'popover-content' }, query.query),
+          div('.popover .left', [
+            div('.popover-content', query.query),
             div('.arrow'),
           ]),
         ]);

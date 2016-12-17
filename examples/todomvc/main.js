@@ -2,9 +2,9 @@ import {
   section, header, footer, h1, p, a, div, span,
   input, none, ul, li, button, strong, label,
 } from '../../tags'
-import {e} from '../../dom'
-import {App} from '../../app'
-import {$any, $push, $merge, $del_at, $filter} from '../../state'
+import { t } from '../../dom'
+import { App } from '../../app'
+import { $any, $push, $merge, $del_at, $filter } from '../../state'
 
 let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   todos: [
@@ -15,7 +15,11 @@ let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   ],
   filter: 'All',
 };
-let app;
+
+let app = new App(
+  document.getElementById('app'),
+  init_state,
+);
 
 function Header() {
   return header('.header', [
@@ -36,30 +40,26 @@ function Header() {
   ]);
 }
 
-let toggle_all = () => {
-  app.tap((state) => {
-    let all_completed = state.todos.reduce((b, c) => b && c.completed, true);
-    app.update('todos', $any, 'completed', all_completed ? false : true);
-  });
-};
-
 function Main(state) {
   return div([
     section('.todoapp', [
-      e(Header),
+      t(Header),
 
       state.todos.length > 0 ? section('.main', [
         input('.toggle-all', {
           type: 'checkbox',
-          onclick: toggle_all,
+          onclick() {
+            let all_completed = app.state.todos.reduce((b, c) => b && c.completed, true);
+            app.update('todos', $any, 'completed', all_completed ? false : true);
+          },
         }),
         label({
           for: 'toggle-all',
         }, 'Mark all as complete'),
-        e(TodoList, state.todos, state.filter),
+        t(TodoList, state.todos, state.filter),
       ]) : none,
 
-      state.todos.length > 0 ? e(Footer, state.todos, state.filter) : none,
+      state.todos.length > 0 ? t(Footer, state.todos, state.filter) : none,
     ]),
     Info,
   ]);
@@ -73,7 +73,10 @@ function TodoList(todos, filter) {
       return none;
     }
     return li({
-      class: (todo.completed ? 'completed' : '') + (todo.editing ? ' editing' : ''),
+      class: {
+        completed: todo.completed,
+        editing: todo.editing,
+      },
     }, [
       div('.view', [
         input('.toggle', {
@@ -97,13 +100,12 @@ function TodoList(todos, filter) {
       input('.edit', {
         value: todo.content,
         onkeypress(e) {
-          if (e.keyCode != 13) {
-            return false;
+          if (e.keyCode == 13) {
+            app.update('todos', i, $merge({
+              'content': this.element.value,
+              'editing': false,
+            }));
           }
-          app.update('todos', i, $merge({
-            'content': this.element.value,
-            'editing': false,
-          }));
         },
       }),
     ]);
@@ -169,10 +171,6 @@ class Application extends App {
   }
 }
 
-app = new Application(
-  document.getElementById('app'),
-  Main,
-  init_state,
-);
+app.init(Main);
 
 window.onhashchange();
