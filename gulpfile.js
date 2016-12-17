@@ -15,7 +15,7 @@ gulp.task('default', function() {
         loaders: [
           {
             test: /\.js$/,
-            exclude: /node_modules/,
+            exclude: /node_modules(?!\/affjs)/,
             loader: 'babel-loader',
           },
         ],
@@ -39,7 +39,7 @@ gulp.task('default', function() {
           loaders: [
             {
               test: /\.js$/,
-              exclude: /node_modules/,
+              exclude: /node_modules(?!\/affjs)/,
               loader: 'babel-loader',
             },
           ],
