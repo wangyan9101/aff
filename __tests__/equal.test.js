@@ -38,4 +38,6 @@ test('test equal', () => {
       baz: 2,
     },
   })).toBe(false);
+  let f1 = () => {};
+  expect(equal(f1, f1)).toBe(true);
 });

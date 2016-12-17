@@ -24,6 +24,8 @@ export function equal(a, b) {
       }
     }
     return true;
+  } else if (type_a === 'function') {
+    return a.name === b.name;
   } else {
     return a === b;
   }
