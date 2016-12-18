@@ -978,6 +978,42 @@ style(`
 
 也可以全部样式都这样写，加上scoped属性。
 
+<h3>css 样式 mixin</h3>
+
+字符串式：
+
+```js
+let clickable = `
+	cursor: pointer;
+  user-select: none;
+`;
+
+div({
+	style: `
+		${clickable}
+		/* ... 其他样式 ... */
+	`,
+});
+```
+
+对象式：
+
+```js
+let clickable = {
+	cursor: 'pointer',
+	userSelect: 'none',
+};
+
+div({
+	style: {
+		...clickable, // object spread语法
+		// 其他样式 ...
+	},
+});
+```
+
+一般一个项目的风格是统一的，要么字符串要么对象，不然没法混合。
+
 <h3>开发环境和线上环境使用不同init_state</h3>
 
 ```js
