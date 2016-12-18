@@ -10,6 +10,7 @@
 * [跟踪状态变化](#7)
 * [状态回滚与重放](#8)
 * [默认及衍生状态](#9)
+* [内联CSS样式](#15)
 * [引用浏览器元素](#10)
 * [路由](#11)
 * [异步竞态问题](#12)
@@ -750,6 +751,125 @@ patch的过程中，如果触发了状态更新，那patch完成后，会再次�
 这也是这个框架不仅仅做视图层，而是加入状态管理的原因。
 或者说，这个本来就是个状态管理的框架，界面组件只不过是状态的观察者，对状态的改变作出适当的反应。
 
+<h2 id="15">内联CSS样式</h2>
+
+从前面的例子可以看出，CSS样式都是写在标签内部的，渲染的时候渲染成标签的style属性。
+
+这样做有很大的好处，下面将介绍一些例子。
+
+<h3>响应式css / 适配分辨率</h3>
+
+如果用css文件实现这个，要用到 media query，繁琐且散布在各处，修改不易。
+
+```js
+let screen_width = window.screen.width;
+
+// 根据屏幕宽度，分成不同的类型
+let screen;
+if (screen_width <= 320) {
+  screen = 'i5';
+} else if (screen_width <= 375) {
+  screen = 'i6';
+} else if (screen_width <= 414) {
+  screen = 'i6s';
+}
+
+let style = `
+	// 根据屏幕类型取对象属性，如果类型不存在，就取默认值50
+  margin-left: ${{
+    i5: 20,
+    i6: 30,
+    i6s: 40,
+  }[screen] || 50}px;
+`;
+```
+
+<h3>css 样式 mixin</h3>
+
+因为内联css样式可以是字符串或者对象，所以可以直接插入字符串到模板，或者合并对象的属性的方式，实现样式的混入。
+
+这个看似和css的class相似，实际大有不同。因为可以混入函数调用的返回值，所以混入的样式，是可以参数化的。
+这是js的表达能力优于原生css的例证。
+
+例如一个可点击的区域，一般会定义cursor和user-select属性。可以把它做成一个可以复用的变量：
+
+```js
+// 字符串式
+let clickable = `
+	cursor: pointer;
+	user-select: none;
+`;
+
+div({
+	// 直接插入模板字符串内
+	style: `
+		${clickable}
+		/* ... 其他样式 ... */
+	`,
+});
+
+// 对象式
+let clickable = {
+	cursor: 'pointer',
+	userSelect: 'none',
+};
+div({
+	// 用 object spread 语法，合并入style对象
+	style: {
+		...clickable, 
+		// 其他样式 ...
+	},
+});
+
+```
+
+另一个例子，绝对定位的样式，要写position、top、left等等，做成可复用的样式函数：
+
+```js
+let abs = (top, right, bottom, left) => {
+  return `
+    position: absolute;
+    ${top === 0 || top ? 'top: ' + top + ';' : ''}
+    ${right === 0 || right ? 'right: ' + right + ';' : ''}
+    ${bottom === 0 || bottom ? 'bottom: ' + bottom + ';' : ''}
+    ${left === 0 || left ? 'left: ' + left + ';' : ''}
+  `;
+};
+```
+
+然后在标签的style属性里就可以像下面这样用了，简洁了一些：
+
+```js
+div({
+  style: `
+    ${abs('30px', false, 0, false)}
+  `,
+});
+```
+
+上面的是字符串的例子，对象的例子原理一样，就不赘述了。
+将常用或者共同的样式写成可混入的字符串或者函数，可以极大地使样式代码变得简洁。
+
+<h3>css 伪类</h3>
+
+标签的style属性是没办法表达伪类的。可以在旁边用一个style标签写：
+
+```js
+import { div, style } from 'affjs/tags'
+
+div('.foo')
+style(`
+  .foo:hover {
+    /* ... */
+  }
+`)
+```
+
+渲染出来，就是一个`<style></style>`，里面是css定义。
+注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
+
+同理，上面的样式代码里也可以使用 ${} 插入任意的字符串。
+
 <h2 id="10">引用浏览器元素</h2>
 
 在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
@@ -934,85 +1054,6 @@ dbmon: https://github.com/reusee/aff/blob/master/examples/dbmon/main.js
 和其他框架对比，代码行数属于比较少的一类，而且也不需要特别做什么优化。dbmon 的 fps，和优化版的 react、vue 处在同一水平。
 
 <h2 id="14">小技巧集锦</h2>
-
-<h3>响应式css / 适配分辨率</h3>
-
-```js
-let screen_width = window.screen.width;
-
-let screen;
-if (screen_width <= 320) {
-  screen = 'i5';
-} else if (screen_width <= 375) {
-  screen = 'i6';
-} else if (screen_width <= 414) {
-  screen = 'i6s';
-}
-
-let style = `
-  margin-left: ${{
-    i5: 20,
-    i6: 30,
-    i6s: 40,
-  }[screen] || 50}px;
-`;
-```
-
-<h3>css 伪类</h3>
-
-标签的style属性是没办法表达伪类的。可以在旁边用一个style标签写：
-
-```js
-import { div, style } from 'affjs/tags'
-
-div('.foo')
-style(`
-  .foo:hover {
-    /* ... */
-  }
-`)
-```
-
-渲染出来，就是一个`<style></style>`，里面是css定义。
-注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
-
-也可以全部样式都这样写，加上scoped属性。
-
-<h3>css 样式 mixin</h3>
-
-字符串式：
-
-```js
-let clickable = `
-	cursor: pointer;
-  user-select: none;
-`;
-
-div({
-	style: `
-		${clickable}
-		/* ... 其他样式 ... */
-	`,
-});
-```
-
-对象式：
-
-```js
-let clickable = {
-	cursor: 'pointer',
-	userSelect: 'none',
-};
-
-div({
-	style: {
-		...clickable, // object spread语法
-		// 其他样式 ...
-	},
-});
-```
-
-一般一个项目的风格是统一的，要么字符串要么对象，不然没法混合。
 
 <h3>开发环境和线上环境使用不同init_state</h3>
 
