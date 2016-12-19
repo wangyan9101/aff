@@ -334,6 +334,9 @@ export function versioned_update(obj, ...args) {
     versionize(ret);
     return ret;
   } else {
+    if (obj === undefined) {
+      obj = {};
+    }
     if (typeof obj === 'object') {
       let key = args[0];
       for (let k in obj) {

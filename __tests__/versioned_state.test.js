@@ -53,4 +53,7 @@ test('versioned_update', () => {
   versioned_update(obj, 'foo', 0, 'baz', 'qux', 1);
   expect(obj.foo[0].baz.qux).toBe(1);
   expect(obj.foo[0].baz.__aff_version).toBe(2);
+  versioned_update(obj, 'foo', 0, 'baz', 'qux', $inc);
+  expect(obj.foo[0].baz.qux).toBe(2);
+  expect(obj.foo[0].baz.__aff_version).toBe(3);
 });
