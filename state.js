@@ -145,7 +145,8 @@ export function versionize(obj) {
     versionize(obj[k]);
   }
   Object.defineProperty(obj, '__aff_version', {
-    __proto__: null,
+    configurable: false,
+    enumerable: false,
     writable: true,
     value: 1,
   });
