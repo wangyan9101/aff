@@ -23,6 +23,7 @@ test('thunk func call optimize', () => {
     return div([
       t(Foo, {
         a: state.a,
+        b: undefined,
       }),
     ]);
   };

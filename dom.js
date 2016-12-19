@@ -587,7 +587,9 @@ class Thunk {
         if (!Array.isArray(arg) && !arg.hasOwnProperty('__aff_version')) { // plain object
           let subs = {};
           for (let key in arg) {
-            subs[key] = arg[key].__aff_version;
+            if (typeof arg[key] === 'object') {
+              subs[key] = arg[key].__aff_version;
+            }
           }
           versions.push({
             version: arg.__aff_version,
