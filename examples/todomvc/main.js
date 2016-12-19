@@ -16,7 +16,19 @@ let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   filter: 'All',
 };
 
-let app = new App(
+class Application extends App {
+  afterUpdate(state, ...args) {
+    window.localStorage.setItem('todos', JSON.stringify(state));
+  }
+
+  update(...args) {
+    console.time('update ' + args);
+    super.update(...args);
+    console.timeEnd('update ' + args);
+  }
+}
+
+let app = new Application(
   document.getElementById('app'),
   init_state,
 );
@@ -160,16 +172,6 @@ let Info = footer('.info', [
     a({ href: 'http://todomvc.com' }, 'reusee@qq.com'),
   ]),
 ]);
-
-class Application extends App {
-  constructor(...args) {
-    super(...args);
-  }
-
-  afterUpdate(state, ...args) {
-    window.localStorage.setItem('todos', JSON.stringify(state));
-  }
-}
 
 app.init(Main);
 
