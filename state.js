@@ -334,7 +334,7 @@ export function versioned_update(obj, ...args) {
     versionize(ret);
     return ret;
   } else {
-    if (obj === undefined) {
+    if (!obj) {
       obj = {};
     }
     if (typeof obj === 'object') {
