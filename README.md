@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/reusee/aff.svg?branch=master)](https://travis-ci.org/reusee/aff)
+
 ## 目录
 
 * [框架理念](#0)
