@@ -21,7 +21,7 @@ test('dom', () => {
   [el, node] = patch(el, get_node(), node);
   [el, node] = patch(el, get_node(), node);
 
-  expect(el.getAttribute('aff-element-serial')).toBe('1');
+  expect(el.getAttribute('aff-serial')).toBe('1');
 
   //TODO more tests
 });

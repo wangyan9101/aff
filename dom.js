@@ -102,13 +102,16 @@ class Node {
     }
   }
 
-  toElement() {
+  toElement(name) {
     let element;
     if (this.text !== null) {
       element = document.createTextNode(this.text);
     } else {
       element = document.createElement(this.tag);
-      element.setAttribute('aff-element-serial', element_serial);
+      element.setAttribute('aff-serial', element_serial);
+      if (name) {
+        element.setAttribute('aff-name', name);
+      }
       element_serial++;
     }
     if (this.innerHTML !== null) {
@@ -612,7 +615,7 @@ class Thunk {
         this.element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
         console.warn('cannot render', node);
       } else {
-        this.element = node.toElement();
+        this.element = node.toElement(this.name);
       }
     }
     return this.element;
