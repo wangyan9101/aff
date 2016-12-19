@@ -1,5 +1,4 @@
 import {
-  copy_update, freeze_all,
   versioned_update, versionize,
 } from './state'
 import {patch} from './dom'
@@ -21,7 +20,6 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
-        //freeze_all(this.state);
         versionize(this.state);
       }
     }
@@ -38,7 +36,6 @@ export class App {
 
   update(...args) {
     this.beforeUpdate(this.state, ...args);
-    //this.state = copy_update(this.state, ...args);
     this.state = versioned_update(this.state, ...args);
     this.afterUpdate(this.state, ...args);
     if (!this.patching) {
