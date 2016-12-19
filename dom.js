@@ -580,12 +580,27 @@ class Thunk {
 
   setArgs(args) {
     this.args = args;
-    this.arg_versions = this.args.map(arg => {
+    let versions = [];
+    for (let i = 0; i < this.args.length; i++) {
+      let arg = this.args[i];
       if (typeof arg === 'object') {
-        return arg.__aff_version;
-      } 
-      return undefined;
-    });
+        if (!Array.isArray(arg) && !arg.hasOwnProperty('__aff_version')) { // plain object
+          let subs = {};
+          for (let key in arg) {
+            subs[key] = arg[key].__aff_version;
+          }
+          versions.push({
+            version: arg.__aff_version,
+            subs: subs,
+          });
+        } else {
+          versions.push(arg.__aff_version);
+        }
+      } else {
+        versions.push(undefined);
+      }
+    }
+    this.arg_versions = versions;
   }
 
   toElement() {
@@ -603,7 +618,9 @@ class Thunk {
 
   getNode() {
     if (!this.node) {
+      beforeThunkCallFunc(this);
       this.node = this.func.apply(this, this.args);
+      afterThunkCallFunc(this);
       if (!this.node) {
         throw['constructor of ' + (this.name || 'anonymous') + ' returned null value', this];
       }
@@ -611,4 +628,13 @@ class Thunk {
     return this.node;
   }
 
+}
+
+let beforeThunkCallFunc = (thunk) => {};
+let afterThunkCallFunc = (thunk) => {};
+export let setBeforeThunkCallFunc = (fn) => {
+  beforeThunkCallFunc = fn;
+}
+export let setAfterThunkCallFunc = (fn) => {
+  afterThunkCallFunc = fn;
 }
