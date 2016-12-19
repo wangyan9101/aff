@@ -8,7 +8,6 @@
 * [App类](#5)
 * [状态更新操作一览](#6)
 * [跟踪状态变化](#7)
-* [状态回滚与重放](#8)
 * [默认及衍生状态](#9)
 * [内联CSS样式](#15)
 * [引用浏览器元素](#10)
@@ -23,7 +22,7 @@
 * 以函数为组件
 * 内置状态管理
 * 充分利用js自有的表达能力，无html模板或jsx
-* 以观察者模式为核心结构，虚拟DOM、不变数据结构为优化手段
+* 利用虚拟DOM、观察者模式充分优化渲染过程
 * 实现最小可用而正交的机制，方便融入现有的库、程序设计技巧及工程理念
 
 bug、建议、提问等内容请在 issues 处发表，任何相关内容都可以。
@@ -444,10 +443,10 @@ App类常用的方法及属性如下：
 
 <h2 id="6">状态更新操作一览</h2>
 
-App类关联的状态树是一个普通的对象，但更新操作不能直接用赋值进行，且为了避免失误，会递归地调用Object.freeze冻结所有子对象。
-为什么不能直接更新？因为更新操作需要保证原有的状态对象不变，所以是通过path-copying算法更新并构建一个新的状态对象。
-另外状态更新之后，需要触发一次或者多次的组件及元素状态的更新，以及其它关联动作如beforeUpdate、afterUpdate等。
-所以更新操作是统一由App类的update方法进行。
+App类关联的状态树是一个普通的对象，对状态的读操作是普通的对象读操作。
+而写操作则需要通过App类的update方法进行。因为状态树中的对象会保存额外的版本信息，供patch函数使用。
+直接对状态树对象做赋值操作，会使其失去部分版本信息，影响重渲染的效率（渲染结果倒是不会影响），且无法自动触发重渲染。
+update函数会触发一次或者多次的组件及元素状态的更新，以及其他关联的动作如beforeUpdate、afterUpdate等。
 
 App的update方法的参数先是要改变的状态的路径，最后是改变的操作。
 
@@ -585,102 +584,6 @@ app.update('foo', $map(v => v * 2));
 ```
 
 ![counter](images/state-trace.png)
-
-<h2 id="8">状态回滚与重放</h2>
-
-因为状态树都是不变的数据结构，所以可以保存下某个时刻的状态，在需要时回滚。
-或者记录一系列的状态，按照时间顺序重新置入App实例内，可用于debug中。
-也可以保存子状态树，它们也是保持不变的。
-
-例子如下：
-
-```js
-import { App } from 'affjs/app'
-import { div, none } from 'affjs/tags'
-import { $merge } from 'affjs/state'
-
-let init_state = {
-  r: 0,
-  g: 0,
-  b: 0,
-};
-
-// App的子类，增加snapshot方法
-class AppWithSnapshot extends App {
-  constructor(...args) {
-    super(...args);
-    this.snapshots = [];
-  }
-
-  snapshot() {
-    // 将当前状态保存
-    this.snapshots.push(this.state);
-  }
-}
-
-// 半初始化，因为Main组件要用到app的方法，所以先生成
-let app = new AppWithSnapshot(
-  document.getElementById('app'),
-  init_state,
-);
-
-function Main(state) {
-  return div([
-    // 点击时颜色随机变化的圆
-    div({
-      style: `
-        background-color: rgb(${state.r}, ${state.g}, ${state.b});
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        margin: 0 auto;
-      `,
-      onclick() {
-        // 更新前创建快照
-        app.snapshot();
-        // 随机颜色
-        app.update($merge({
-          r: Math.ceil(Math.random() * 255),
-          g: Math.ceil(Math.random() * 255),
-          b: Math.ceil(Math.random() * 255),
-        }));
-      },
-    }),
-
-    // 显示历史颜色，点击切换回历史状态
-    // 这里用到的数据不在状态树内，但恰好创建snapshot后就更新了颜色状态，触发了重渲染
-    div({
-      style: `
-        margin: 0 auto;
-        text-align: center;
-        margin-top: 20px;
-        max-width: 150px;
-      `,
-    }, app.snapshots.map(snapshot => div({
-      style: `
-        background-color: rgb(${snapshot.r}, ${snapshot.g}, ${snapshot.b});
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: inline-block;
-        margin: 0 5px;
-      `,
-      onclick() {
-        // 直接将app的状态更新为历史状态
-        app.update(snapshot);
-      },
-    }))),
-  ]);
-}
-
-// 完成app的初始化
-app.init(Main);
-```
-
-![counter](images/snapshot.gif)
-
-这个例子的目的并不是要实现这种交互，而是说明可以如何处理状态。
-不变的数据结构在实现 "时间机器" 这种功能方面是十分容易的。
 
 <h2 id="9">默认及衍生状态</h2>
 
