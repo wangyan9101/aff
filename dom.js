@@ -207,12 +207,12 @@ export function t(...args) {
   case 'string': // named thunk
     thunk.name = args[0];
     thunk.func = args[1];
-    thunk.args = args.slice(2);
+    thunk.setArgs(args.slice(2));
     break
 
   case 'function':
     thunk.func = args[0];
-    thunk.args = args.slice(1);
+    thunk.setArgs(args.slice(1));
     thunk.name = thunk.func.name;
     break
   }
@@ -230,7 +230,7 @@ export function e(...args) {
   if (typeof args[0] === 'function') {
     let thunk = new Thunk();
     thunk.func = args[0];
-    thunk.args = args.slice(1);
+    thunk.setArgs(args.slice(1));
     // set thunk name from function, may be undefined
     thunk.name = thunk.func.name; 
     return thunk;
@@ -344,7 +344,13 @@ export function patch(last_element, node, last_node) {
     if (
       last_thunk 
       && thunk.name == last_thunk.name 
-      && equal(thunk.args, last_thunk.args)
+      && thunk.args.length === last_thunk.args.length
+      && thunk.args.reduce((acc, cur, i) => {
+        return acc && equal(
+          cur, last_thunk.args[i],
+          thunk.arg_versions[i], last_thunk.arg_versions[i],
+        );
+      }, true)
     ) {
       // reuse node
       thunk.node = last_thunk.node;
@@ -566,9 +572,20 @@ class Thunk {
   constructor() {
     this.func = null;
     this.args = null;
+    this.arg_versions = null;
     this.node = null;
     this.element = null;
     this.name = null;
+  }
+
+  setArgs(args) {
+    this.args = args;
+    this.arg_versions = this.args.map(arg => {
+      if (typeof arg === 'object') {
+        return arg.__aff_version;
+      } 
+      return undefined;
+    });
   }
 
   toElement() {

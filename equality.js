@@ -1,6 +1,6 @@
 import {object_has_tag} from './object'
 
-export function equal(a, b) {
+export function equal(a, b, aVer = 0, bVer = 0) {
   let type_a = typeof a;
   let type_b = typeof b;
   if (type_a !== type_b) {
@@ -13,6 +13,11 @@ export function equal(a, b) {
     if (object_has_tag(a, 'frozen') && object_has_tag(b, 'frozen')) {
       return a === b;
     }
+    // versioned objects
+    if (a.hasOwnProperty('__aff_version') && b.hasOwnProperty('__aff_version') && a === b) {
+      return aVer === bVer;
+    }
+    // deep compare
     let keys_a = Object.keys(a);
     let keys_b = Object.keys(b);
     if (keys_a.length != keys_b.length) {

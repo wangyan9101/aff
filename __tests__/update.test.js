@@ -1,4 +1,4 @@
-import {$map, $inc, $dec, $any, $merge, $filter, $reduce, copy_update} from '../state'
+import {$map, $inc, $dec, $any, $merge, $filter, $reduce, copy_update, versioned_update} from '../state'
 import {object_has_tag} from '../object'
 
 test('copy update', () => {
@@ -91,7 +91,7 @@ test('copy update freezing', () => {
   expect(object_has_tag(new_array, 'frozen')).toBe(true);
 });
 
-test('copy_update merge', () => {
+function test_merge(fn) {
   let obj = {
     foo: 1,
     bar: 2,
@@ -101,7 +101,7 @@ test('copy_update merge', () => {
       ],
     },
   };
-  let new_obj = copy_update(obj, $merge({
+  let new_obj = fn(obj, $merge({
     foo: 42,
     bar: 24,
     baz: {
@@ -117,13 +117,13 @@ test('copy_update merge', () => {
   expect(new_obj.qux).toBe(42);
 
   obj = {};
-  new_obj = copy_update(obj, $merge({
+  new_obj = fn(obj, $merge({
     foo: [1, 2, 3],
   }));
   expect(Array.isArray(new_obj.foo)).toBe(true);
 
   obj = {};
-  new_obj = copy_update(obj, $merge({
+  new_obj = fn(obj, $merge({
     foo: 'FOO',
     bar: 'BAR',
   }));
@@ -136,7 +136,7 @@ test('copy_update merge', () => {
     baz: [9, 8, 7],
     qux: [2, 4, 6],
   };
-  new_obj = copy_update(obj, $merge({
+  new_obj = fn(obj, $merge({
     foo: $reduce((acc, cur) => {
       acc.push(cur + 1);
       return acc;
@@ -157,6 +157,14 @@ test('copy_update merge', () => {
   expect(new_obj.qux[0]).toBe(3);
   expect(new_obj.qux[1]).toBe(5);
   expect(new_obj.qux[2]).toBe(7);
+}
+
+test('copy_update merge', () => {
+  test_merge(copy_update);
+});
+
+test('versioned_update merge', () => {
+  test_merge(versioned_update);
 });
 
 test('copy update with getter', () => {

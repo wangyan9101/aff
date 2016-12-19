@@ -8,6 +8,9 @@ export let $inc = {
   apply(obj) {
     return (obj || 0) + 1;
   },
+  inplace_apply(obj) {
+    return (obj || 0) + 1;
+  },
 };
 
 export let $dec = {
@@ -16,6 +19,9 @@ export let $dec = {
   apply(obj) {
     return obj - 1;
   },
+  inplace_apply(obj) {
+    return obj - 1;
+  }
 };
 
 export let $merge = (spec) => ({
@@ -36,6 +42,20 @@ export let $merge = (spec) => ({
     }
     return obj;
   },
+  inplace_apply(obj) {
+    if (Array.isArray(spec)) {
+      return versioned_update(obj, ...spec);
+    }
+    for (let key in spec) {
+      let o2 = spec[key];
+      if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {
+        obj = versioned_update(obj, key, $merge(o2));
+      } else {
+        obj = versioned_update(obj, key, o2);
+      }
+    }
+    return obj;
+  },
 });
 
 export let $push = (elem) => ({
@@ -48,6 +68,10 @@ export let $push = (elem) => ({
     o2.push(elem);
     return o2;
   },
+  inplace_apply(obj) {
+    obj.push(elem);
+    return obj;
+  },
 });
 
 export let $reduce = (fn, accumulated, what = 'reduce') => ({
@@ -55,6 +79,12 @@ export let $reduce = (fn, accumulated, what = 'reduce') => ({
   op: what,
   args: [fn, accumulated],
   apply(obj) {
+    for (let key in obj) {
+      accumulated = fn(accumulated, obj[key], key);
+    }
+    return accumulated;
+  },
+  inplace_apply(obj) {
     for (let key in obj) {
       accumulated = fn(accumulated, obj[key], key);
     }
@@ -79,6 +109,29 @@ export let $filter = (fn) => ({
   op: 'filter',
   args: [fn],
   apply(obj) {
+    if (typeof obj == 'object') {
+      if (Array.isArray(obj)) {
+        let o2 = [];
+        for (let i = 0; i < obj.length; i++) {
+          if (fn(obj[i], i)) {
+            o2.push(obj[i]);
+          }
+        }
+        return o2;
+      } else {
+        let o2 = {};
+        for (let k in obj) {
+          if (fn(obj[k], k)) {
+            o2[k] = obj[k];
+          }
+        }
+        return o2;
+      }
+    } else {
+      return fn(obj);
+    }
+  },
+  inplace_apply(obj) {
     if (typeof obj == 'object') {
       if (Array.isArray(obj)) {
         let o2 = [];
@@ -220,6 +273,8 @@ export function freeze_all(obj) {
   return obj;
 }
 
+// utils
+
 export function pick(obj, ...keys) {
   if (typeof obj === 'object') {
     if (Array.isArray(obj)) {
@@ -244,4 +299,56 @@ export function pick(obj, ...keys) {
   } else {
     throw['not pickable', obj, keys];
   }
+}
+
+// versioned update
+
+export function versionize(obj) {
+  if (typeof obj !== 'object') {
+    return
+  }
+  if (obj.hasOwnProperty('__aff_version')) {
+    obj.__aff_version++;
+    return
+  }
+  for (let k in obj) {
+    versionize(obj[k]);
+  }
+  Object.defineProperty(obj, '__aff_version', {
+    __proto__: null,
+    writable: true,
+    value: 1,
+  });
+}
+
+export function versioned_update(obj, ...args) {
+  if (args.length === 0) {
+    return obj;
+  } else if (args.length === 1) {
+    let ret;
+    if (args[0].__is_op) {
+      ret = args[0].inplace_apply(obj);
+    } else {
+      ret = args[0];
+    }
+    versionize(ret);
+    return ret;
+  } else {
+    if (typeof obj === 'object') {
+      let key = args[0];
+      for (let k in obj) {
+        if (k == key || key === $any) {
+          obj[k] = versioned_update(obj[k], ...args.slice(1));
+        }
+      }
+      if (key !== $any && !(key in obj)) {
+        obj[key] = versioned_update(undefined, ...args.slice(1));
+      }
+      obj.__aff_version++;
+      return obj;
+    } else {
+      throw['bad update path', obj, args];
+    }
+  }
+  throw['no here'];
 }
