@@ -1085,3 +1085,7 @@ setInterval(saveState, 60000);
 window.onbeforeunload = saveState;
 // 或者其他适当的时机
 ```
+
+注意，在代码里更改了 init_state，上面的代码仍然会载入local storage里的状态。
+所以更改代码里定义的init_state后，需要手工清除local storage里的内容。
+各浏览器的开发者工具都可以方便地做这个操作，或者在页面增加一个操作按钮。
