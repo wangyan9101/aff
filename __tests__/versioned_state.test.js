@@ -56,4 +56,9 @@ test('versioned_update', () => {
   versioned_update(obj, 'foo', 0, 'baz', 'qux', $inc);
   expect(obj.foo[0].baz.qux).toBe(2);
   expect(obj.foo[0].baz.__aff_version).toBe(3);
+
+  obj = {};
+  versionize(obj);
+  versioned_update(obj, 'foo', $any, 'foo', 42);
+  expect(Object.keys(obj.foo).length).toBe(0);
 });

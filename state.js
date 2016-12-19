@@ -336,6 +336,7 @@ export function versioned_update(obj, ...args) {
   } else {
     if (!obj) {
       obj = {};
+      versionize(obj);
     }
     if (typeof obj === 'object') {
       let key = args[0];
