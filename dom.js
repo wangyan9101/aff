@@ -442,9 +442,11 @@ export function patch(last_element, node, last_node) {
         }
       }
       // delete styles exist in old Node but not in new
-      for (let key in last_node.style) {
-        if (!(key in node.style)) {
-          last_element.style[key] = null;
+      if (typeof last_node.style === 'object') {
+        for (let key in last_node.style) {
+          if (!(key in node.style)) {
+            last_element.style[key] = '';
+          }
         }
       }
     } else if (node.style) {
@@ -454,9 +456,7 @@ export function patch(last_element, node, last_node) {
       }
     } else if (last_node.style) {
       // no style in new Node, delete all
-      for (let key in last_node.style) {
-        last_element.style[key] = null;
-      }
+      last_element.style = undefined;
     }
   }
 

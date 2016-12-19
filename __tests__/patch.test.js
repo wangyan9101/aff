@@ -1,6 +1,6 @@
 import { App } from '../app'
 import { div } from '../tags'
-import { t } from '../dom'
+import { t, patch } from '../dom'
 import {
   setBeforeThunkCallFunc,
 } from '../dom'
@@ -44,4 +44,13 @@ test('thunk func call optimize', () => {
   // related to Foo
   app.update('a', 2);
   expect(n).toBe(2);
+});
+
+test('patch invalid node', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  console.warn = jest.genMockFn();
+  patch(element, null);
+  expect(root.textContent).toBe('RENDER ERROR: cannot render null');
 });

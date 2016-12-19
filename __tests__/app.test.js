@@ -72,5 +72,287 @@ test('app patch again', () => {
   expect(root.querySelector('#m').textContent).toBe('3');
 });
 
-test('app tap', () => {
+test('children delete', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      ns: [1, 2, 3],
+    },
+  );
+  let Main = (state) => {
+    if (state.ns.length == 0) {
+      return div();
+    }
+    return div([
+      state.ns.map(n => div(n)),
+    ]);
+  };
+  app.init(Main);
+  expect(root.textContent).toBe('123');
+  app.update('ns', []);
+  expect(app.html()).toBe('');
+});
+
+test('children append', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      ns: [],
+    },
+  );
+  let Main = (state) => {
+    if (state.ns.length == 0) {
+      return div();
+    }
+    return div([
+      state.ns.map(n => div(n)),
+    ]);
+  };
+  app.init(Main);
+  expect(app.html()).toBe('');
+  app.update('ns', [1, 2, 3]);
+  expect(root.textContent).toBe('123');
+  app.update('ns', [1, 2, 3, 4]);
+  expect(root.textContent).toBe('1234');
+});
+
+test('children append invalid', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      ns: [],
+    },
+  );
+  let Main = (state) => {
+    if (state.ns.length == 0) {
+      return div();
+    }
+    return div([
+      false,
+    ]);
+  };
+  app.init(Main);
+  expect(app.html()).toBe('');
+  console.warn = jest.genMockFn();
+  app.update('ns', [1, 2, 3]);
+  expect(root.textContent).toBe('RENDER ERROR: cannot render false');
+});
+
+test('children append invalid', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return div([1]);
+    } else if (state.step == 1) {
+      return div([1, false]);
+    }
+  };
+  app.init(Main);
+  expect(app.html()).toBe('1');
+  console.warn = jest.genMockFn();
+  app.update('step', 1);
+  expect(root.textContent).toBe('1RENDER ERROR: cannot render false');
+});
+
+test('remove event', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0 || state.step == 2) {
+      return div({
+        onclick() {},
+      });
+    } else if (state.step == 1) {
+      return div();
+    } else if (state.step == 3) {
+      return div({
+        onfoo() {},
+        onbar() {},
+      });
+    }
+  };
+  app.init(Main);
+  expect(app.html()).toBe('');
+  console.warn = jest.genMockFn();
+  app.update('step', 1);
+  expect(root.textContent).toBe('');
+  app.update('step', 2);
+  expect(root.textContent).toBe('');
+  app.update('step', 3);
+});
+
+test('remove attribute', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0 || state.step == 2) {
+      return div({
+        foo: 'foo',
+      });
+    } else if (state.step == 1) {
+      return div();
+    } else if (state.step == 3) {
+      return div({
+        bar: 'bar',
+      });
+    }
+  };
+  app.init(Main);
+  expect(root.innerHTML).toBe('<div aff-serial="21" foo="foo"></div>');
+  app.update('step', 1);
+  expect(root.textContent).toBe('');
+  app.update('step', 2);
+  expect(root.innerHTML).toBe('<div aff-serial="21" foo="foo"></div>');
+  app.update('step', 3);
+});
+
+test('change class', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return div('.foo');
+    } else if (state.step == 1) {
+      return div('.bar');
+    }
+  };
+  app.init(Main);
+  expect(root.innerHTML).toBe('<div aff-serial="22" class="foo"></div>');
+  app.update('step', 1);
+  expect(root.innerHTML).toBe('<div aff-serial="22" class="bar"></div>');
+});
+
+test('change style', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0 || state.step == 2 || state.step == 5) {
+      return div({
+        style: {
+          border: '1px solid red',
+        },
+      });
+    } else if (state.step == 1) {
+      return div();
+    } else if (state.step == 3) {
+      return div({
+        style: {
+          marginTop: '3px',
+        },
+      });
+    } else if (state.step == 4) {
+      return div({
+        style: `
+          margin-top: 5px;
+        `,
+      });
+    }
+  };
+  app.init(Main);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+  app.update('step', 1);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style=""></div>');
+  app.update('step', 2);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+  app.update('step', 3);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style="margin-top: 3px;"></div>');
+  app.update('step', 4);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style="margin-top: 5px;"></div>');
+  app.update('step', 5);
+  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+});
+
+test('change id', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return div('#foo');
+    } else if (state.step == 1) {
+      return div('#bar');
+    }
+  }
+  app.init(Main);
+  expect(root.innerHTML).toBe('<div aff-serial="24" id="foo"></div>');
+  app.update('step', 1);
+  expect(root.innerHTML).toBe('<div aff-serial="24" id="bar"></div>');
+});
+
+test('change innerHTML', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return div({
+        innerHTML: 'foo',
+      });
+    } else if (state.step == 1) {
+      return div({
+        innerHTML: 'bar',
+      });
+    }
+  }
+  app.init(Main);
+  expect(root.innerHTML).toBe('<div aff-serial="25">foo</div>');
+  app.update('step', 1);
+  expect(root.innerHTML).toBe('<div aff-serial="25">bar</div>');
 });

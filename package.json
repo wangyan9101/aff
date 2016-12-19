@@ -4,7 +4,7 @@
   "description": "minimal, pure js frontend framework",
   "scripts": {
     "test": "jest --coverage",
-    "dev": "jest --watch",
+    "dev": "jest --watch --coverage",
     "build": "gulp"
   },
   "keywords": [],
