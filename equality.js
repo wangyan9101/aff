@@ -1,6 +1,6 @@
 import {object_has_tag} from './object'
 
-export function equal(a, b, aVer = 0, bVer = 0) {
+export function equal(a, b, aVer, bVer) {
   let type_a = typeof a;
   let type_b = typeof b;
   if (type_a !== type_b) {
@@ -15,6 +15,9 @@ export function equal(a, b, aVer = 0, bVer = 0) {
     }
     // versioned objects
     if (a.hasOwnProperty('__aff_version') && b.hasOwnProperty('__aff_version') && a === b) {
+      if (!aVer || !bVer) {
+        return false;
+      }
       return aVer === bVer;
     }
     // deep compare

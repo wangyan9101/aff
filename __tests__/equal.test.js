@@ -55,5 +55,5 @@ test('versioned equality', () => {
   let v3 = obj.__aff_version;
   expect(equal(obj, obj, v1, v3)).toBe(false);
   expect(equal(obj, obj, v2, v3)).toBe(false);
-  expect(equal(obj, obj)).toBe(true);
+  expect(equal(obj, obj)).toBe(false);
 });
