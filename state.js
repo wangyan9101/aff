@@ -1,5 +1,3 @@
-import {object_add_tag, object_has_tag} from './object'
-
 // operations 
 
 export let $inc = {

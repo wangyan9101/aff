@@ -1,5 +1,4 @@
 import {$map, $inc, $dec, $any, $merge, $filter, $reduce, versioned_update} from '../state'
-import {object_has_tag} from '../object'
 
 function test_merge(fn) {
   let obj = {

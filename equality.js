@@ -1,5 +1,3 @@
-import {object_has_tag} from './object'
-
 export function equal(a, b, a_version_info, b_version_info) {
   let type_a = typeof a;
   let type_b = typeof b;
@@ -9,10 +7,6 @@ export function equal(a, b, a_version_info, b_version_info) {
   if (type_a === 'undefined') {
     return true;
   } else if (type_a === 'object') {
-    // frozen objects, compare by reference
-    if (object_has_tag(a, 'frozen') && object_has_tag(b, 'frozen')) {
-      return a === b;
-    }
     // versioned objects
     if (a.hasOwnProperty('__aff_version') && b.hasOwnProperty('__aff_version') && a === b) {
       if (!a_version_info || !b_version_info) {
