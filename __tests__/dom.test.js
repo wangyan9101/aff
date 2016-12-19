@@ -59,3 +59,20 @@ test('online', () => {
   }, 'foobar'));
   expect(called).toBe(true);
 });
+
+test('null thunk', () => {
+  let thunk = t(() => {});
+  expect(() => {
+    thunk.getNode();
+  }).toThrowError('constructor of anonymous returned null value,[object Object]');
+
+});
+
+test('render error', () => {
+  console.warn = jest.genMockFn();
+  let thunk = t(() => {
+    return {};
+  });
+  let elem = thunk.toElement();
+  expect(elem.textContent).toBe('RENDER ERROR: cannot render [object Object]');
+});
