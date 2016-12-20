@@ -46,7 +46,7 @@ export class App {
       this.updated = false;
       this.update_count = 0;
       this.patch_tick++;
-      [this.element, this.node] = this.patch(this.element, this.node_func(this.state, this.update.bind(this)), this.node);
+      [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
       while (this.updated) {
         if (this.update_count > 4096) { // infinite loop
           throw['infinite loop in updating', args];
@@ -54,7 +54,7 @@ export class App {
         // if state is updated when patching, patch again
         this.updated = false;
         this.patch_tick++;
-        [this.element, this.node] = this.patch(this.element, this.node_func(this.state, this.update.bind(this)), this.node);
+        [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
       }
       this.patching = false;
       this.update_count = 0;
