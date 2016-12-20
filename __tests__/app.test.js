@@ -490,3 +490,30 @@ test('bench update', () => {
   }
   console.timeEnd(`update ${n}`);
 });
+
+test('test state not change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let state = {
+    foo: {
+      foo: 'foo',
+    },
+    bar: {
+      bar: 'bar',
+    },
+  };
+  let app = new App(state, element);
+  app.init((state) => {
+    return div([
+      t('foo', (state) => {
+        return div(state.foo);
+      }, state.foo),
+      t('bar', (state) => {
+        return div(state.bar);
+      }, state.bar),
+    ]);
+  });
+  app.update('foo', 'foo', 'FOO');
+  expect(root.textContent).toBe('FOObar');
+});

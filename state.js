@@ -20,16 +20,16 @@ export let $merge = (spec) => ({
   __is_op: true,
   op: 'merge',
   args: [spec],
-  apply(obj) {
+  apply(obj, app) {
     if (Array.isArray(spec)) {
-      return versioned_update(obj, ...spec);
+      return app.update_state(obj, ...spec);
     }
     for (let key in spec) {
       let o2 = spec[key];
       if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {
-        obj = versioned_update(obj, key, $merge(o2));
+        obj = app.update_state(obj, key, $merge(o2));
       } else {
-        obj = versioned_update(obj, key, o2);
+        obj = app.update_state(obj, key, o2);
       }
     }
     return obj;
@@ -128,63 +128,5 @@ export function pick(obj, ...keys) {
     }
   } else {
     throw['not pickable', obj, keys];
-  }
-}
-
-// versioned update
-
-export function versionize(obj) {
-  if (typeof obj !== 'object') {
-    return
-  }
-  if (obj.hasOwnProperty('__aff_version')) {
-    obj.__aff_version++;
-    return
-  }
-  for (let k in obj) {
-    versionize(obj[k]);
-  }
-  Object.defineProperty(obj, '__aff_version', {
-    configurable: false,
-    enumerable: false,
-    writable: true,
-    value: 1,
-  });
-}
-
-export function versioned_update(obj, ...args) {
-  if (args.length === 0) {
-    return obj;
-  } else if (args.length === 1) {
-    let ret;
-    if (typeof args[0] === 'object' && args[0].__is_op) {
-      ret = args[0].apply(obj);
-    } else {
-      ret = args[0];
-    }
-    versionize(ret);
-    return ret;
-  } else {
-    if (!obj) {
-      obj = {};
-    }
-    if (typeof obj === 'object') {
-      if (!obj.hasOwnProperty('__aff_version')) {
-        versionize(obj);
-      }
-      let key = args[0];
-      for (let k in obj) {
-        if (k == key || key === $any) {
-          obj[k] = versioned_update(obj[k], ...args.slice(1));
-        }
-      }
-      if (key !== $any && !(key in obj)) {
-        obj[key] = versioned_update(undefined, ...args.slice(1));
-      }
-      obj.__aff_version++;
-      return obj;
-    } else {
-      throw['bad update path', obj, args];
-    }
   }
 }

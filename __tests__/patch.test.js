@@ -46,11 +46,12 @@ test('thunk func call optimize', () => {
   expect(n).toBe(2);
 });
 
-test('patch invalid node', () => {
+test('not patchable', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
+  let app = new App(element);
   console.warn = jest.genMockFn();
-  patch(element, null);
-  expect(root.textContent).toBe('RENDER ERROR: cannot render null');
+  app.patch(element, false);
+  expect(root.textContent).toBe('RENDER ERROR: cannot render false');
 });

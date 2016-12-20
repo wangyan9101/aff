@@ -1,5 +1,5 @@
 import {equal} from '../equality'
-import {versioned_update, versionize} from '../state'
+import {versioned_update} from '../state'
 
 test('test equal', () => {
   expect(equal(1, true)).toBe(false);
@@ -43,17 +43,3 @@ test('test equal', () => {
   expect(equal(f1, f1)).toBe(true);
 });
 
-test('versioned equality', () => {
-  let obj = { foo: 1 };
-  versionize(obj);
-  let v1 = obj.__aff_version;
-  versioned_update(obj, 'foo', 42);
-  let v2 = obj.__aff_version;
-  expect(equal(obj, obj, v1, v2)).toBe(false);
-  expect(equal(obj, obj, v1, v1)).toBe(true);
-  versioned_update(obj, 'foo', 1);
-  let v3 = obj.__aff_version;
-  expect(equal(obj, obj, v1, v3)).toBe(false);
-  expect(equal(obj, obj, v2, v3)).toBe(false);
-  expect(equal(obj, obj)).toBe(false);
-});

@@ -1,32 +1,7 @@
-import {patch, t, e, setAfterThunkCallFunc} from '../dom'
+import {t, e, setAfterThunkCallFunc} from '../dom'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../state'
-
-test('dom', () => {
-  let root = document.createElement('div');
-  let el = document.createElement('div');
-  root.appendChild(el);
-
-  let n = 0;
-  function get_node() {
-    n++;
-    return div([
-      p('yes ' + n),
-      none,
-    ]);
-  }
-
-  let node;
-
-  [el, node] = patch(el, get_node(), node);
-  [el, node] = patch(el, get_node(), node);
-  [el, node] = patch(el, get_node(), node);
-
-  expect(el.getAttribute('aff-serial')).toBe('1');
-
-  //TODO more tests
-});
 
 test('thunk this', () => {
   let _this;
@@ -38,27 +13,22 @@ test('thunk this', () => {
   expect(_this === thunk).toBe(true);
 });
 
-test('thunk element', () => {
-  let f = (state) => div(state.foo);
-  let thunk1 = t(f, { foo: 'yes' });
-  let element = thunk1.toElement();
-  let thunk2 = t(f, { foo: 'no' });
-  let new_element, node = patch(element, thunk2, thunk1);
-  expect(thunk2.element !== null).toBe(true);
-});
-
 test('oncreated', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
 
   let called = false;
-  patch(element, div({
-    oncreated: (elem) => {
-      called = true;
-      expect(elem.innerHTML).toBe('foobar');
-    },
-  }, 'foobar'));
+  let app = new App(
+    element,
+    {},
+    () => div({
+      oncreated: (elem) => {
+        called = true;
+        expect(elem.innerHTML).toBe('foobar');
+      },
+    }, 'foobar'),
+  );
   expect(called).toBe(true);
 });
 
@@ -103,13 +73,13 @@ test('attr change', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="7"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="7"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
   app.update('step', 2);
-  expect(root.innerHTML).toBe('<div aff-serial="7" foo="true"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="3" foo="true"></div>');
   app.update('step', 3);
-  expect(root.innerHTML).toBe('<div aff-serial="7"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
 });
 
 test('nested thunk', () => {
@@ -134,9 +104,9 @@ test('nested thunk', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="8"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="4"></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="8" id="foo"></div>');
+  expect(root.innerHTML).toBe('<div aff-serial="4" id="foo"></div>');
 });
 
 test('bad argument to e', () => {
