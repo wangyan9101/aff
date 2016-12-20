@@ -12,6 +12,7 @@ export function equal(a, b, a_version_info, b_version_info) {
       if (!a_version_info || !b_version_info) {
         return false;
       }
+      /* TODO
       let va = a_version_info;
       if (typeof va === 'object') {
         va = va.version;
@@ -21,6 +22,8 @@ export function equal(a, b, a_version_info, b_version_info) {
         vb = vb.version;
       }
       return va === vb;
+      */
+      return a_version_info === b_version_info;
     }
     // deep compare
     let keys_a = Object.keys(a);

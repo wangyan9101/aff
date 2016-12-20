@@ -72,13 +72,13 @@ class Node {
           this.events[key] = properties[key];
         }
       } else {
-        if (
-          (this.tag == 'input' && key == 'checked' && !properties[key])
-          || (this.tag == 'input' && key == 'disabled' && !properties[key])
-          || (this.tag == 'button' && key == 'disabled' && !properties[key])
-        ) {
-          continue
-        }
+        //if (
+        //  (this.tag == 'input' && key == 'checked' && !properties[key])
+        //  || (this.tag == 'input' && key == 'disabled' && !properties[key])
+        //  || (this.tag == 'button' && key == 'disabled' && !properties[key])
+        //) {
+        //  continue
+        //}
         // attributes
         this.attributes = this.attributes || {};
         this.attributes[key] = properties[key];
@@ -145,8 +145,15 @@ class Node {
     if (this.attributes !== null) {
       for (let key in this.attributes) {
         let value = this.attributes[key];
-        if (value !== undefined && value !== null) {
+        let valueType = typeof value;
+        if (valueType == 'string' || valueType == 'number') {
           element.setAttribute(key, value);
+        } else if (valueType == 'boolean') {
+          if (value) {
+            element.setAttribute(key, true);
+          } else {
+            element.removeAttribute(key);
+          }
         }
       }
     }
@@ -200,7 +207,7 @@ let element_set_listener = (() => {
 
 // thunk helper
 export function t(...args) {
-  if (args.length === 0) {
+  if (args.length == 0) {
     throw['no arguments to t()'];
   }
 
@@ -282,7 +289,6 @@ export function e(...args) {
 
     default:
       throw['bad argument at index 1 to e()', args];
-      break
     }
 
     break
@@ -303,7 +309,6 @@ export function e(...args) {
       break
     default:
       throw['bad argument at index 1 to e()', args];
-      break
     }
 
     arg2 = args[2];
@@ -327,7 +332,6 @@ export function e(...args) {
 
   default:
     throw['bad arguments to e()', args];
-    break
   }
 
   return node;
@@ -471,8 +475,15 @@ export function patch(last_element, node, last_node) {
     for (let key in node.attributes) {
       if (node.attributes[key] != last_node.attributes[key]) {
         let value = node.attributes[key];
-        if (value !== undefined && value !== null) {
+        let valueType = typeof value;
+        if (valueType == 'string' || valueType == 'number') {
           last_element.setAttribute(key, value);
+        } else if (valueType == 'boolean') {
+          if (value) {
+            last_element.setAttribute(key, true);
+          } else {
+            last_element.removeAttribute(key);
+          }
         }
       }
     }
@@ -486,8 +497,15 @@ export function patch(last_element, node, last_node) {
     // set new attributes only
     for (let key in node.attributes) {
       let value = node.attributes[key];
-      if (value !== undefined && value !== null) {
+      let valueType = typeof value;
+      if (valueType == 'string' || valueType == 'number') {
         last_element.setAttribute(key, value);
+      } else if (valueType == 'boolean') {
+        if (value) {
+          last_element.setAttribute(key, true);
+        } else {
+          last_element.removeAttribute(key);
+        }
       }
     }
   } else if (last_node.attributes) {

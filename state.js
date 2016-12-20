@@ -87,7 +87,7 @@ export let $filter = (fn) => ({
       } else {
         let o2 = {};
         for (let k in obj) {
-          if (fn(obj[k], k)) {
+          if (fn(obj[k], k) === true) {
             o2[k] = obj[k];
           }
         }
@@ -157,7 +157,7 @@ export function versioned_update(obj, ...args) {
     return obj;
   } else if (args.length === 1) {
     let ret;
-    if (args[0].__is_op) {
+    if (typeof args[0] === 'object' && args[0].__is_op) {
       ret = args[0].apply(obj);
     } else {
       ret = args[0];
@@ -167,9 +167,11 @@ export function versioned_update(obj, ...args) {
   } else {
     if (!obj) {
       obj = {};
-      versionize(obj);
     }
     if (typeof obj === 'object') {
+      if (!obj.hasOwnProperty('__aff_version')) {
+        versionize(obj);
+      }
       let key = args[0];
       for (let k in obj) {
         if (k == key || key === $any) {
@@ -185,5 +187,4 @@ export function versioned_update(obj, ...args) {
       throw['bad update path', obj, args];
     }
   }
-  throw['no here'];
 }

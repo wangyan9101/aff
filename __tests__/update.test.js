@@ -1,4 +1,4 @@
-import {$map, $inc, $dec, $any, $merge, $filter, $reduce, versioned_update} from '../state'
+import {$map, $inc, $dec, $any, $merge, $filter, $reduce, versioned_update, versionize, $del_at, $push} from '../state'
 
 function test_merge(fn) {
   let obj = {
@@ -72,3 +72,38 @@ test('versioned_update merge', () => {
   test_merge(versioned_update);
 });
 
+test('filter', () => {
+  let obj = {
+    foo: 42,
+    bar: 90,
+  };
+  versionize(obj);
+  obj = versioned_update(obj, 'foo', $filter(v => v * 2));
+  expect(obj.foo).toBe(84);
+  obj = versioned_update(obj, $filter((v, k) => {
+    return k != 'foo';
+  }));
+  expect(obj.foo).toBe(undefined);
+  expect(obj.bar).toBe(90);
+});
+
+test('del_at', () => {
+  let obj = [1, 2, 3, 4, 5];
+  versionize(obj);
+  obj = versioned_update(obj, $del_at(0));
+  expect(obj.length).toBe(4);
+});
+
+test('push', () => {
+  let obj = [];
+  versionize(obj);
+  obj = versioned_update(obj, $push('foo'));
+  expect(obj.length).toBe(1);
+  expect(obj[0]).toBe('foo');
+});
+
+test('bad update path', () => {
+  expect(() => {
+    versioned_update(true, true, true, true);
+  }).toThrowError('bad update path,true,true,true,true');
+});

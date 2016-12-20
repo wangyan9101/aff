@@ -1,5 +1,5 @@
 import {App} from '../app'
-import {div, none} from '../tags'
+import {div, none, input, style} from '../tags'
 import { t } from '../dom'
 
 test('app', () => {
@@ -355,4 +355,95 @@ test('change innerHTML', () => {
   expect(root.innerHTML).toBe('<div aff-serial="25">foo</div>');
   app.update('step', 1);
   expect(root.innerHTML).toBe('<div aff-serial="25">bar</div>');
+});
+
+test('checked', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return input('#foo', {
+        type: 'checkbox',
+        checked: true,
+      });
+    } else if (state.step == 1) {
+      return input('#foo', {
+        type: 'checkbox',
+        checked: false,
+      });
+    }
+  }
+  app.init(Main);
+  expect(root.querySelector('#foo').checked).toBe(true);
+  app.update('step', 1);
+  expect(root.querySelector('#foo').checked).toBe(false);
+});
+
+test('checked', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0 || state.step == 3) {
+      return input('#foo', {
+        type: 'checkbox',
+        checked: false,
+      });
+    } else if (state.step == 1) {
+      return input('#foo', {
+        type: 'checkbox',
+        checked: true,
+      });
+    } else if (state.step == 2) {
+      return input('#foo', {
+        type: 'checked',
+      });
+    }
+  }
+  app.init(Main);
+  expect(root.querySelector('#foo').checked).toBe(false);
+  app.update('step', 1);
+  expect(root.querySelector('#foo').checked).toBe(true);
+  app.update('step', 2);
+  expect(root.querySelector('#foo').checked).toBe(false);
+  app.update('step', 3);
+  expect(root.querySelector('#foo').checked).toBe(false);
+});
+
+test('style change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    if (state.step == 0) {
+      return style(``);
+    } else if (state.step == 1) {
+      return style({
+        scoped: true,
+      });
+    }
+  }
+  app.init(Main);
+  expect(root.innerHTML).toBe('<style aff-serial="32"></style>');
+  app.update('step', 1);
+  expect(root.innerHTML).toBe('<style aff-serial="32" scoped="true"></style>');
 });

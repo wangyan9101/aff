@@ -15,3 +15,9 @@ test('pick', () => {
   expect(pick({foo: false, bar: 'bar'}, 'bar')).toEqual({bar: 'bar'});
   expect(pick({foo: false, bar: 'bar'})).toEqual({});
 });
+
+test('pick false', () => {
+  expect(() => {
+    pick(false, 'foo');
+  }).toThrowError('not pickable');
+});
