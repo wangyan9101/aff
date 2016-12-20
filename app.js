@@ -20,7 +20,6 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
-        this.setup_state_object(this.state);
       }
     }
     if (this.element && this.node_func && this.state) {
@@ -84,10 +83,12 @@ export class App {
       let ret;
       if (typeof args[0] === 'object' && args[0].__is_op) {
         ret = args[0].apply(obj, this);
+        if (ret === obj) {
+          this.setup_state_object(ret);
+        }
       } else {
         ret = args[0];
       }
-      this.setup_state_object(ret);
       return ret;
     } else {
       if (!obj) {
@@ -115,15 +116,9 @@ export class App {
   }
 
   setup_state_object(obj) {
-    if (typeof obj !== 'object') {
-      return
-    }
     if (obj.hasOwnProperty('__aff_tick')) {
       obj.__aff_tick = this.patch_tick + 1;
       return
-    }
-    for (let k in obj) {
-      this.setup_state_object(obj[k]);
     }
     Object.defineProperty(obj, '__aff_tick', {
       configurable: false,

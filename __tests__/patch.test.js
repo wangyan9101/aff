@@ -4,6 +4,7 @@ import { t, patch } from '../dom'
 import {
   setBeforeThunkCallFunc,
 } from '../dom'
+import { $push } from '../state'
 
 test('thunk func call optimize', () => {
   let n = 0;
@@ -54,4 +55,34 @@ test('not patchable', () => {
   console.warn = jest.genMockFn();
   app.patch(element, false);
   expect(root.textContent).toBe('RENDER ERROR: cannot render false');
+});
+
+test('update push', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      foos: [1, 2, 3],
+      bars: [2, 3, 4],
+    },
+  );
+  let Main = (state) => {
+    return div([
+      t('foos', (foos) => {
+        return div(foos.map(foo => div(foo)));
+      }, state.foos),
+      t('bars', (bars) => {
+        return div(bars.map(bar => div(bar)));
+      }, state.bars),
+    ]);
+  };
+  app.init(Main);
+  app.update('foos', $push(4));
+  expect(root.textContent).toBe('1234234');
+  app.update('foos', $push(4));
+  expect(root.textContent).toBe('12344234');
+  app.update('bars', $push(4));
+  expect(root.textContent).toBe('123442344');
 });
