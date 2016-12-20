@@ -14,8 +14,7 @@ class Node {
     this.text = null;
     this.innerHTML = null;
     this.element = null;
-
-    this.online_callback = null;
+    this.hooks = null;
   }
 
   set_selector(selector) {
@@ -64,8 +63,10 @@ class Node {
         // styles
         this.style = properties.style;
       } else if (/^on/.test(key) && typeof properties[key] === 'function') {
-        if (key == 'online') {
-          this.online_callback = properties[key];
+        if (key == 'oncreated' || key == 'oncreate') {
+          this.hooks = this.hooks || {};
+          this.hooks.created = this.hooks.created || [];
+          this.hooks.created.push(properties[key]);
         } else {
           // events
           this.events = this.events || {};
@@ -165,8 +166,10 @@ class Node {
       }
     }
     this.element = element;
-    if (this.online_callback) {
-      this.online_callback(element);
+    if (this.hooks && this.hooks.created) {
+      this.hooks.created.forEach(fn => {
+        fn(element);
+      });
     }
     return element;
   }

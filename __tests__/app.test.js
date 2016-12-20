@@ -471,3 +471,22 @@ test('infinite update', () => {
     app.init(Main);
   }).toThrowError('infinite loop in updating,__initialized,true');
 });
+
+test('bench update', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+    (state) => div(state.step),
+  );
+  let n = 10000;
+  console.time(`update ${n}`);
+  for (let i = 0; i < n; i++) {
+    app.update('step', $inc);
+  }
+  console.timeEnd(`update ${n}`);
+});

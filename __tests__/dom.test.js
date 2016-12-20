@@ -46,14 +46,14 @@ test('thunk element', () => {
   expect(thunk2.element !== null).toBe(true);
 });
 
-test('online', () => {
+test('oncreated', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
 
   let called = false;
   patch(element, div({
-    online: (elem) => {
+    oncreated: (elem) => {
       called = true;
       expect(elem.innerHTML).toBe('foobar');
     },
@@ -169,7 +169,7 @@ test('click', () => {
         onclick() {
           clicked = true;
         },
-        online(elem) {
+        oncreated(elem) {
           let ev = new MouseEvent('click');
           elem.dispatchEvent(ev);
         },
@@ -189,7 +189,7 @@ test('bad children', () => {
     {},
     () => {
       return div({
-        online(elem) {
+        oncreated(elem) {
           expect(elem.textContent).toBe('RENDER ERROR: cannot render null');
           checked = true;
         },

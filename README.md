@@ -793,7 +793,7 @@ style(`
 
 在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
 在事件回调外、组件函数内，是拿不到元素的引用的，因为这个时候还没有创建元素。
-可以添加 online 事件回调，会在元素创建后调用。
+可以添加 oncreated 事件回调，会在元素创建后调用。
 
 ```js
 import { App } from 'affjs/app'
@@ -816,8 +816,8 @@ let Main = (state) => {
         app.update('count', $inc);
       },
       // 元素创建回调
-      online(elem) {
-        console.log('online', elem);
+      oncreated(elem) {
+        console.log('oncreated', elem);
       },
     }, `CLICK ME ${state.count}`),
   ]);
@@ -828,7 +828,7 @@ app.init(Main);
 
 ![element](images/element.png)
 
-注意到 online 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发online事件。
+注意到 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
 这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
 
 <h2 id="11">路由</h2>
