@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/reusee/aff.svg?branch=master)](https://travis-ci.org/reusee/aff)
+[![codecov](https://codecov.io/gh/reusee/aff/branch/master/graph/badge.svg)](https://codecov.io/gh/reusee/aff)
 
 ## 目录
 
