@@ -1,6 +1,7 @@
 import {App} from '../app'
 import {div, none, input, style} from '../tags'
 import { t } from '../dom'
+import { $inc } from '../state'
 
 test('app', () => {
   let root = document.createElement('div');
@@ -446,4 +447,27 @@ test('style change', () => {
   expect(root.innerHTML).toBe('<style aff-serial="32"></style>');
   app.update('step', 1);
   expect(root.innerHTML).toBe('<style aff-serial="32" scoped="true"></style>');
+});
+
+test('infinite update', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let Main = (state) => {
+    return div([
+      t('bad', (state) => {
+        app.update('step', $inc);
+        return none;
+      }, state),
+    ]);
+  };
+  expect(() => {
+    app.init(Main);
+  }).toThrowError('infinite loop in updating,__initialized,true');
 });
