@@ -67,6 +67,10 @@ class Node {
           this.hooks = this.hooks || {};
           this.hooks.created = this.hooks.created || [];
           this.hooks.created.push(properties[key]);
+        } else if (key == 'onpatch' || key == 'onpatched') {
+          this.hooks = this.hooks || {};
+          this.hooks.patched = this.hooks.patched || [];
+          this.hooks.patched.push(properties[key]);
         } else {
           // events
           this.events = this.events || {};
@@ -167,9 +171,7 @@ class Node {
     }
     this.element = element;
     if (this.hooks && this.hooks.created) {
-      this.hooks.created.forEach(fn => {
-        fn(element);
-      });
+      this.hooks.created.forEach(fn => fn(element));
     }
     return element;
   }
@@ -587,6 +589,10 @@ export function patch(last_element, node, last_node) {
   node.element = last_element;
   if (thunk) {
     thunk.element = last_element;
+  }
+
+  if (node.hooks && node.hooks.patched) {
+    node.hooks.patched.forEach(fn => fn(last_element));
   }
 
   return [last_element, node];

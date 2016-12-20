@@ -1,6 +1,7 @@
 import {patch, t, e, setAfterThunkCallFunc} from '../dom'
 import {div, p, none} from '../tags'
 import {App} from '../app'
+import {$inc} from '../state'
 
 test('dom', () => {
   let root = document.createElement('div');
@@ -239,4 +240,34 @@ test('children change', () => {
 
 test('cover setAfterThunkCallFunc', () => {
   setAfterThunkCallFunc(() => {});
+});
+
+test('onpatch', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let n = 0;
+  let Main = (state) => {
+    return div([
+      t((state) => {
+        return div({
+          onpatch() {
+            n++
+          },
+        }, state.step);
+      }, state),
+    ]);
+  };
+  app.init(Main);
+  expect(n).toBe(0);
+  app.update('step', $inc);
+  expect(n).toBe(1);
+  app.update('step', $inc);
+  expect(n).toBe(2);
 });
