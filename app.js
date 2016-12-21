@@ -427,8 +427,8 @@ class Path {
     return this.app.get(this.path);
   }
 
-  set(value) {
-    return this.app.update(...this.path, value);
+  update(...args) {
+    return this.app.update(...this.path, ...args);
   }
 
   sub(...args) {
