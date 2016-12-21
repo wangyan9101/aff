@@ -1,5 +1,4 @@
 import { $any } from './state'
-import {equal} from './equality'
 
 export class App {
   constructor(...args) {
@@ -86,6 +85,14 @@ export class App {
       obj = obj[path[i]];
     }
     return obj;
+  }
+
+  path(...args) {
+    let path = args;
+    if (path.length == 1 && Array.isArray(path[0])) {
+      path = path[0];
+    }
+    return new Path(this, path);
   }
 
   update_state(obj, ...args) {
@@ -407,6 +414,29 @@ export class App {
     }
 
     return [last_element, node];
+  }
+}
+
+class Path {
+  constructor(app, path) {
+    this.app = app;
+    this.path = path;
+  }
+
+  get() {
+    return this.app.get(this.path);
+  }
+
+  set(value) {
+    return this.app.update(...this.path, value);
+  }
+
+  sub(...args) {
+    let subpath = args;
+    if (subpath.length == 1 && Array.isArray(subpath[0])) {
+      subpath = subpath[0];
+    }
+    return new Path(this.app, [...this.path, ...subpath]);
   }
 }
 
@@ -797,3 +827,33 @@ let element_set_listener = (() => {
   }
 })();
 
+export function equal(a, b) {
+  if (a === b) {
+    return true;
+  }
+  let type_a = typeof a;
+  let type_b = typeof b;
+  if (type_a !== type_b) {
+    return false;
+  }
+  if (type_a === 'object') {
+    if (a instanceof Path && b instanceof Path) {
+      return equal(a.get(), b.get());
+    }
+    // deep compare
+    let keys_a = Object.keys(a);
+    let keys_b = Object.keys(b);
+    if (keys_a.length != keys_b.length) {
+      return false;
+    }
+    for (let key in a) {
+      if (!equal(a[key], b[key])) {
+        return false;
+      }
+    }
+    return true;
+  } else if (type_a === 'function') {
+    return a.name === b.name;
+  }
+  return false;
+}

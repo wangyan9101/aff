@@ -1,4 +1,4 @@
-import {equal} from '../equality'
+import {equal} from '../app'
 import {versioned_update} from '../state'
 
 test('test equal', () => {
