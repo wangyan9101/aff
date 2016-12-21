@@ -1,6 +1,7 @@
-import { table, tbody, tr, td, div, span } from '../../tags'
-import { t } from '../../dom'
-import { App } from '../../app'
+import {
+  App, t,
+  table, tbody, tr, td, div, span ,
+} from '../../index'
 
 function DBMon(state) {
   return div([

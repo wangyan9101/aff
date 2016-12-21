@@ -1,10 +1,9 @@
 import {
+  App, t,
   section, header, footer, h1, p, a, div, span,
   input, none, ul, li, button, strong, label,
-} from '../../tags'
-import { t } from '../../dom'
-import { App } from '../../app'
-import { $any, $push, $merge, $del_at, $filter } from '../../state'
+  $any, $push, $merge, $del_at, $filter,
+} from '../../index'
 
 let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   todos: [

@@ -97,12 +97,12 @@ index.html 入口 html
 
 main.js 入口js
 ```js
-import { patch } from 'affjs/dom'
-import { p } from 'affjs/tags'
+import { App, p } from 'affjs'
 
-patch(
+new App(
   document.getElementById('app'),
-  p('Hello, world!')
+  {},
+  () => p('Hello, world!'),
 );
 ```
 
@@ -116,9 +116,11 @@ patch(
 <h2 id="2">基本用例：霓虹helloworld</h2>
 
 ```js
-import { App } from 'affjs/app'
-import { div, span } from 'affjs/tags'
-import { $inc } from 'affjs/state'
+import {
+  App,
+  div, span,
+  $inc,
+} from 'affjs'
 
 let colors = [
   '#f26522',
@@ -180,7 +182,7 @@ setInterval(() => {
 <h2 id="3">html标签表示法一览</h2>
 
 ```js
-import { div, p, button } from 'affjs/tags'
+import { div, p, button } from 'affjs'
 
 // 单个空标签
 // <div></div>
@@ -316,10 +318,11 @@ div('#main', {
 thunk 用 t 函数构造。第一个参数是组件函数，其余参数是将会传入组件函数的参数，示例：
 
 ```js
-import { App } from 'affjs/app'
-import { button, div, img } from 'affjs/tags'
-import { t } from 'affjs/dom'
-import { $inc, $dec } from 'affjs/state'
+import {
+  App, t,
+  button, div, img,
+  $inc, $dec,
+} from 'affjs'
 
 // 一个按钮组件，文字和点击事件都作为参数，从外部传入
 let Button = (text, onclick) => button({
@@ -468,10 +471,12 @@ App的update方法的参数先是要改变的状态的路径，最后是改变�
 各种操作的示例如下：
 
 ```js
-import { $inc, $dec, $merge, $push, $reduce, 
-  $del_at, $map, $filter, $any } from 'affjs/state'
-import { App } from 'affjs/app'
-import { div } from 'affjs/tags'
+import {
+  App,
+  div,
+  $inc, $dec, $merge, $push, $reduce, 
+  $del_at, $map, $filter, $any,
+} from 'affjs'
 
 let app = new App(
   document.getElementById('app'),
@@ -564,9 +569,11 @@ assert(app.state.array[1] == 84);
 可以添加 oncreated 事件回调，会在元素创建后调用。
 
 ```js
-import { App } from 'affjs/app'
-import { div, button } from 'affjs/tags'
-import { $inc } from 'affjs/state'
+import {
+  App,
+  div, button,
+  $inc,
+} from 'affjs'
 
 let app = new App(
   document.getElementById('app'),
@@ -607,9 +614,11 @@ app.init(Main);
 例如打印更新前后的状态，和更新操作的内容。这样可以方便地跟踪状态的变化，debug时可能用得上。
 
 ```js
-import { App } from 'affjs/app'
-import { div } from 'affjs/tags'
-import { $map } from 'affjs/state'
+import {
+  App,
+  div,
+  $map,
+} from 'affjs'
 
 class StateTracingApp extends App {
   constructor(...args) {
@@ -822,7 +831,7 @@ div({
 标签的style属性是没办法表达伪类的。可以在旁边用一个style标签写：
 
 ```js
-import { div, style } from 'affjs/tags'
+import { div, style } from 'affjs'
 
 div('.foo')
 style(`
@@ -844,9 +853,11 @@ style(`
 以 riot-router 为例：
 
 ```js
-import { App } from 'affjs/app'
-import { div, a } from 'affjs/tags'
-import { $merge } from 'affjs/state'
+import {
+  App,
+  div, a,
+  $merge,
+} from 'affjs'
 import route from 'riot-route';
 
 // 子组件
