@@ -139,28 +139,36 @@ export class App {
     let thunk;
     if (node instanceof Thunk) {
       thunk = node;
-      if (
-        last_thunk 
-        && thunk.name == last_thunk.name 
-        && thunk.args.length === last_thunk.args.length
-        && thunk.args.reduce((acc, cur, i) => {
-          let last = last_thunk.args[i];
-          if (cur === last && cur.hasOwnProperty('__aff_tick')) { // object belong to state tree
-            if (cur.__aff_tick === this.patch_tick) { // should update
-              return acc && false;
-            } else { // not changed
-              return acc && true;
-            }
-          }
-          return acc && equal(cur, last);
-        }, true)
-      ) {
+    }
+
+    let should_update = false;
+    if (!thunk || !last_thunk) {
+      should_update = true;
+    } else if (thunk.name != last_thunk.name) {
+      should_update = true;
+    } else if (thunk.args.length != last_thunk.args.length) {
+      should_update = true;
+    } else {
+      for (let i = 0; i < thunk.args.length; i++) {
+        let arg = thunk.args[i];
+        let last_arg = last_thunk.args[i];
+        if (arg === last_arg && typeof arg === 'object' && arg.__aff_tick === this.patch_tick) {
+          should_update = true;
+          break
+        } else if (!equal(arg, last_arg)) {
+          should_update = true;
+          break
+        }
+      }
+    }
+
+    if (thunk) {
+      if (last_thunk && !should_update) {
         // reuse node
         thunk.node = last_thunk.node;
         // reuse element
         thunk.element = last_thunk.element;
       }
-      // get node of thunk
       node = thunk.getNode();
     }
 
