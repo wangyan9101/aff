@@ -4,21 +4,24 @@
 ## 目录
 
 * [框架理念](#0)
-* [环境安装配置](#1)
-* [基本用例：霓虹 Hello, world](#2)
-* [html标签表示法一览](#3)
-* [组件](#4)
-* [App类](#5)
-* [状态更新操作一览](#6)
-* [跟踪状态变化](#7)
-* [默认及衍生状态](#9)
-* [内联CSS样式](#16)
-* [引用浏览器元素](#10)
-* [路由](#11)
-* [异步竞态问题](#12)
-* [应对状态树结构变更](#13)
-* [例子：todomvc 和 dbmon](#15)
-* [小技巧集锦](#14)
+* 基本使用
+	* [环境安装配置](#1)
+	* [基本用例：霓虹 Hello, world](#2)
+	* [html标签表示法一览](#3)
+	* [组件](#4)
+	* [App类](#5)
+	* [状态更新操作一览](#6)
+	* [引用浏览器元素](#10)
+* 进阶话题
+	* [跟踪状态变化](#7)
+	* [默认及衍生状态](#9)
+	* [内联CSS样式](#16)
+	* [路由](#11)
+	* [异步竞态问题](#12)
+	* [应对状态树结构变更](#13)
+* 其他
+	* [例子：todomvc 和 dbmon](#15)
+	* [小技巧集锦](#14)
 
 <h2 id="0">框架理念</h2>
 
@@ -554,6 +557,50 @@ assert(app.state.array[0] == 84);
 assert(app.state.array[1] == 84);
 ```
 
+<h2 id="10">引用浏览器元素</h2>
+
+在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
+在事件回调外、组件函数内，是拿不到元素的引用的，因为这个时候还没有创建元素。
+可以添加 oncreated 事件回调，会在元素创建后调用。
+
+```js
+import { App } from 'affjs/app'
+import { div, button } from 'affjs/tags'
+import { $inc } from 'affjs/state'
+
+let app = new App(
+  document.getElementById('app'),
+  {
+    count: 0,
+  },
+);
+
+let Main = (state) => {
+  return div([
+    button({
+      // 点击回调
+      onclick() {
+        console.log('onclick', this.element);
+        app.update('count', $inc);
+      },
+      // 元素创建回调
+      oncreated(elem) {
+        console.log('oncreated', elem);
+      },
+    }, `CLICK ME ${state.count}`),
+  ]);
+};
+
+app.init(Main);
+```
+
+![element](images/element.png)
+
+注意到 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
+这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
+
+如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
+
 <h2 id="7">跟踪状态变化</h2>
 
 继承App类，并覆盖beforeUpdate和afterUpdate方法，可以在状态更新前后，执行一些动作。
@@ -789,50 +836,6 @@ style(`
 注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
 
 同理，上面的样式代码里也可以使用 ${} 插入任意的字符串。
-
-<h2 id="10">引用浏览器元素</h2>
-
-在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
-在事件回调外、组件函数内，是拿不到元素的引用的，因为这个时候还没有创建元素。
-可以添加 oncreated 事件回调，会在元素创建后调用。
-
-```js
-import { App } from 'affjs/app'
-import { div, button } from 'affjs/tags'
-import { $inc } from 'affjs/state'
-
-let app = new App(
-  document.getElementById('app'),
-  {
-    count: 0,
-  },
-);
-
-let Main = (state) => {
-  return div([
-    button({
-      // 点击回调
-      onclick() {
-        console.log('onclick', this.element);
-        app.update('count', $inc);
-      },
-      // 元素创建回调
-      oncreated(elem) {
-        console.log('oncreated', elem);
-      },
-    }, `CLICK ME ${state.count}`),
-  ]);
-};
-
-app.init(Main);
-```
-
-![element](images/element.png)
-
-注意到 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
-这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
-
-如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
 
 <h2 id="11">路由</h2>
 
