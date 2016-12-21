@@ -22,14 +22,14 @@ export let $merge = (spec) => ({
   args: [spec],
   apply(obj, app) {
     if (Array.isArray(spec)) {
-      return app.update_state(obj, ...spec);
+      return app.update_state(app.dirty_tree, obj, ...spec);
     }
     for (let key in spec) {
       let o2 = spec[key];
       if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {
-        obj = app.update_state(obj, key, $merge(o2));
+        obj = app.update_state(app.dirty_tree, obj, key, $merge(o2));
       } else {
-        obj = app.update_state(obj, key, o2);
+        obj = app.update_state(app.dirty_tree, obj, key, o2);
       }
     }
     return obj;

@@ -1,5 +1,7 @@
 import { App, equal } from '../app'
 import { $any } from '../state'
+import { t } from '../dom'
+import { div } from '../tags'
 
 test('path', () => {
   let init_state = {
@@ -34,4 +36,27 @@ test('path', () => {
   path = app.path('foo');
   path.update($any, $any, $any, 'FOO');
   expect(app.state.foo.bar.baz.qux).toBe('FOO');
+});
+
+test('path change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      foo: 42,
+    },
+  );
+  let main = (state) => {
+    return div([
+      t('foo', (path) => {
+        return div('#foo', path.get());
+      }, app.path('foo')),
+    ]);
+  };
+  app.init(main);
+  expect(root.querySelector('#foo').textContent).toBe('42');
+  app.update('foo', 8);
+  expect(root.querySelector('#foo').textContent).toBe('8');
 });

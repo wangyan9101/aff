@@ -5,6 +5,8 @@ export class App {
     this.node = null;
     this.patching = false;
     this.patch_tick = 1;
+    this.dirty_tree = {};
+    this.next_dirty_tree = {};
     this.updated = false;
     this.update_count = 0;
     this.init(...args);
@@ -34,7 +36,7 @@ export class App {
 
   update(...args) {
     this.beforeUpdate(this.state, ...args);
-    this.state = this.update_state(this.state, ...args);
+    this.state = this.update_state(this.next_dirty_tree, this.state, ...args);
     this.afterUpdate(this.state, ...args);
     if (!this.element) {
       return this.state;
@@ -44,6 +46,8 @@ export class App {
       this.updated = false;
       this.update_count = 0;
       this.patch_tick++;
+      this.dirty_tree = this.next_dirty_tree;
+      this.next_dirty_tree = {};
       [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
       while (this.updated) {
         if (this.update_count > 4096) { // infinite loop
@@ -52,6 +56,8 @@ export class App {
         // if state is updated when patching, patch again
         this.updated = false;
         this.patch_tick++;
+        this.dirty_tree = this.next_dirty_tree;
+        this.next_dirty_tree = {};
         [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
       }
       this.patching = false;
@@ -95,7 +101,7 @@ export class App {
     return new Path(this, path);
   }
 
-  update_state(obj, ...args) {
+  update_state(dirty_tree, obj, ...args) {
     if (args.length === 0) {
       return obj;
     } else if (args.length === 1) {
@@ -120,11 +126,17 @@ export class App {
         let key = args[0];
         for (let k in obj) {
           if (k == key || key === $any) {
-            obj[k] = this.update_state(obj[k], ...args.slice(1));
+            if (!dirty_tree[k]) {
+              dirty_tree[k] = {};
+            }
+            obj[k] = this.update_state(dirty_tree[k], obj[k], ...args.slice(1));
           }
         }
         if (key !== $any && !(key in obj)) {
-          obj[key] = this.update_state(undefined, ...args.slice(1));
+          if (!dirty_tree[key]) {
+            dirty_tree[key] = {};
+          }
+          obj[key] = this.update_state(dirty_tree[key], undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patch_tick + 1;
         return obj;
@@ -171,7 +183,16 @@ export class App {
       for (let i = 0; i < thunk.args.length; i++) {
         let arg = thunk.args[i];
         let last_arg = last_thunk.args[i];
-        if (arg === last_arg && typeof arg === 'object' && arg.__aff_tick === this.patch_tick) {
+        if (arg instanceof Path) {
+          let path_index = 0;
+          while (path_index < arg.path.length && this.dirty_tree[arg.path[path_index]]) {
+            path_index++;
+          }
+          if (path_index == arg.path.length) { // dirty
+            should_update = true;
+            break;
+          }
+        } else if (arg === last_arg && typeof arg === 'object' && arg.__aff_tick === this.patch_tick) {
           should_update = true;
           break
         } else if (!equal(arg, last_arg)) {
