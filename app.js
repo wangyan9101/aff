@@ -407,10 +407,6 @@ class Thunk {
     this.name = null;
   }
 
-  setArgs(args) {
-    this.args = args;
-  }
-
   toElement() {
     if (!this.element) {
       let node = this.getNode();
@@ -450,12 +446,12 @@ export function t(...args) {
   case 'string': // named thunk
     thunk.name = args[0];
     thunk.func = args[1];
-    thunk.setArgs(args.slice(2));
+    thunk.args = args.slice(2);
     break
 
   case 'function':
     thunk.func = args[0];
-    thunk.setArgs(args.slice(1));
+    thunk.args = args.slice(1);
     thunk.name = thunk.func.name;
     break
   }
@@ -473,7 +469,7 @@ export function e(...args) {
   if (typeof args[0] === 'function') {
     let thunk = new Thunk();
     thunk.func = args[0];
-    thunk.setArgs(args.slice(1));
+    thunk.args = args.slice(1);
     // set thunk name from function, may be undefined
     thunk.name = thunk.func.name; 
     return thunk;
