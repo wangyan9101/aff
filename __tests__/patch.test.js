@@ -86,3 +86,34 @@ test('update push', () => {
   app.update('bars', $push(4));
   expect(root.textContent).toBe('123442344');
 });
+
+test('thunk name chagne', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      step: 0,
+    },
+  );
+  let main = (state) => {
+    return div([
+      (() => {
+        if (state.step == 0) {
+          return t('foo', () => div('foo'));
+        } else if (state.step == 1) {
+          return t('bar', () => div('bar'));
+        } else if (state.step == 2) {
+          return t('bar', () => div('BAR'), 'bar');
+        }
+      })(),
+    ]);
+  };
+  app.init(main);
+  expect(root.textContent).toBe('foo');
+  app.update('step', 1);
+  expect(root.textContent).toBe('bar');
+  app.update('step', 2);
+  expect(root.textContent).toBe('BAR');
+});
