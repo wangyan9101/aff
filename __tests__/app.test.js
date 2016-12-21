@@ -469,7 +469,7 @@ test('infinite update', () => {
   };
   expect(() => {
     app.init(Main);
-  }).toThrowError('infinite loop in updating,__initialized,true');
+  }).toThrowError('infinite loop in updating,');
 });
 
 test('bench update', () => {
@@ -535,4 +535,18 @@ test('app get state', () => {
   expect(app.get(['foo']) === init_state.foo).toBe(true);
   expect(app.get(['foo', 'bar']) === init_state.foo.bar).toBe(true);
   expect(app.get(['foo', 'bar', 'baz']) === init_state.foo.bar.baz).toBe(true);
+});
+
+test('init state 0', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    0,
+    (n) => {
+      return div(n + 10);
+    },
+  );
+  expect(root.textContent).toBe('10');
 });

@@ -23,8 +23,8 @@ export class App {
         this.state = arg;
       }
     }
-    if (this.element && this.node_func && this.state) {
-      this.update('__initialized', true);
+    if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
+      this.update();
     }
   }
 
