@@ -185,7 +185,9 @@ export class App {
         let last_arg = last_thunk.args[i];
         if (arg instanceof Path) {
           let path_index = 0;
-          while (path_index < arg.path.length && this.dirty_tree[arg.path[path_index]]) {
+          let obj = this.dirty_tree;
+          while (path_index < arg.path.length && obj && obj[arg.path[path_index]]) {
+            obj = obj[arg.path[path_index]];
             path_index++;
           }
           if (path_index == arg.path.length) { // dirty

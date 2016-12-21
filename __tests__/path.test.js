@@ -46,6 +46,11 @@ test('path change', () => {
     element,
     {
       foo: 42,
+      bar: {
+        baz: {
+          qux: 'QUX',
+        },
+      },
     },
   );
   let main = (state) => {
@@ -53,10 +58,16 @@ test('path change', () => {
       t('foo', (path) => {
         return div('#foo', path.get());
       }, app.path('foo')),
+      t('bar', (path) => {
+        return div('#bar', path.get());
+      }, app.path('bar', 'baz', 'qux')),
     ]);
   };
   app.init(main);
   expect(root.querySelector('#foo').textContent).toBe('42');
   app.update('foo', 8);
   expect(root.querySelector('#foo').textContent).toBe('8');
+  expect(root.querySelector('#bar').textContent).toBe('QUX');
+  app.update('bar', 'baz', 'qux', 'qux');
+  expect(root.querySelector('#bar').textContent).toBe('qux');
 });
