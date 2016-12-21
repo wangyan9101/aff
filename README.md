@@ -973,9 +973,9 @@ todomvc: https://github.com/reusee/aff/blob/master/examples/todomvc/main.js
 
 dbmon: https://github.com/reusee/aff/blob/master/examples/dbmon/main.js
 
-和其他框架对比，代码行数属于比较少的一类，而且也不需要特别做什么优化。dbmon 的 fps，和优化版的 react、vue 处在同一水平。
+和其他框架对比，代码行数属于比较少的一类，而且也不需要特别做什么优化。dbmon 的 fps，比优化版的 react、vue 都要高。
 
-dbmon 在线demo：http://reusee.github.io/dbmon/index.html
+dbmon 在线demo：<a href="http://reusee.github.io/dbmon/index.html" target="_blank">http://reusee.github.io/dbmon/index.html</a>
 
 <h2 id="14">小技巧集锦</h2>
 
