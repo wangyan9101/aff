@@ -517,3 +517,22 @@ test('test state not change', () => {
   app.update('foo', 'foo', 'FOO');
   expect(root.textContent).toBe('FOObar');
 });
+
+test('app get state', () => {
+  let init_state = {
+    foo: {
+      bar: {
+        baz: {
+          qux: 'QUX',
+        },
+      },
+    },
+  };
+  let app = new App(init_state);
+  expect(app.get('foo') === init_state.foo).toBe(true);
+  expect(app.get('foo', 'bar') === init_state.foo.bar).toBe(true);
+  expect(app.get('foo', 'bar', 'baz') === init_state.foo.bar.baz).toBe(true);
+  expect(app.get(['foo']) === init_state.foo).toBe(true);
+  expect(app.get(['foo', 'bar']) === init_state.foo.bar).toBe(true);
+  expect(app.get(['foo', 'bar', 'baz']) === init_state.foo.bar.baz).toBe(true);
+});

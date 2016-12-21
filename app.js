@@ -76,6 +76,18 @@ export class App {
     return this.element.innerHTML;
   }
 
+  get(...args) {
+    let path = args;
+    if (path.length == 1 && Array.isArray(path[0])) {
+      path = path[0];
+    }
+    let obj = this.state;
+    for (let i = 0; i < path.length; i++) {
+      obj = obj[path[i]];
+    }
+    return obj;
+  }
+
   update_state(obj, ...args) {
     if (args.length === 0) {
       return obj;
