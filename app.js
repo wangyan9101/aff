@@ -93,12 +93,12 @@ export class App {
     return obj;
   }
 
-  path(...args) {
+  sub(...args) {
     let path = args;
     if (path.length == 1 && Array.isArray(path[0])) {
       path = path[0];
     }
-    return new Path(this, path);
+    return new SubState(this, path);
   }
 
   update_state(dirty_tree, obj, ...args) {
@@ -183,7 +183,7 @@ export class App {
       for (let i = 0; i < thunk.args.length; i++) {
         let arg = thunk.args[i];
         let last_arg = last_thunk.args[i];
-        if (arg instanceof Path) {
+        if (arg instanceof SubState) {
           let path_index = 0;
           let obj = this.dirty_tree;
           while (path_index < arg.path.length && obj && obj[arg.path[path_index]]) {
@@ -440,7 +440,7 @@ export class App {
   }
 }
 
-class Path {
+class SubState {
   constructor(app, path) {
     this.app = app;
     this.path = path;
@@ -459,7 +459,7 @@ class Path {
     if (subpath.length == 1 && Array.isArray(subpath[0])) {
       subpath = subpath[0];
     }
-    return new Path(this.app, [...this.path, ...subpath]);
+    return new SubState(this.app, [...this.path, ...subpath]);
   }
 }
 
@@ -860,7 +860,7 @@ export function equal(a, b) {
     return false;
   }
   if (type_a === 'object') {
-    if (a instanceof Path && b instanceof Path) {
+    if (a instanceof SubState && b instanceof SubState) {
       return equal(a.get(), b.get());
     }
     // deep compare
