@@ -783,7 +783,7 @@ class Node {
       element = document.createTextNode(this.text);
     } else {
       // use cached element
-      if (app && app.element_cache[this.tag].length > 0) {
+      if (app && app.element_cache[this.tag] && app.element_cache[this.tag].length > 0) {
         let [element, last_node] = app.element_cache[this.tag].pop();
         return app.patch_node(element, this, last_node)[0];
       }
