@@ -188,16 +188,27 @@ export class App {
       for (let i = 0; i < thunk.args.length; i++) {
         let arg = thunk.args[i];
         let last_arg = last_thunk.args[i];
-        if (arg instanceof SubState) {
-          let path_index = 0;
-          let obj = this.dirty_tree;
-          while (path_index < arg.path.length && obj && obj[arg.path[path_index]]) {
-            obj = obj[arg.path[path_index]];
-            path_index++;
+        if (arg instanceof SubState && last_arg instanceof SubState) {
+          let max_dirty_index = -1;
+          let max_same_index = -1;
+          let dirty_tree = this.dirty_tree;
+          let last_path = last_arg.path;
+          for (let index = 0; index < arg.path.length; index++) {
+            if (dirty_tree && dirty_tree[arg.path[index]]) {
+              dirty_tree = dirty_tree[arg.path[index]];
+              max_dirty_index = index;
+            }
+            if (last_path[index] == arg.path[index]) {
+              max_same_index = index;
+            }
           }
-          if (path_index == arg.path.length) { // dirty
+          if (max_dirty_index == arg.path.length - 1) {
             should_update = true;
-            break;
+            break
+          }
+          if (max_same_index != arg.path.length - 1) {
+            should_update = true;
+            break
           }
         } else if (arg === last_arg && typeof arg === 'object' && arg.__aff_tick === this.patch_tick) {
           should_update = true;

@@ -550,3 +550,34 @@ test('init state 0', () => {
   );
   expect(root.textContent).toBe('10');
 });
+
+test('substate path change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let call = false;
+  let app = new App(
+    element,
+    {
+      n: 0,
+      m: 0,
+    },
+  );
+  app.init((state) => {
+      return div([
+        (() => {
+          if (state.n == 0) {
+            return t('foo', () => { return none }, app.sub('n'));
+          } else if (state.n == 1) {
+            return t('foo', () => {
+              call = true;
+              return none;
+            }, app.sub('m')); // path changed
+          }
+        })(),
+      ]);
+    },
+  );
+  app.update('n', 1);
+  expect(call).toBe(true);
+});
