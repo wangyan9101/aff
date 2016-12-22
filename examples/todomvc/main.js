@@ -39,7 +39,7 @@ function Header() {
       placeholder: "What needs to be done?",
       autofocus: 'autofocus',
       onkeypress(e) {
-        if (e.keyCode == 13) {
+        if (e.keyCode == 13 && this.element.value.length > 0) {
           app.update('todos', $push({
             completed: false,
             content: this.element.value,
