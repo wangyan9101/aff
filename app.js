@@ -1,4 +1,5 @@
 import { $any } from './state'
+import { all_tags } from './all_tags'
 
 export class App {
   constructor(...args) {
@@ -9,6 +10,10 @@ export class App {
     this.next_dirty_tree = {};
     this.updated = false;
     this.update_count = 0;
+    this.element_cache = {};
+    for (let i = 0; i < all_tags.length; i++) {
+      this.element_cache[all_tags[i]] = [];
+    }
     this.init(...args);
   }
 
@@ -231,21 +236,21 @@ export class App {
       (!last_node)
       // different tag, no way to patch
       || (node.tag != last_node.tag)
-      // hacks for input / button with checked / disabled changed
-      || (node.tag == 'input'  && node.attributes && last_node.attributes && node.attributes['checked'] != last_node.attributes['checked'])
-      || (node.tag == 'input'  && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
-      || (node.tag == 'button' && node.attributes && last_node.attributes && node.attributes['disabled'] != last_node.attributes['disabled'])
     ) {
       let element;
       if (!node || !node.toElement) {
         element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
         console.warn('cannot render', node);
       } else {
-        element = node.toElement();
+        element = node.toElement(undefined, this);
       }
       // insert new then remove old
-      last_element.parentNode.insertBefore(element, last_element);
-      last_element.parentNode.removeChild(last_element);
+      if (last_element.parentNode) {
+        last_element.parentNode.insertBefore(element, last_element);
+        last_element.parentNode.removeChild(last_element);
+      }
+      // cache last_element
+      this.element_cache[last_element.tagName.toLowerCase()].push([last_element, last_node]);
 
       return [element, node];
     }
@@ -324,11 +329,14 @@ export class App {
           let valueType = typeof value;
           if (valueType == 'string' || valueType == 'number') {
             last_element.setAttribute(key, value);
+            last_element[key] = value
           } else if (valueType == 'boolean') {
             if (value) {
               last_element.setAttribute(key, true);
+              last_element[key] = true;
             } else {
               last_element.removeAttribute(key);
+              last_element[key] = false;
             }
           }
         }
@@ -337,6 +345,7 @@ export class App {
       for (let key in last_node.attributes) {
         if (!(key in node.attributes)) {
           last_element.removeAttribute(key);
+          last_element[key] = undefined;
         }
       }
     } else if (node.attributes) {
@@ -346,11 +355,14 @@ export class App {
         let valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
           last_element.setAttribute(key, value);
+          last_element[key] = value;
         } else if (valueType == 'boolean') {
           if (value) {
             last_element.setAttribute(key, true);
+            last_element[key] = true;
           } else {
             last_element.removeAttribute(key);
+            last_element[key] = false;
           }
         }
       }
@@ -358,6 +370,7 @@ export class App {
       // no attributes in new Node, delete all
       for (let key in last_node.attributes) {
         last_element.removeAttribute(key);
+        last_element[key] = undefined;
       }
     }
     
@@ -402,7 +415,7 @@ export class App {
           last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
           console.warn('cannot render', node.children[i]);
         } else {
-          last_element.appendChild(node.children[i].toElement());
+          last_element.appendChild(node.children[i].toElement(undefined, this));
         }
       }
       // delete
@@ -416,7 +429,7 @@ export class App {
           last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
           console.warn('cannot render', node.children[i]);
         } else {
-          last_element.appendChild(node.children[i].toElement());
+          last_element.appendChild(node.children[i].toElement(undefined, this));
         }
       }
     } else if (last_node.children) {
@@ -472,14 +485,14 @@ class Thunk {
     this.name = null;
   }
 
-  toElement() {
+  toElement(_name, app) {
     if (!this.element) {
       let node = this.getNode();
       if (!node || !node.toElement) {
         this.element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
         console.warn('cannot render', node);
       } else {
-        this.element = node.toElement(this.name);
+        this.element = node.toElement(this.name, app);
       }
     }
     return this.element;
@@ -747,11 +760,16 @@ class Node {
     }
   }
 
-  toElement(name) {
+  toElement(name, app) {
     let element;
     if (this.text !== null) {
       element = document.createTextNode(this.text);
     } else {
+      // use cached element
+      if (app && app.element_cache[this.tag].length > 0) {
+        let [element, last_node] = app.element_cache[this.tag].pop();
+        return app.patch(element, this, last_node)[0];
+      }
       element = document.createElement(this.tag);
       element.setAttribute('aff-serial', element_serial);
       if (name) {
@@ -783,7 +801,7 @@ class Node {
           element.appendChild(warning(`RENDER ERROR: cannot render ${this.children[i]}`).toElement());
           console.warn('cannot render', this.children[i]);
         } else {
-          element.appendChild(this.children[i].toElement());
+          element.appendChild(this.children[i].toElement(undefined, app));
         }
       }
     }
@@ -793,11 +811,14 @@ class Node {
         let valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
           element.setAttribute(key, value);
+          element[key] = value;
         } else if (valueType == 'boolean') {
           if (value) {
             element.setAttribute(key, true);
+            element[key] = true;
           } else {
             element.removeAttribute(key);
+            element[key] = false;
           }
         }
       }

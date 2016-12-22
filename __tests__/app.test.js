@@ -444,9 +444,9 @@ test('style change', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<style aff-serial="32"></style>');
+  expect(root.innerHTML).toBe('<style aff-serial="28"></style>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<style aff-serial="32" scoped="true"></style>');
+  expect(root.innerHTML).toBe('<style aff-serial="28" scoped="true"></style>');
 });
 
 test('infinite update', () => {
