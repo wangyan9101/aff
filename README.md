@@ -698,6 +698,8 @@ let Main = (state) => {
 app.init(Main);
 ```
 
+![checkbox](images/checkbox.gif)
+
 上面实现的，有点类似某些框架提供的双向绑定功能。传入一个状态的路径，组件既会反映该状态，也会改变该状态。
 
 实际上所有 input 标签都应该这样，在 onclick、onchange 等事件发生的时候，将元素的 checked、text 等属性同步入状态树，而不应依赖浏览器元素自己维护的值。
