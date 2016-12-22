@@ -12,6 +12,7 @@
 	* [App类](#5)
 	* [状态更新操作一览](#6)
 	* [引用浏览器元素](#10)
+	* [子状态](#child-state)
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
@@ -612,6 +613,101 @@ app.init(Main);
 这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
 
 如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
+
+<h2 id="child-state">子状态</h2>
+
+App对象可以用 sub 方法得到一个 SubState 类型的对象。这个对象类似一个指针，指向状态树中的某个子状态。例如：
+
+```js
+import { App } from 'affjs'
+
+let app = new App(
+	// 初始状态
+  {
+    foo: {
+      bar: {
+        baz: {
+          qux: 'QUX',
+        },
+      },
+    },
+  },
+);
+
+// 一个子状态，指向 app.state.foo.bar.baz
+let baz_state = app.sub('foo', 'bar', 'baz');
+```
+
+SubState 对象有三个方法：
+
+* get()，返回指向的状态值，例如 `baz_state.get()` 返回 `{ qux: 'QUX' }` 这个对象
+* update(...args)，和 App.update 方法类似，只是以指向的路径为起始路径，例如 `baz_state.update('qux', 'QUUX')` 相当于 `app.update('foo', 'bar', 'baz', 'qux', 'QUUX')`
+* sub(...args)，和 App.sub 方法类似，返回其自身的子状态，例如 `baz_state.sub('qux')` 相当于 `app.sub('foo', 'bar', 'baz', 'qux')`
+
+SubState 对象作为组件函数的参数使用时，框架是有特别处理的。
+SubState 对象的路径变化，或者路径指向的状态的变化，会被组件函数观察到并作出反应。
+
+如果一个组件需要同时观察并且更新某个状态，并且需要可复用，就可以使用子状态作为组件函数的参数。
+
+例如一个 checkbox 组件，既要观察某个状态作为 checked 状态，也要在用户点击的时候，更新该状态，就可以这样实现：
+
+```js
+import { App, input, div, p } from 'affjs'
+
+let app = new App(
+  document.getElementById('app'),
+  {
+    // checkbox 各自的状态
+    aChecked: false,
+    bChecked: false,
+    cChecked: false,
+  },
+);
+
+let Checkbox = (state) => {
+  return input({
+    type: 'checkbox',
+    // 读传入的子状态，并对应地设置
+    checked: state.get(),
+    // 点击时，更新该子状态为元素的 checked 状态
+    onclick() {
+      state.update(this.element.checked);
+    },
+  });
+}
+
+let Main = (state) => {
+  return div([
+    p([
+      // checkbox 组件
+      Checkbox(app.sub('aChecked')),
+      // 显示状态，会跟随上面的组件的状态
+      state.aChecked ? 'checked' : 'unchecked',
+    ]),
+    p([
+      Checkbox(app.sub('bChecked')),
+      state.bChecked ? 'checked' : 'unchecked',
+    ]),
+    p([
+      Checkbox(app.sub('cChecked')),
+      state.cChecked ? 'checked' : 'unchecked',
+    ]),
+  ]);
+};
+
+app.init(Main);
+```
+
+上面实现的，有点类似某些框架提供的双向绑定功能。传入一个状态的路径，组件既会反映该状态，也会改变该状态。
+
+实际上所有 input 标签都应该这样，在 onclick、onchange 等事件发生的时候，将元素的 checked、text 等属性同步入状态树，而不应依赖浏览器元素自己维护的值。
+因为重渲染的时候，可能会渲染到其他的元素上，如果状态树里没有保存这些属性，就有可能丢失了。
+
+同步入状态树后，如果其他组件需要用到或者观察这些值，就比较方便。
+例如搜索框，一边输入，一边提示关键词或者搜索结果，那输入框组件，和显示结果的组件，就通过状态树进行协作。
+
+另外，可以看到 Checkbox 组件并没有使用 app 这个变量去更新状态树，而是使用传入的 SubState 参数。
+这是实现可复用的组件的重要手段，后面会有专门的一节讲组件的可复用性。
 
 <h2 id="7">跟踪状态变化</h2>
 
