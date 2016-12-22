@@ -250,11 +250,17 @@ export class App {
         last_element.parentNode.removeChild(last_element);
       }
       // cache last_element
-      this.element_cache[last_element.tagName.toLowerCase()].push([last_element, last_node]);
+      if (last_node) {
+        this.element_cache[last_element.tagName.toLowerCase()].push([last_element, last_node]);
+      }
 
       return [element, node];
     }
 
+    return this.patch_node(last_element, node, last_node, thunk);
+  }
+
+  patch_node(last_element, node, last_node, thunk) {
     // innerHTML
     if (node.innerHTML != last_node.innerHTML) {
       last_element.innerHTML = node.innerHTML;
@@ -768,7 +774,7 @@ class Node {
       // use cached element
       if (app && app.element_cache[this.tag].length > 0) {
         let [element, last_node] = app.element_cache[this.tag].pop();
-        return app.patch(element, this, last_node)[0];
+        return app.patch_node(element, this, last_node)[0];
       }
       element = document.createElement(this.tag);
       element.setAttribute('aff-serial', element_serial);

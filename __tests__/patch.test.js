@@ -1,5 +1,5 @@
 import { App } from '../app'
-import { div } from '../tags'
+import { div, p, none } from '../tags'
 import { t, patch } from '../dom'
 import {
   setBeforeThunkCallFunc,
@@ -116,4 +116,41 @@ test('thunk name chagne', () => {
   expect(root.textContent).toBe('bar');
   app.update('step', 2);
   expect(root.textContent).toBe('BAR');
+});
+
+test('element reuse', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    0,
+    (step) => {
+      if (step % 2 == 0) {
+        let list = [];
+        for (let i = 0; i < step; i++) {
+          list.push(none);
+        }
+        return div(list);
+      } else {
+        let list = [];
+        for (let i = 0; i < step; i++) {
+          list.push(p(i));
+        }
+        return div(list);
+      }
+    },
+  );
+  for (let i = 0; i < 32; i++) {
+    app.update(i);
+    if (i % 2 == 0) {
+      expect(root.textContent).toBe('');
+    } else {
+      let s = '';
+      for (let n = 0; n < i; n++) {
+        s += n;
+      }
+      expect(root.textContent).toBe(s);
+    }
+  }
 });
