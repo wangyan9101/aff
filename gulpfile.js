@@ -1,5 +1,6 @@
 var gulp = require('gulp');
 var webpack = require('gulp-webpack');
+var wp = require('webpack');
 
 gulp.task('default', function() {
   gulp.src('index.js')
@@ -44,6 +45,14 @@ gulp.task('default', function() {
             },
           ],
         },
+        plugins: [
+          new wp.optimize.UglifyJsPlugin({
+            compress: {
+              warnings: false,
+            },
+          }),
+          new wp.optimize.OccurrenceOrderPlugin(),
+        ],
       }))
       .pipe(gulp.dest('examples/' + what));
   });
