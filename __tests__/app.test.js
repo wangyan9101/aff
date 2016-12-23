@@ -230,11 +230,11 @@ test('remove attribute', () => {
     }
   };
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="21" foo="foo"></div>');
+  expect(root.innerHTML).toBe('<div foo="foo"></div>');
   app.update('step', 1);
   expect(root.textContent).toBe('');
   app.update('step', 2);
-  expect(root.innerHTML).toBe('<div aff-serial="21" foo="foo"></div>');
+  expect(root.innerHTML).toBe('<div foo="foo"></div>');
   app.update('step', 3);
 });
 
@@ -256,9 +256,9 @@ test('change class', () => {
     }
   };
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="22" class="foo"></div>');
+  expect(root.innerHTML).toBe('<div class="foo"></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="22" class="bar"></div>');
+  expect(root.innerHTML).toBe('<div class="bar"></div>');
 });
 
 test('change style', () => {
@@ -295,17 +295,17 @@ test('change style', () => {
     }
   };
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+  expect(root.innerHTML).toBe('<div style="border: 1px solid red;"></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style=""></div>');
+  expect(root.innerHTML).toBe('<div style=""></div>');
   app.update('step', 2);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+  expect(root.innerHTML).toBe('<div style="border: 1px solid red;"></div>');
   app.update('step', 3);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style="margin-top: 3px;"></div>');
+  expect(root.innerHTML).toBe('<div style="margin-top: 3px;"></div>');
   app.update('step', 4);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style="margin-top: 5px;"></div>');
+  expect(root.innerHTML).toBe('<div style="margin-top: 5px;"></div>');
   app.update('step', 5);
-  expect(root.innerHTML).toBe('<div aff-serial="23" style="border: 1px solid red;"></div>');
+  expect(root.innerHTML).toBe('<div style="border: 1px solid red;"></div>');
 });
 
 test('change id', () => {
@@ -326,9 +326,9 @@ test('change id', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="24" id="foo"></div>');
+  expect(root.innerHTML).toBe('<div id="foo"></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="24" id="bar"></div>');
+  expect(root.innerHTML).toBe('<div id="bar"></div>');
 });
 
 test('change innerHTML', () => {
@@ -353,9 +353,9 @@ test('change innerHTML', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="25">foo</div>');
+  expect(root.innerHTML).toBe('<div>foo</div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="25">bar</div>');
+  expect(root.innerHTML).toBe('<div>bar</div>');
 });
 
 test('checked', () => {
@@ -444,9 +444,9 @@ test('style change', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<style aff-serial="28"></style>');
+  expect(root.innerHTML).toBe('<style></style>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<style aff-serial="28" scoped="true"></style>');
+  expect(root.innerHTML).toBe('<style scoped="true"></style>');
 });
 
 test('infinite update', () => {

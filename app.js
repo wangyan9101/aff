@@ -670,8 +670,6 @@ export let setAfterThunkCallFunc = (fn) => {
   afterThunkCallFunc = fn;
 }
 
-let element_serial = 1;
-
 class Node {
   constructor() {
     this.tag = null;
@@ -788,11 +786,9 @@ class Node {
         return app.patch_node(element, this, last_node)[0];
       }
       element = document.createElement(this.tag);
-      element.setAttribute('aff-serial', element_serial);
       if (name) {
         element.setAttribute('aff-name', name);
       }
-      element_serial++;
     }
     if (this.innerHTML !== null) {
       element.innerHTML = this.innerHTML;

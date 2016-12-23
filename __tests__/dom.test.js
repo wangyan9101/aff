@@ -73,13 +73,17 @@ test('attr change', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
+  let e = app.element;
+  expect(root.innerHTML).toBe('<div></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
+  expect(root.innerHTML).toBe('<div></div>');
+  expect(app.element === e);
   app.update('step', 2);
-  expect(root.innerHTML).toBe('<div aff-serial="3" foo="true"></div>');
+  expect(root.innerHTML).toBe('<div foo="true"></div>');
+  expect(app.element === e);
   app.update('step', 3);
-  expect(root.innerHTML).toBe('<div aff-serial="3"></div>');
+  expect(root.innerHTML).toBe('<div></div>');
+  expect(app.element === e);
 });
 
 test('nested thunk', () => {
@@ -104,9 +108,11 @@ test('nested thunk', () => {
     }
   }
   app.init(Main);
-  expect(root.innerHTML).toBe('<div aff-serial="4"></div>');
+  let e = app.element;
+  expect(root.innerHTML).toBe('<div></div>');
   app.update('step', 1);
-  expect(root.innerHTML).toBe('<div aff-serial="4" id="foo"></div>');
+  expect(root.innerHTML).toBe('<div id="foo"></div>');
+  expect(app.element === e);
 });
 
 test('bad argument to e', () => {
