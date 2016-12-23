@@ -786,9 +786,6 @@ class Node {
         return app.patch_node(element, this, last_node)[0];
       }
       element = document.createElement(this.tag);
-      if (name) {
-        element.setAttribute('aff-name', name);
-      }
     }
     if (this.innerHTML !== null) {
       element.innerHTML = this.innerHTML;
