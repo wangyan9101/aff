@@ -497,7 +497,7 @@ class Thunk {
   constructor() {
     this.func = null;
     this.args = null;
-    this.node = null;
+    this.node = undefined;
     this.element = null;
     this.name = null;
   }
@@ -520,8 +520,11 @@ class Thunk {
       beforeThunkCallFunc(this);
       this.node = this.func.apply(this, this.args);
       afterThunkCallFunc(this);
+      if (this.node === null) {
+        this.node = e('div', { style: { display: 'none' }});
+      }
       if (!this.node) {
-        throw['constructor of ' + (this.name || 'anonymous') + ' returned null value', this];
+        throw['constructor of ' + (this.name || 'anonymous') + ' returned undefined value', this];
       }
     }
     return this.node;

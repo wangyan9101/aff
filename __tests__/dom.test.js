@@ -32,11 +32,11 @@ test('oncreated', () => {
   expect(called).toBe(true);
 });
 
-test('null thunk', () => {
+test('undefined thunk', () => {
   let thunk = t(() => {});
   expect(() => {
     thunk.getNode();
-  }).toThrowError('constructor of anonymous returned null value,[object Object]');
+  }).toThrowError('constructor of anonymous returned undefined value,[object Object]');
 
 });
 
@@ -246,4 +246,20 @@ test('onpatch', () => {
   expect(n).toBe(1);
   app.update('step', $inc);
   expect(n).toBe(2);
+});
+
+test('null dom', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  new App(
+    element,
+    {},
+    (state) => {
+      return div([
+        t(() => null),
+      ]);
+    },
+  );
+  expect(root.innerHTML).toBe('<div><div style="display: none;"></div></div>');
 });
