@@ -1,5 +1,7 @@
+[![npm version](https://badge.fury.io/js/affjs.svg)](https://badge.fury.io/js/affjs)
 [![Build Status](https://travis-ci.org/reusee/aff.svg?branch=master)](https://travis-ci.org/reusee/aff)
 [![codecov](https://codecov.io/gh/reusee/aff/branch/master/graph/badge.svg)](https://codecov.io/gh/reusee/aff)
+[![Coverage Status](https://coveralls.io/repos/github/reusee/aff/badge.svg?branch=master)](https://coveralls.io/github/reusee/aff?branch=master)
 
 ## 目录
 
@@ -464,6 +466,9 @@ App类常用的方法及属性如下：
 在需要状态共享的场合，可以用观察者模式（后面衍生状态一节会讲到）推送状态到一个全局管理者，然后再分发给各个子app。
 
 也可以在现有的页面里用这个框架实现一个或者几个部件。一个app只侵入一个浏览器元素，和页面其他部分不会有任何交集。
+
+将App实例的 element 元素赋值为非真值，可以使它停止渲染：`app.element = undefined`。
+后续仍然可以用 app.init 渲染到某一元素上。
 
 <h2 id="6">状态更新操作一览</h2>
 
