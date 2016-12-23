@@ -1129,3 +1129,35 @@ window.onbeforeunload = saveState;
 注意，在代码里更改了 init_state，上面的代码仍然会载入local storage里的状态。
 所以更改代码里定义的init_state后，需要手工清除local storage里的内容。
 各浏览器的开发者工具都可以方便地做这个操作，或者在页面增加一个操作按钮。
+
+<h3>在浏览器直接使用</h3>
+
+lib 目录下的 affjs.js 是编译出来的 UMD 格式的库文件，可以直接用`<script>`标签引入并使用。例子：
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="affjs.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+
+var affjs = window.affjs;
+var App = affjs.App;
+var div = affjs.div;
+
+var app = new App(
+  document.getElementById('app'),
+  {},
+  function(state) {
+    return div('Hello, world!');
+  }
+);
+
+    </script>
+  </body>
+</html>
+```
