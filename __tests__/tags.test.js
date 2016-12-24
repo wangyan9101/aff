@@ -167,3 +167,12 @@ test('function child', () => {
   let elem = node.toElement();
   expect(elem.innerHTML).toBe('<div>FOO</div>');
 });
+
+test('undefined child', () => {
+  expect(() => {
+    let node = div(undefined);
+  }).toThrowError('bad child,');
+  expect(() => {
+    let node = div(null);
+  }).toThrowError('bad child,');
+});

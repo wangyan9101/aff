@@ -699,14 +699,14 @@ class Node {
       } else {
         this.children.push(children);
       }
-    } else if (type === 'undefined' || type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
+    } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
       let child = new Node();
       child.text = children.toString();
       this.children.push(child);
     } else if (type === 'function') {
       this.children.push(children());
     } else {
-      this.children.push(children);
+      throw['bad child', children];
     }
   }
 

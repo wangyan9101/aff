@@ -177,17 +177,18 @@ test('bad children', () => {
   let element = document.createElement('div');
   root.appendChild(element);
   let checked = false;
+  function Foo() {}
   let app = new App(
     element,
     {},
     () => {
       return div({
         oncreated(elem) {
-          expect(elem.textContent).toBe('RENDER ERROR: cannot render null');
+          expect(elem.textContent).toBe('RENDER ERROR: cannot render [object Object]');
           checked = true;
         },
       }, [
-        null,
+        new Foo(),
       ]);
     },
   );
