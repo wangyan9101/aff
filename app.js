@@ -270,10 +270,16 @@ export class App {
       return [element, node];
     }
 
-    return this.patch_node(last_element, node, last_node, thunk);
+    // set element
+    node.element = last_element;
+    if (thunk) {
+      thunk.element = last_element;
+    }
+
+    return this.patch_node(last_element, node, last_node);
   }
 
-  patch_node(last_element, node, last_node, thunk) {
+  patch_node(last_element, node, last_node) {
     // innerHTML
     if (node.innerHTML != last_node.innerHTML) {
       last_element.innerHTML = node.innerHTML;
@@ -352,41 +358,13 @@ export class App {
     }
 
     // attributes
-    if (node.attributes && last_node.attributes) {
-      // update common attributes
-      for (let key in node.attributes) {
-        if (node.attributes[key] != last_node.attributes[key]) {
-          let value = node.attributes[key];
-          let valueType = typeof value;
-          if (valueType == 'string' || valueType == 'number') {
-            last_element.setAttribute(key, value);
-            last_element[key] = value
-          } else if (valueType == 'boolean') {
-            if (value) {
-              last_element.setAttribute(key, true);
-              last_element[key] = true;
-            } else {
-              last_element.removeAttribute(key);
-              last_element[key] = false;
-            }
-          }
-        }
-      }
-      // delete non-exist attributes
-      for (let key in last_node.attributes) {
-        if (!(key in node.attributes)) {
-          last_element.removeAttribute(key);
-          last_element[key] = undefined;
-        }
-      }
-    } else if (node.attributes) {
-      // set new attributes only
-      for (let key in node.attributes) {
+    for (let key in node.attributes) {
+      if (!last_node.attributes || node.attributes[key] != last_node.attributes[key]) {
         let value = node.attributes[key];
         let valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
           last_element.setAttribute(key, value);
-          last_element[key] = value;
+          last_element[key] = value
         } else if (valueType == 'boolean') {
           if (value) {
             last_element.setAttribute(key, true);
@@ -397,36 +375,21 @@ export class App {
           }
         }
       }
-    } else if (last_node.attributes) {
-      // no attributes in new Node, delete all
-      for (let key in last_node.attributes) {
+    }
+    for (let key in last_node.attributes) {
+      if (!node.attributes || !(key in node.attributes)) {
         last_element.removeAttribute(key);
         last_element[key] = undefined;
       }
     }
-    
+
     // events
-    // not implementing global event proxy
-    if (node.events && last_node.events) {
-      for (let key in node.events) {
-        // set events, bind current node to callback function
-        // to enable referencing current node
-        element_set_listener(last_element, key, node.events[key].bind(node));
-      }
-      let serial = last_element.__element_serial;
-      for (let key in element_events[serial]) {
-        if (!(key in node.events)) {
-          element_events[serial][key] = false;
-        }
-      }
-    } else if (node.events) {
-      for (let key in node.events) {
-        // set events, bind current node to callback function
-        element_set_listener(last_element, key, node.events[key].bind(node));
-      }
-    } else if (last_node.events) {
-      let serial = last_element.__element_serial;
-      for (let key in element_events[serial]) {
+    for (let key in node.events) {
+      element_set_listener(last_element, key, node.events[key].bind(node));
+    }
+    let serial = last_element.__element_serial;
+    for (let key in element_events[serial]) {
+      if (!node.events || !(key in node.events)) {
         element_events[serial][key] = false;
       }
     }
@@ -468,12 +431,6 @@ export class App {
       while (last_element.firstChild) {
         last_element.removeChild(last_element.firstChild);
       }
-    }
-
-    // set element
-    node.element = last_element;
-    if (thunk) {
-      thunk.element = last_element;
     }
 
     if (node.hooks && node.hooks.patched) {
