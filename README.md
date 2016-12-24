@@ -5,7 +5,7 @@
 ## 目录
 
 * [框架理念](#0)
-* 基本使用
+* 上手指南
 	* [环境安装配置](#1)
 	* [基本用例：霓虹 Hello, world](#2)
 	* [html 标签的表示法](#3)
@@ -140,8 +140,10 @@ let init_state = {
 
 // 根组件，所有组件都表示为函数
 let Main = (state) => div(
+
   // 样式定义，使用 es6 的 tagged literal
-  css` font-size: 32px; `, [
+  css` font-size: 32px; `,
+
   // 字符串分解成单个字符，并构造span
   'Hello, world!'.split('').map((c, i) => {
     let color_index = state.animation_tick - i;
@@ -153,7 +155,8 @@ let Main = (state) => div(
       text-shadow: 0 0 10px ${color}; 
     `);
   }),
-]);
+
+);
 
 // 生成app
 let app = new App(
@@ -169,6 +172,7 @@ setInterval(() => {
   // 更新状态，触发app重新渲染
   app.update('animation_tick', $inc);
 }, 100);
+
 ```
 
 ![colorful helloworld](images/colorful-helloworld.gif)
@@ -1013,22 +1017,22 @@ let style = `
 例如一个可点击的区域，一般会定义cursor和user-select属性。可以把它做成一个可以复用的变量：
 
 ```js
+import { div, css } from 'affjs'
+
 // 字符串式
 let clickable = `
 	cursor: pointer;
 	user-select: none;
 `;
 
-div({
+div(css`
 	// 直接插入模板字符串内
-	style: `
-		${clickable}
-		/* ... 其他样式 ... */
-	`,
-});
+  ${clickable}
+  /* ... 其他样式 ... */
+`);
 
 // 对象式
-let clickable = {
+clickable = {
 	cursor: 'pointer',
 	userSelect: 'none',
 };
@@ -1039,7 +1043,6 @@ div({
 		// 其他样式 ...
 	},
 });
-
 ```
 
 另一个例子，绝对定位的样式，要写position、top、left等等，做成可复用的样式函数：
@@ -1059,11 +1062,9 @@ let abs = (top, right, bottom, left) => {
 然后在标签的style属性里就可以像下面这样用了，简洁了一些：
 
 ```js
-div({
-  style: `
-    ${abs('30px', false, 0, false)}
-  `,
-});
+div(css`
+	${abs('30px', false, 0, false)}
+`);
 ```
 
 上面的是字符串的例子，对象的例子原理一样，就不赘述了。
