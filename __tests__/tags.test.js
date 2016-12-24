@@ -157,3 +157,13 @@ test('css', () => {
   let node = e('div', css`font-size: ${fontSize}px; margin-top: ${marginTop}px;`);
   expect(node.style).toBe('font-size: 90px; margin-top: 30px;')
 });
+
+test('function child', () => {
+  let node = e('div', [
+    () => {
+      return div('FOO');
+    },
+  ]);
+  let elem = node.toElement();
+  expect(elem.innerHTML).toBe('<div>FOO</div>');
+});

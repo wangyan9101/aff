@@ -113,7 +113,7 @@ export class App {
       return obj;
     } else if (args.length === 1) {
       let ret;
-      if (typeof args[0] === 'object' && args[0].__is_op) {
+      if (typeof args[0] === 'object' && args[0] !== null && args[0].__is_op) {
         ret = args[0].apply(obj, this);
         if (ret === obj) {
           this.setup_state_object(ret);
@@ -126,7 +126,7 @@ export class App {
       if (!obj) {
         obj = {};
       }
-      if (typeof obj === 'object') {
+      if (typeof obj === 'object' && obj !== null) {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setup_state_object(obj);
         }
@@ -212,7 +212,7 @@ export class App {
             should_update = true;
             break
           }
-        } else if (arg === last_arg && typeof arg === 'object' && arg.__aff_tick === this.patch_tick) {
+        } else if (arg === last_arg && typeof arg === 'object' && arg !== null && arg.__aff_tick === this.patch_tick) {
           should_update = true;
           break
         } else if (!equal(arg, last_arg)) {
@@ -294,7 +294,7 @@ export class App {
     let last_style_type = typeof last_node.style;
     if (style_type != last_style_type || style_type == 'string') {
       // not diffable
-      if (style_type == 'object') {
+      if (style_type == 'object' && node.style !== null) {
         // remove all existing style
         last_element.style = null;
         // reset
@@ -316,7 +316,7 @@ export class App {
           }
         }
         // delete styles exist in old Node but not in new
-        if (typeof last_node.style === 'object') {
+        if (typeof last_node.style === 'object' && last_node.style !== null) {
           for (let key in last_node.style) {
             if (!(key in node.style)) {
               last_element.style[key] = '';
@@ -576,7 +576,7 @@ export function e(tag, ...args) {
       node.set_properties({
         ['on' + arg.ev_type]: arg.fn,
       });
-    } else if (typeof arg === 'object') {
+    } else if (typeof arg === 'object' && arg !== null) {
       if (Array.isArray(arg)) {
         node.set_children(arg)
       } else {
@@ -639,7 +639,7 @@ class Node {
         let property = properties.class;
         if (typeof property == 'string') {
           this.class = property;
-        } else if (typeof property == 'object') {
+        } else if (typeof property == 'object' && property !== null) {
           if (Array.isArray(property)) {
             this.class = property.join(' ');
           } else {
@@ -689,15 +689,22 @@ class Node {
 
   set_children(children) {
     this.children = this.children || [];
-    if (Array.isArray(children)) {
-      // flatten
-      for (let i = 0, l = children.length; i < l; i++) {
-        this.set_children(children[i]);
+    let type = typeof children;
+    if (type === 'object' && children !== null) {
+      if (Array.isArray(children)) {
+        // flatten
+        for (let i = 0, l = children.length; i < l; i++) {
+          this.set_children(children[i]);
+        }
+      } else {
+        this.children.push(children);
       }
-    } else if (typeof children === 'string' || typeof children === 'number') {
+    } else if (type === 'undefined' || type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
       let child = new Node();
-      child.text = children;
+      child.text = children.toString();
       this.children.push(child);
+    } else if (type === 'function') {
+      this.children.push(children());
     } else {
       this.children.push(children);
     }
@@ -722,7 +729,7 @@ class Node {
       element.id = this.id;
     }
     if (this.style !== null) {
-      if (typeof this.style == 'object') {
+      if (typeof this.style == 'object' && this.style !== null) {
         for (let key in this.style) {
           element.style[key] = this.style[key];
         }
@@ -818,7 +825,7 @@ export function equal(a, b) {
   if (type_a !== type_b) {
     return false;
   }
-  if (type_a === 'object') {
+  if (type_a === 'object' && a !== null) {
     if (a instanceof SubState && b instanceof SubState) {
       return equal(a.get(), b.get());
     }

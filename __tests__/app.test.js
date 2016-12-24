@@ -134,19 +134,20 @@ test('children append invalid', () => {
       ns: [],
     },
   );
+  function Foo() {}
   let Main = (state) => {
     if (state.ns.length == 0) {
       return div();
     }
     return div([
-      false,
+      new Foo(),
     ]);
   };
   app.init(Main);
   expect(app.html()).toBe('');
   console.warn = jest.genMockFn();
   app.update('ns', [1, 2, 3]);
-  expect(root.textContent).toBe('RENDER ERROR: cannot render false');
+  expect(root.textContent).toBe('RENDER ERROR: cannot render [object Object]');
 });
 
 test('children append invalid', () => {
@@ -159,18 +160,19 @@ test('children append invalid', () => {
       step: 0,
     },
   );
+  function Foo() {}
   let Main = (state) => {
     if (state.step == 0) {
       return div([1]);
     } else if (state.step == 1) {
-      return div([1, false]);
+      return div([1, new Foo()]);
     }
   };
   app.init(Main);
   expect(app.html()).toBe('1');
   console.warn = jest.genMockFn();
   app.update('step', 1);
-  expect(root.textContent).toBe('1RENDER ERROR: cannot render false');
+  expect(root.textContent).toBe('1RENDER ERROR: cannot render [object Object]');
 });
 
 test('remove event', () => {
