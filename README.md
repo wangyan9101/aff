@@ -17,7 +17,7 @@
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
-	* [内联CSS样式](#16)
+	* [内联 css 样式技巧](#16)
 	* [路由](#11)
 	* [异步竞态问题](#12)
 	* [应对状态树结构变更](#13)
@@ -433,27 +433,29 @@ thunk 用 t 函数构造。第一个参数是组件函数，其余参数是将�
 
 ```js
 import {
-  App, t,
+  App, t, css, on,
   button, div, img,
   $inc, $dec,
 } from 'affjs'
 
 // 一个按钮组件，文字和点击事件都作为参数，从外部传入
-let Button = (text, onclick) => button({
-  onclick: onclick,
-  style: `
+let Button = (text, onclick) => button(
+  text,
+  on('click', onclick),
+  css`
     border: 3px solid #666;
     border-radius: 10px;
     background-color: white;
     width: 50px;
     height: 50px;
+    user-select: none;
   `,
-}, text);
+);
 
 // 一个布局组件，在圆周上均匀分布所有子元素
 let Layout = (radius, base_degree, elems) => {
-  return div({
-    style: `
+  return div(
+    css`
       width: ${radius * 2}px;
       height: ${radius * 2}px;
       border: 1px dotted #09C;
@@ -461,20 +463,19 @@ let Layout = (radius, base_degree, elems) => {
       margin: ${radius / 2}px auto;
       position: relative;
     `,
-  }, elems.map((elem, i) => {
-    let degree = (i / elems.length * 360 + base_degree) % 360;
-    let theta = 2 * 3.14 * (degree / 360);
-    let x = radius * Math.cos(theta) + radius;
-    let y = radius * Math.sin(theta) + radius;
-    return div({
-      style: `
+    elems.map((elem, i) => {
+      let degree = (i / elems.length * 360 + base_degree) % 360;
+      let theta = 2 * 3.14 * (degree / 360);
+      let x = radius * Math.cos(theta) + radius;
+      let y = radius * Math.sin(theta) + radius;
+      return div(elem, css`
         position: absolute;
         left: ${x}px;
         top: ${y}px;
         transform: translate(-50%, -50%) rotate(${degree}deg);
-      `,
-    }, elem);
-  }));
+      `);
+    }),
+  );
 };
 
 // 初始化app
@@ -513,17 +514,15 @@ let Main = (state) => {
     Button('－－', dec),
 
     // 显示计数状态
-    div({
-      style: `
-        border: 3px solid #666;
-        display: inline-block;
-        border-radius: 50%;
-        width: 25px;
-        height: 25px;
-        text-align: center;
-        background-color: white;
-      `,
-    }, state.counter),
+    div(state.counter, css`
+      border: 3px solid #666;
+      display: inline-block;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      text-align: center;
+      background-color: white;
+    `),
 
     // 凑够6个元素
     img({src: 'http://img.t.sinajs.cn/t4/appstyle/expression/ext/normal/b6/doge_thumb.gif'}),
@@ -720,7 +719,7 @@ app.init(Main);
 
 ![element](images/element.png)
 
-注意到 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
+注意 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
 这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
 
 如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
@@ -943,10 +942,6 @@ patch的过程中，如果触发了状态更新，那patch完成后，会再次�
 
 <h2 id="16">内联CSS样式</h2>
 
-从前面的例子可以看出，CSS样式都是写在标签内部的，渲染的时候渲染成标签的style属性。
-
-这样做有很大的好处，下面将介绍一些例子。
-
 <h3>响应式css / 适配分辨率</h3>
 
 如果用css文件实现这个，要用到 media query，繁琐且散布在各处，修改不易。
@@ -1059,6 +1054,7 @@ style(`
 
 渲染出来，就是一个`<style></style>`，里面是css定义。
 注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
+如果不想使用 !important，可以将内联样式去掉，都写在 script 标签内。
 
 同理，上面的样式代码里也可以使用 ${} 插入任意的字符串。
 
@@ -1070,7 +1066,7 @@ style(`
 
 ```js
 import {
-  App,
+  App, css, on,
   div, a,
   $merge,
 } from 'affjs'
@@ -1090,18 +1086,17 @@ let Main = (state) => {
       '/',
       '/foo/1/FOO',
       '/bar/x',
-    ].map(url => a({
-      style: `
+    ].map(url => a(
+      url,
+      on('click', () => route(url)),
+      css`
         background-color: #09C;
         color: white;
         cursor: pointer;
         margin: 0 5px;
         padding: 0 20px;
       `,
-      onclick() {
-        route(url);
-      },
-    }, url)),
+    )),
 
     // 根据当前路由key，返回不同的内容
     // 还可以直接将 Foo, Bar, Baz 等放入路由定义，可以少一处重复，但有时未必是一个key对应一个组件，牺牲一点DRY增加一点灵活性
@@ -1145,6 +1140,12 @@ for (let key in routes) {
 route.exec();
 window.onhashchange = route.exec;
 ```
+
+上面实现的是，一个路由对应到一个组件的方式。实际上并不是一定要这么死板。
+URL 的改变引起状态树某些状态的改变，界面因而根据状态的改变而发生改变。
+有时是整个界面全变，有时只是变一部分。其实没有必要模拟出传统的 web 系统的架构。
+甚至“路由”这个概念都不是必要的。把 URL 所带的信息，看成是状态的一部分，URL 变了就是状态变了。
+以状态管理的角度来看 URL 的改变，其实并没有什么需要框架特别处理的。
 
 ![route](images/route.gif)
 
@@ -1268,3 +1269,5 @@ var app = new App(
   </body>
 </html>
 ```
+
+当然有些方便的语法特性，浏览器的 js 环境可能不支持。还是推荐使用转译器来写。
