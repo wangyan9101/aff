@@ -1,6 +1,7 @@
 import { $any } from './state'
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
+import { Event } from './event'
 
 export class App {
   constructor(...args) {
@@ -570,6 +571,10 @@ export function e(tag, ...args) {
     } else if (arg instanceof Css) {
       node.set_properties({
         style: arg.str,
+      });
+    } else if (arg instanceof Event) {
+      node.set_properties({
+        ['on' + arg.ev_type]: arg.fn,
       });
     } else if (typeof arg === 'object') {
       if (Array.isArray(arg)) {

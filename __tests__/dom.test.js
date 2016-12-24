@@ -3,6 +3,7 @@ import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../state'
 import { $ } from '../tagged'
+import { on } from '../index'
 
 test('thunk this', () => {
   let _this;
@@ -146,6 +147,26 @@ test('click', () => {
           elem.dispatchEvent(ev);
         },
       });
+    },
+  );
+  expect(clicked).toBe(true);
+});
+
+test('click 2', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let clicked = false;
+  let app = new App(
+    element,
+    {},
+    () => {
+      return div(on('click', () => {
+        clicked = true;
+      }), on('created', (elem) => {
+        let ev = new MouseEvent('click');
+        elem.dispatchEvent(ev);
+      }));
     },
   );
   expect(clicked).toBe(true);
