@@ -704,7 +704,7 @@ class Node {
       child.text = children.toString();
       this.children.push(child);
     } else if (type === 'function') {
-      this.children.push(children());
+      this.set_children(children());
     } else {
       throw['bad child', children];
     }

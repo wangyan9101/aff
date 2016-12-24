@@ -163,9 +163,10 @@ test('function child', () => {
     () => {
       return div('FOO');
     },
+    () => 'foo',
   ]);
   let elem = node.toElement();
-  expect(elem.innerHTML).toBe('<div>FOO</div>');
+  expect(elem.innerHTML).toBe('<div>FOO</div>foo');
 });
 
 test('undefined child', () => {
