@@ -1,6 +1,7 @@
 import {e, t} from '../dom'
 import {div, DIV, Div, P} from '../tags'
 import {$, css} from '../tagged'
+import './__helpers'
 
 test('e', () => {
   let node = div();
@@ -13,10 +14,16 @@ test('e', () => {
   let s = '.bar';
   let id = 'quux';
   node = div($`.foo ${s} .baz qux #${id}`);
-  expect(node.class).toBe('foo bar baz');
+  expect(node.class).toMatchObject({
+    foo: true,
+    bar: true,
+    baz: true,
+  });
   expect(node.id).toBe('quux');
   node = div($`.foo`);
-  expect(node.class).toBe('foo');
+  expect(node.class).toMatchObject({
+    foo: true,
+  });
   node = div($`#foo`);
   expect(node.id).toBe('foo');
 
@@ -26,7 +33,9 @@ test('e', () => {
     innerHTML: 'yes',
   });
   expect(node.id).toBe('foo');
-  expect(node.class).toBe('bar');
+  expect(node.class).toMatchObject({
+    bar: true,
+  });
   expect(node.innerHTML).toBe('yes');
   node = div({
     style: {
@@ -112,7 +121,9 @@ test('e 2', () => {
     P(),
   ]);
   expect(node.id).toBe('foo');
-  expect(node.class).toBe('bar');
+  expect(node.class).toMatchObject({
+    bar: true,
+  });
   expect(node.children.length).toBe(1);
 });
 
@@ -120,11 +131,19 @@ test('class property', () => {
   let node = e('div', {
     class: 'foo bar baz',
   });
-  expect(node.class == 'foo bar baz').toBe(true);
+  expect(node.class).toMatchObject({
+    foo: true,
+    bar: true,
+    baz: true,
+  });
   node = e('div', {
     class: ['foo', 'bar', 'baz'],
   });
-  expect(node.class == 'foo bar baz').toBe(true);
+  expect(node.class).toMatchObject({
+    foo: true,
+    bar: true,
+    baz: true,
+  });
   node = e('div', {
     class: {
       foo: true,
@@ -134,14 +153,13 @@ test('class property', () => {
       quux: false,
     },
   });
-  expect(node.class.split(' ').length == 3).toBe(true);
-  let res = node.class.split(' ').reduce((acc, cur) => {
-    acc[cur] = true;
-    return acc;
-  }, {});
-  expect(res.foo).toBe(true);
-  expect(res.bar).toBe(true);
-  expect(res.baz).toBe(true);
+  expect(node.class).toMatchObject({
+    foo: true,
+    bar: true,
+    baz: true,
+    qux: false,
+    quux: false,
+  });
 });
 
 test('node child', () => {

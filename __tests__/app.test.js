@@ -584,3 +584,35 @@ test('substate path change', () => {
   app.update('n', 1);
   expect(call).toBe(true);
 });
+
+test('class change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    0,
+  );
+  app.init((step) => {
+    if (step == 0) {
+      return div({
+        id: 'foo',
+        class: {
+          foo: true,
+          bar: false,
+        },
+      });
+    } else {
+      return div({
+        id: 'foo',
+        class: {
+          foo: false,
+          bar: true,
+        },
+      });
+    }
+  });
+  expect(root.querySelector('#foo').className).toBe('foo');
+  app.update(1);
+  expect(root.querySelector('#foo').className).toBe('bar');
+});
