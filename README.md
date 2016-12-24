@@ -279,7 +279,6 @@ p(span('Hello, '), span('world!'))
 ```
 
 其中 span 标签函数传入的是一个字符串参数，这个参数会被解析成一个文本元素。
-数字类型的参数，也会视作文本元素。
 
 也可以将子标签放入一个数组，再传递：
 
@@ -307,6 +306,39 @@ p(span('Hello, ', span('world')))
 ```html
 <p><span>Hello, <span>world</span></span></p>
 ```
+
+类型为 boolean 和 number 的值，也和 string 类型的值一样，会被视为文本元素：
+
+```js
+ul(
+  li(42),
+  li(true),
+)
+```
+
+相当于：
+```html
+<ul>
+	<li>42</li>
+	<li>true</li>
+</ul>
+```
+
+类型为 function 的值，会被调用，以返回值作为嵌套的值：
+
+```js
+ul(
+  () => span('hello, '),
+  () => 'world!',
+)
+```
+
+相当于：
+```js
+<ul><span>hello, </span>world!</ul>
+```
+
+同样的效果，也可以用 `(() => { ... })()` 实现。但能自动调用的话，写法就简单一些。
 
 <h3>内联 css 样式</h3>
 
