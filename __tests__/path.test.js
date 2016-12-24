@@ -2,6 +2,7 @@ import { App, equal } from '../app'
 import { $any } from '../state'
 import { t } from '../dom'
 import { div } from '../tags'
+import { $, css } from '../tagged'
 
 test('path', () => {
   let init_state = {
@@ -56,10 +57,10 @@ test('path change', () => {
   let main = (state) => {
     return div([
       t('foo', (path) => {
-        return div('#foo', path.get());
+        return div($`#foo`, path.get());
       }, app.sub('foo')),
       t('bar', (path) => {
-        return div('#bar', path.get());
+        return div($`#bar`, path.get());
       }, app.sub('bar', 'baz', 'qux')),
     ]);
   };

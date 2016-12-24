@@ -2,6 +2,7 @@ import {App} from '../app'
 import {div, none, input, style} from '../tags'
 import { t } from '../dom'
 import { $inc } from '../state'
+import { $, css } from '../tagged'
 
 test('app', () => {
   let root = document.createElement('div');
@@ -11,7 +12,7 @@ test('app', () => {
   let app = new App(
     element,
     (state) => {
-      return div('#test', [
+      return div($`#test`, [
         state.foo,
       ]);
     },
@@ -56,8 +57,8 @@ test('app patch again', () => {
       }, {
         n: state.n
       }, 'foo', [1, 2, 3]),
-      div('#n', state.n),
-      div('#m', state.m || ''),
+      div($`#n`, state.n),
+      div($`#m`, state.m || ''),
       t(() => div(), {
         foo: state.foo,
       }),
@@ -250,9 +251,9 @@ test('change class', () => {
   );
   let Main = (state) => {
     if (state.step == 0) {
-      return div('.foo');
+      return div($`.foo`);
     } else if (state.step == 1) {
-      return div('.bar');
+      return div($`.bar`);
     }
   };
   app.init(Main);
@@ -320,9 +321,9 @@ test('change id', () => {
   );
   let Main = (state) => {
     if (state.step == 0) {
-      return div('#foo');
+      return div($`#foo`);
     } else if (state.step == 1) {
-      return div('#bar');
+      return div($`#bar`);
     }
   }
   app.init(Main);
@@ -370,12 +371,12 @@ test('checked', () => {
   );
   let Main = (state) => {
     if (state.step == 0) {
-      return input('#foo', {
+      return input($`#foo`, {
         type: 'checkbox',
         checked: true,
       });
     } else if (state.step == 1) {
-      return input('#foo', {
+      return input($`#foo`, {
         type: 'checkbox',
         checked: false,
       });
@@ -399,17 +400,17 @@ test('checked', () => {
   );
   let Main = (state) => {
     if (state.step == 0 || state.step == 3) {
-      return input('#foo', {
+      return input($`#foo`, {
         type: 'checkbox',
         checked: false,
       });
     } else if (state.step == 1) {
-      return input('#foo', {
+      return input($`#foo`, {
         type: 'checkbox',
         checked: true,
       });
     } else if (state.step == 2) {
-      return input('#foo', {
+      return input($`#foo`, {
         type: 'checked',
       });
     }

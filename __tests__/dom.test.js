@@ -2,6 +2,7 @@ import {t, e, setAfterThunkCallFunc} from '../dom'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../state'
+import { $ } from '../tagged'
 
 test('thunk this', () => {
   let _this;
@@ -102,7 +103,7 @@ test('nested thunk', () => {
     } else if (state.step == 1) {
       return t(() => {
         return t(() => {
-          return div('#foo');
+          return div($`#foo`);
         });
       });
     }
@@ -118,16 +119,10 @@ test('nested thunk', () => {
 test('bad argument to e', () => {
   expect(() => {
     e(1, 2, 3, 4, 5);
-  }).toThrowError('bad arguments to e(),1,2,3,4,5');
-  expect(() => {
-    e('div', true, []);
-  }).toThrowError('bad argument at index 1 to e(),div,true');
-  expect(() => {
-    e('div', true);
-  }).toThrowError('bad argument at index 1 to e(),div,true');
+  }).toThrowError('');
   expect(() => {
     e();
-  }).toThrowError('no arguments to e');
+  }).toThrowError('bad tag name,');
   expect(() => {
     t();
   }).toThrowError('no arguments to t');

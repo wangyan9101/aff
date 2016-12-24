@@ -5,3 +5,4 @@ export {
 } from './app';
 export * from './state';
 export * from './tags';
+export * from './tagged';

@@ -3,6 +3,7 @@ import {
   section, header, footer, h1, p, a, div, span,
   input, none, ul, li, button, strong, label,
   $any, $push, $merge, $del_at, $filter,
+  $,
 } from '../../index'
 
 let init_state = JSON.parse(window.localStorage.getItem('todos')) || {
@@ -33,9 +34,9 @@ let app = new Application(
 );
 
 function Header() {
-  return header('.header', [
+  return header($`.header`, [
     h1('todos'),
-    input('.new-todo', {
+    input($`.new-todo`, {
       placeholder: "What needs to be done?",
       autofocus: 'autofocus',
       onkeypress(e) {
@@ -53,11 +54,11 @@ function Header() {
 
 function Main(state) {
   return div([
-    section('.todoapp', [
+    section($`.todoapp`, [
       t(Header),
 
-      state.todos.length > 0 ? section('.main', [
-        input('.toggle-all', {
+      state.todos.length > 0 ? section($`.main`, [
+        input($`.toggle-all`, {
           type: 'checkbox',
           onclick() {
             let all_completed = app.state.todos.reduce((b, c) => b && c.completed, true);
@@ -77,7 +78,7 @@ function Main(state) {
 }
 
 function TodoList(todos, filter) {
-  return ul('.todo-list', todos.map((todo, i) =>  {
+  return ul($`.todo-list`, todos.map((todo, i) =>  {
     if (filter == 'Active' && todo.completed) {
       return none;
     } else if (filter == 'Completed' && !todo.completed) {
@@ -89,8 +90,8 @@ function TodoList(todos, filter) {
         editing: todo.editing,
       },
     }, [
-      div('.view', [
-        input('.toggle', {
+      div($`.view`, [
+        input($`.toggle`, {
           type: 'checkbox',
           checked: todo.completed ? 'checked' : false,
           onclick() {
@@ -102,13 +103,13 @@ function TodoList(todos, filter) {
             app.update('todos', i, 'editing', true);
           },
         }, todo.content),
-        button('.destroy', {
+        button($`.destroy`, {
           onclick() {
             app.update('todos', $del_at(i));
           },
         }),
       ]),
-      input('.edit', {
+      input($`.edit`, {
         value: todo.content,
         onkeypress(e) {
           if (e.keyCode == 13) {
@@ -124,14 +125,14 @@ function TodoList(todos, filter) {
 }
 
 function Footer(todos, filter) {
-  return footer('.footer', [
-    span('.todo-count', [
+  return footer($`.footer`, [
+    span($`.todo-count`, [
       strong(todos.reduce((n, c) => {
         return n + (c.completed ? 0 : 1);
       }, 0)),
       ' item left',
     ]),
-    ul('.filters', [
+    ul($`.filters`, [
       ['#/', 'All'],
       ['#/active', 'Active'],
       ['#/completed', 'Completed'],
@@ -164,7 +165,7 @@ window.onhashchange = () => {
   }
 };
 
-let Info = footer('.info', [
+let Info = footer($`.info`, [
   p('Double-click to edit a todo'),
   p([
     'Created by ',

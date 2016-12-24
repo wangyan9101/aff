@@ -1,5 +1,6 @@
 import {e, t} from '../dom'
 import {div, DIV, Div, P} from '../tags'
+import {$, css} from '../tagged'
 
 test('e', () => {
   let node = div();
@@ -9,12 +10,14 @@ test('e', () => {
   node = Div();
   expect(node.tag).toBe('div');
 
-  node = div('.foo .bar .baz qux #quux');
+  let s = '.bar';
+  let id = 'quux';
+  node = div($`.foo ${s} .baz qux #${id}`);
   expect(node.class).toBe('foo bar baz');
   expect(node.id).toBe('quux');
-  node = div('.foo');
+  node = div($`.foo`);
   expect(node.class).toBe('foo');
-  node = div('#foo');
+  node = div($`#foo`);
   expect(node.id).toBe('foo');
 
   node = div({
@@ -76,16 +79,12 @@ test('t', () => {
   thunk = t('Foo', () => {}, 1, 2, 3);
   expect(thunk.name).toBe('Foo');
   expect(thunk.args.length).toBe(3);
-
-  thunk = e(Foo, 1, 2, 3)
-  expect(thunk.name).toBe('Foo');
-  expect(thunk.args.length).toBe(3);
 });
 
 test('e 2', () => {
   let node;
 
-  node = e('div', '#foo');
+  node = e('div', $`#foo`);
   expect(node.id).toBe('foo');
   node = e('div', 'foo');
   expect(node.children.length).toBe(1);
@@ -94,7 +93,7 @@ test('e 2', () => {
   });
   expect(node.attributes.href).toBe('yes');
 
-  node = e('div', '#foo', [
+  node = e('div', $`#foo`, [
     P(),
   ]);
   expect(node.id).toBe('foo');
@@ -107,7 +106,7 @@ test('e 2', () => {
   expect(node.id).toBe('foo');
   expect(node.children.length).toBe(1);
 
-  node = e('div', '#foo', {
+  node = e('div', $`#foo`, {
     class: 'bar',
   }, [
     P(),
@@ -143,4 +142,18 @@ test('class property', () => {
   expect(res.foo).toBe(true);
   expect(res.bar).toBe(true);
   expect(res.baz).toBe(true);
+});
+
+test('node child', () => {
+  let node = e('div', e('div'));
+  expect(node.children.length == 1).toBe(true);
+  node = e('div', t('foo', () => {}));
+  expect(node.children.length == 1).toBe(true);
+});
+
+test('css', () => {
+  let fontSize = 90;
+  let marginTop = 30;
+  let node = e('div', css`font-size: ${fontSize}px; margin-top: ${marginTop}px;`);
+  expect(node.style).toBe('font-size: 90px; margin-top: 30px;')
 });

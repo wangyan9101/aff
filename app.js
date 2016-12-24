@@ -1,5 +1,6 @@
 import { $any } from './state'
 import { all_tags } from './all_tags'
+import { Selector, Css } from './tagged'
 
 export class App {
   constructor(...args) {
@@ -537,130 +538,49 @@ export function t(...args) {
   if (args.length == 0) {
     throw['no arguments to t()'];
   }
-
   let thunk = new Thunk();
-
   switch (typeof args[0]) {
   case 'string': // named thunk
     thunk.name = args[0];
     thunk.func = args[1];
     thunk.args = args.slice(2);
     break
-
   case 'function':
     thunk.func = args[0];
     thunk.args = args.slice(1);
     thunk.name = thunk.func.name;
     break
   }
-
   return thunk
 }
 
 // element helper
-export function e(...args) {
-  if (args.length === 0) {
-    throw['no arguments to e()'];
+export function e(tag, ...args) {
+  if (typeof tag !== 'string') {
+    throw['bad tag name', tag];
   }
-
-  // Thunk
-  if (typeof args[0] === 'function') {
-    let thunk = new Thunk();
-    thunk.func = args[0];
-    thunk.args = args.slice(1);
-    // set thunk name from function, may be undefined
-    thunk.name = thunk.func.name; 
-    return thunk;
-  }
-
   let node = new Node();
-
-  let arg1, arg2;
-
-  switch (args.length) {
-  case 1:
-    // tag only, eg. e('hr')
-    node.tag = args[0];
-
-    break
-
-  case 2:
-    // two args, first the tag, second a selector or children or properties
-    // eg. e('div', '#main .block')
-    // or e('div', 'Hello, world')
-    // or e('div', [ e('p', 'Hello, world') ])
-    // or e('div', { id: 'main' })
-    node.tag = args[0];
-    arg1 = args[1];
-
-    switch (typeof arg1) {
-    case 'string':
-      if (arg1[0] == '#' || arg1[0] == '.') { // selector
-        node.set_selector(arg1);
-      } else { // text node
-        node.set_children(arg1);
+  node.tag = tag;
+  for (let i = 0; i < args.length; i++) {
+    let arg = args[i];
+    if (arg instanceof Node || arg instanceof Thunk) {
+      node.set_children(arg);
+    } else if (arg instanceof Selector) {
+      node.set_selector(arg.str);
+    } else if (arg instanceof Css) {
+      node.set_properties({
+        style: arg.str,
+      });
+    } else if (typeof arg === 'object') {
+      if (Array.isArray(arg)) {
+        node.set_children(arg)
+      } else {
+        node.set_properties(arg);
       }
-      break
-
-    case 'number':
-      node.set_children(arg1);
-      break
-
-    case 'object':
-      if (Array.isArray(arg1) || (arg1 instanceof Node) || (arg1 instanceof Thunk)) { // children
-        node.set_children(arg1);
-      } else { // properties
-        node.set_properties(arg1);
-      }
-      break
-
-    default:
-      throw['bad argument at index 1 to e()', args];
-    }
-
-    break
-
-  case 3:
-    // three args, first the tag, second a selector or properties, third children or properties
-    // eg. e('div', '#main', [ e('p', 'Hello') ])
-    // or e('div', { id: 'main' }, [])
-    node.tag = args[0];
-
-    arg1 = args[1];
-    switch (typeof arg1) {
-    case 'string':
-      node.set_selector(arg1);
-      break
-    case 'object':
-      node.set_properties(arg1);
-      break
-    default:
-      throw['bad argument at index 1 to e()', args];
-    }
-
-    arg2 = args[2];
-    if (typeof arg2 == 'object' && !Array.isArray(arg2) && !(arg2 instanceof Node) && !(arg2 instanceof Thunk)) {
-      node.set_properties(arg2);
     } else {
-      node.set_children(arg2);
+      node.set_children(arg);
     }
-
-    break
-
-  case 4:
-    // four arguments. first tag, second selector, third properties, forth children
-    // eg e('div', '#main', { class: 'foo' }, [ e('div') ])
-    node.tag = args[0];
-    node.set_selector(args[1]);
-    node.set_properties(args[2]);
-    node.set_children(args[3]);
-
-    break
-
-  default:
-    throw['bad arguments to e()', args];
   }
-
   return node;
 }
 
