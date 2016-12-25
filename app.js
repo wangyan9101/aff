@@ -613,13 +613,15 @@ class Node {
 
   set_selector(selector) {
     let parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
-    for (let i = 0, l = parts.length; i < l; i++) {
-      let part = parts[i];
-      if (part.charAt(0) == '#') {
-        this.id = part.substring(1);
-      } else if (part.charAt(0) == '.') {
-        this.class = this.class || {};
-        this.class[part.substring(1)] = true;
+    if (parts) {
+      for (let i = 0, l = parts.length; i < l; i++) {
+        let part = parts[i];
+        if (part.charAt(0) == '#') {
+          this.id = part.substring(1);
+        } else if (part.charAt(0) == '.') {
+          this.class = this.class || {};
+          this.class[part.substring(1)] = true;
+        }
       }
     }
   }
@@ -634,9 +636,11 @@ class Node {
         let property = properties.class;
         if (typeof property == 'string') {
           let parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
-          for (let i = 0, l = parts.length; i < l; i++) {
-            let part = parts[i];
-            this.class[part] = true;
+          if (parts) {
+            for (let i = 0, l = parts.length; i < l; i++) {
+              let part = parts[i];
+              this.class[part] = true;
+            }
           }
         } else if (typeof property == 'object' && property !== null) {
           if (Array.isArray(property)) {

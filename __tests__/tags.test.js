@@ -195,3 +195,10 @@ test('undefined child', () => {
     let node = div(null);
   }).toThrowError('bad child,');
 });
+
+test('empty class', () => {
+  div({
+    class: '',
+  });
+  div($``);
+});
