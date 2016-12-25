@@ -59,3 +59,16 @@ test('alias', () => {
   expect(app.state.foo6.a.b.c.d.e).toBe('foo');
   expect(app.state.foo).toBe('foo');
 });
+
+test('nested init state alias', () => {
+  let init_state = {
+    foo: 'FOO',
+    bar: {
+      baz: {
+        qux: alias('foo'),
+      },
+    },
+  };
+  let app = new App(init_state);
+  expect(app.state.bar.baz.qux).toBe('FOO');
+});

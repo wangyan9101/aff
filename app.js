@@ -29,7 +29,7 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
-        this.setup_alias(this.state);
+        this.setup_alias(this.state, true);
       }
     }
     if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
