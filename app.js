@@ -298,6 +298,8 @@ export class App {
     if (
       // not diffable
       (!last_node)
+      // no element
+      || (!last_element)
       // different tag, no way to patch
       || (node.tag != last_node.tag)
     ) {
@@ -309,7 +311,7 @@ export class App {
         element = node.toElement(undefined, this);
       }
       // insert new then remove old
-      if (last_element.parentNode) {
+      if (last_element && last_element.parentNode) {
         last_element.parentNode.insertBefore(element, last_element);
         last_element.parentNode.removeChild(last_element);
       }
@@ -446,42 +448,21 @@ export class App {
     }
 
     // children
-    if (node.children && last_node.children) {
-      // patch common amount of children
-      const common_length = Math.min(node.children.length, last_node.children.length);
-      const child_elements = last_element.childNodes;
-      for (let i = 0; i < common_length; i++) {
-        // recursive patch
-        this.patch(child_elements[i], node.children[i], last_node.children[i]);
+    const child_elements = last_element.childNodes;
+    const child_len = node.children ? node.children.length : 0;
+    const last_child_len = last_node && last_node.children ? last_node.children.length : 0;
+    for (let i = 0; i < child_len; i++) {
+      const [elem, _] = this.patch(
+        child_elements[i], 
+        node.children[i], 
+        last_node && last_node.children ? last_node.children[i] : undefined,
+      );
+      if (!child_elements[i]) {
+        last_element.appendChild(elem);
       }
-      // insert new children
-      for (let i = common_length, l = node.children.length; i < l; i++) {
-        if (!node.children[i] || !node.children[i].toElement) {
-          last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
-          console.warn('cannot render', node.children[i]);
-        } else {
-          last_element.appendChild(node.children[i].toElement(undefined, this));
-        }
-      }
-      // delete
-      for (let i = common_length, l = last_node.children.length; i < l; i++) {
-        last_element.removeChild(last_element.childNodes[common_length]);
-      }
-    } else if (node.children) {
-      // insert only
-      for (let i = 0, l = node.children.length; i < l; i++) {
-        if (!node.children[i] || !node.children[i].toElement) {
-          last_element.appendChild(warning(`RENDER ERROR: cannot render ${node.children[i]}`).toElement());
-          console.warn('cannot render', node.children[i]);
-        } else {
-          last_element.appendChild(node.children[i].toElement(undefined, this));
-        }
-      }
-    } else if (last_node.children) {
-      // delete only
-      while (last_element.firstChild) {
-        last_element.removeChild(last_element.firstChild);
-      }
+    }
+    for (let i = child_len; i < last_child_len; i++) {
+      last_element.removeChild(last_element.childNodes[child_len]);
     }
 
     if (node.hooks && node.hooks.patched) {
@@ -696,14 +677,6 @@ class Node {
           this.events[key] = properties[key];
         }
       } else {
-        //if (
-        //  (this.tag == 'input' && key == 'checked' && !properties[key])
-        //  || (this.tag == 'input' && key == 'disabled' && !properties[key])
-        //  || (this.tag == 'button' && key == 'disabled' && !properties[key])
-        //) {
-        //  continue
-        //}
-        // attributes
         this.attributes = this.attributes || {};
         this.attributes[key] = properties[key];
       }
