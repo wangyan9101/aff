@@ -42,9 +42,16 @@ export class App {
   }
 
   update(...args) {
-    this.beforeUpdate(this.state, ...args);
-    this.state = this.update_state(this.next_dirty_tree, this.state, ...args);
-    this.afterUpdate(this.state, ...args);
+    return this.update_multi(args);
+  }
+
+  update_multi(...args) {
+    for (let i = 0; i < args.length; i++) {
+      let arg = args[i];
+      this.beforeUpdate(this.state, ...arg);
+      this.state = this.update_state(this.next_dirty_tree, this.state, ...arg);
+      this.afterUpdate(this.state, ...arg);
+    }
     if (!this.element) {
       return this.state;
     }

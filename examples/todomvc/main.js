@@ -2,7 +2,7 @@ import {
   App, t,
   section, header, footer, h1, p, a, div, span,
   input, none, ul, li, button, strong, label,
-  $any, $push, $merge, $del_at, $filter,
+  $any, $push, $del_at, $filter,
   $,
 } from '../../index'
 
@@ -113,10 +113,10 @@ function TodoList(todos, filter) {
         value: todo.content,
         onkeypress(e) {
           if (e.keyCode == 13) {
-            app.update('todos', i, $merge({
-              'content': this.element.value,
-              'editing': false,
-            }));
+            app.update_multi(
+              ['todos', i, 'content', this.element.value],
+              ['todos', i, 'editing', false],
+            );
           }
         },
       }),

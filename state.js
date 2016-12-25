@@ -16,26 +16,6 @@ export let $dec = {
   }
 };
 
-export let $merge = (spec) => ({
-  __is_op: true,
-  op: 'merge',
-  args: [spec],
-  apply(obj, app) {
-    if (Array.isArray(spec)) {
-      return app.update_state(app.dirty_tree, obj, ...spec);
-    }
-    for (let key in spec) {
-      let o2 = spec[key];
-      if (typeof o2 == 'object' && !Array.isArray(o2) && !o2.__is_op) {
-        obj = app.update_state(app.dirty_tree, obj, key, $merge(o2));
-      } else {
-        obj = app.update_state(app.dirty_tree, obj, key, o2);
-      }
-    }
-    return obj;
-  },
-});
-
 export let $push = (elem) => ({
   __is_op: true,
   op: 'push',

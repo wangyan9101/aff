@@ -626,7 +626,7 @@ App的update方法的参数先是要改变的状态的路径，最后是改变�
 import {
   App,
   div,
-  $inc, $dec, $merge, $push, $reduce, 
+  $inc, $dec, $push, $reduce, 
   $del_at, $map, $filter, $any,
 } from 'affjs'
 
@@ -650,14 +650,6 @@ assert(app.state.number == 2);
 // $dec 自减
 app.update('number', $dec);
 assert(app.state.number == 1);
-
-// $merge 合并多个路径的操作
-app.update($merge({
-  'number': $inc,
-  'string': 'FOO',
-}));
-assert(app.state.number == 2);
-assert(app.state.string == 'FOO');
 
 // $push array.push
 app.update('array', [1, 2, 3]);
@@ -1101,7 +1093,6 @@ style(`
 import {
   App, css, on,
   div, a,
-  $merge,
 } from 'affjs'
 import route from 'riot-route';
 
@@ -1163,10 +1154,10 @@ let routes = {
 for (let key in routes) {
   route(routes[key], (...args) => {
     // 将key和参数放入状态树
-    app.update($merge({
-      route_key: key,
-      route_args: args,
-    }));
+		app.update_multi(
+			['route_key', key],
+			['route_args', args],
+		);
   });
 }
 // 首次访问时，执行一下路由
