@@ -21,7 +21,7 @@ export class App {
 
   init(...args) {
     for (let i = 0; i < args.length; i++) {
-      let arg = args[i];
+      const arg = args[i];
       if (arg instanceof HTMLElement) {
         this.element = arg;
       } else if (typeof arg == 'function') {
@@ -78,7 +78,7 @@ export class App {
   }
 
   tap(fn) {
-    let res = fn(this.state);
+    const res = fn(this.state);
     if (res) {
       this.update(...(Array.isArray(res) ? res : [res]));
     }
@@ -130,8 +130,8 @@ export class App {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setup_patch_tick(obj);
         }
-        let key = args[0];
-        for (let k in obj) {
+        const key = args[0];
+        for (const k in obj) {
           if (k == key || key === $any) {
             if (!dirty_tree[k]) {
               dirty_tree[k] = {};
@@ -167,8 +167,8 @@ export class App {
   }
 
   args_changed(arg, last_arg) {
-    let arg_type = typeof arg;
-    let last_arg_type = typeof last_arg;
+    const arg_type = typeof arg;
+    const last_arg_type = typeof last_arg;
 
     // different type
     if (arg_type !== last_arg_type) {
@@ -181,7 +181,7 @@ export class App {
       let max_dirty_index = -1;
       let max_same_index = -1;
       let dirty_tree = this.dirty_tree;
-      let last_path = last_arg.path;
+      const last_path = last_arg.path;
       for (let index = 0; index < arg.path.length; index++) {
         if (dirty_tree && dirty_tree[arg.path[index]]) {
           dirty_tree = dirty_tree[arg.path[index]];
@@ -229,7 +229,7 @@ export class App {
       if (Object.keys(arg).length != Object.keys(last_arg).length) {
         return true;
       }
-      for (let key in arg) {
+      for (const key in arg) {
         if (this.args_changed(arg[key], last_arg[key])) {
           return true;
         }
@@ -347,15 +347,15 @@ export class App {
     }
 
     // styles
-    let style_type = typeof node.style;
-    let last_style_type = typeof last_node.style;
+    const style_type = typeof node.style;
+    const last_style_type = typeof last_node.style;
     if (style_type != last_style_type || style_type == 'string') {
       // not diffable
       if (style_type == 'object' && node.style !== null) {
         // remove all existing style
         last_element.style = null;
         // reset
-        for (let key in node.style) {
+        for (const key in node.style) {
           last_element.style[key] = node.style[key];
         }
       } else {
@@ -367,14 +367,14 @@ export class App {
     } else {
       if (node.style && last_node.style) {
         // common styles
-        for (let key in node.style) {
+        for (const key in node.style) {
           if (node.style[key] != last_node.style[key]) {
             last_element.style[key] = node.style[key];
           }
         }
         // delete styles exist in old Node but not in new
         if (typeof last_node.style === 'object' && last_node.style !== null) {
-          for (let key in last_node.style) {
+          for (const key in last_node.style) {
             if (!(key in node.style)) {
               last_element.style[key] = '';
             }
@@ -382,7 +382,7 @@ export class App {
         }
       } else if (node.style) {
         // new Node only
-        for (let key in node.style) {
+        for (const key in node.style) {
           last_element.style[key] = node.style[key];
         }
       } else if (last_node.style) {
@@ -392,7 +392,7 @@ export class App {
     }
 
     // class
-    for (let key in node.class) {
+    for (const key in node.class) {
       // should update
       if (!last_node.class || node.class[key] != last_node.class[key]) {
         if (node.class[key]) {
@@ -402,17 +402,17 @@ export class App {
         }
       }
     }
-    for (let key in last_node.class) {
+    for (const key in last_node.class) {
       if (!node.class || !(key in node.class)) {
         last_element.classList.remove(key);
       }
     }
 
     // attributes
-    for (let key in node.attributes) {
+    for (const key in node.attributes) {
       if (!last_node.attributes || node.attributes[key] != last_node.attributes[key]) {
-        let value = node.attributes[key];
-        let valueType = typeof value;
+        const value = node.attributes[key];
+        const valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
           last_element.setAttribute(key, value);
           last_element[key] = value
@@ -427,7 +427,7 @@ export class App {
         }
       }
     }
-    for (let key in last_node.attributes) {
+    for (const key in last_node.attributes) {
       if (!node.attributes || !(key in node.attributes)) {
         last_element.removeAttribute(key);
         last_element[key] = undefined;
@@ -435,11 +435,11 @@ export class App {
     }
 
     // events
-    for (let key in node.events) {
+    for (const key in node.events) {
       element_set_listener(last_element, key, node.events[key].bind(node));
     }
-    let serial = last_element.__element_serial;
-    for (let key in element_events[serial]) {
+    const serial = last_element.__element_serial;
+    for (const key in element_events[serial]) {
       if (!node.events || !(key in node.events)) {
         element_events[serial][key] = false;
       }
@@ -448,8 +448,8 @@ export class App {
     // children
     if (node.children && last_node.children) {
       // patch common amount of children
-      let common_length = Math.min(node.children.length, last_node.children.length);
-      let child_elements = last_element.childNodes;
+      const common_length = Math.min(node.children.length, last_node.children.length);
+      const child_elements = last_element.childNodes;
       for (let i = 0; i < common_length; i++) {
         // recursive patch
         this.patch(child_elements[i], node.children[i], last_node.children[i]);
@@ -526,7 +526,7 @@ class Thunk {
 
   toElement(_name, app) {
     if (!this.element) {
-      let node = this.getNode();
+      const node = this.getNode();
       if (!node || !node.toElement) {
         this.element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
         console.warn('cannot render', node);
@@ -559,7 +559,7 @@ export function t(...args) {
   if (args.length == 0) {
     throw['no arguments to t()'];
   }
-  let thunk = new Thunk();
+  const thunk = new Thunk();
   switch (typeof args[0]) {
   case 'string': // named thunk
     thunk.name = args[0];
@@ -580,10 +580,10 @@ export function e(tag, ...args) {
   if (typeof tag !== 'string') {
     throw['bad tag name', tag];
   }
-  let node = new Node();
+  const node = new Node();
   node.tag = tag;
   for (let i = 0; i < args.length; i++) {
-    let arg = args[i];
+    const arg = args[i];
     if (arg instanceof Node || arg instanceof Thunk) {
       node.set_children(arg);
     } else if (arg instanceof Selector) {
@@ -611,10 +611,10 @@ export function e(tag, ...args) {
 
 let beforeThunkCallFunc = (thunk) => {};
 let afterThunkCallFunc = (thunk) => {};
-export let setBeforeThunkCallFunc = (fn) => {
+export const setBeforeThunkCallFunc = (fn) => {
   beforeThunkCallFunc = fn;
 }
-export let setAfterThunkCallFunc = (fn) => {
+export const setAfterThunkCallFunc = (fn) => {
   afterThunkCallFunc = fn;
 }
 
@@ -634,10 +634,10 @@ class Node {
   }
 
   set_selector(selector) {
-    let parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
+    const parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
     if (parts) {
       for (let i = 0, l = parts.length; i < l; i++) {
-        let part = parts[i];
+        const part = parts[i];
         if (part.charAt(0) == '#') {
           this.id = part.substring(1);
         } else if (part.charAt(0) == '.') {
@@ -649,18 +649,18 @@ class Node {
   }
 
   set_properties(properties) {
-    for (let key in properties) {
+    for (const key in properties) {
       if (key == 'id' || key == 'innerHTML') {
         // id, innerHTML
         this[key] = properties[key];
       } else if (key == 'class') {
         this.class = this.class || {};
-        let property = properties.class;
+        const property = properties.class;
         if (typeof property == 'string') {
-          let parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
+          const parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
           if (parts) {
             for (let i = 0, l = parts.length; i < l; i++) {
-              let part = parts[i];
+              const part = parts[i];
               this.class[part] = true;
             }
           }
@@ -670,8 +670,8 @@ class Node {
               this.class[property[i]] = true;
             }
           } else {
-            let classes = [];
-            for (let k in property) {
+            const classes = [];
+            for (const k in property) {
               this.class[k] = property[k];
             }
           }
@@ -712,7 +712,7 @@ class Node {
 
   set_children(children) {
     this.children = this.children || [];
-    let type = typeof children;
+    const type = typeof children;
     if (type === 'object' && children !== null) {
       if (Array.isArray(children)) {
         // flatten
@@ -723,7 +723,7 @@ class Node {
         this.children.push(children);
       }
     } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
-      let child = new Node();
+      const child = new Node();
       child.text = children.toString();
       this.children.push(child);
     } else if (type === 'function') {
@@ -753,7 +753,7 @@ class Node {
     }
     if (this.style !== null) {
       if (typeof this.style == 'object' && this.style !== null) {
-        for (let key in this.style) {
+        for (const key in this.style) {
           element.style[key] = this.style[key];
         }
       } else {
@@ -780,9 +780,9 @@ class Node {
       }
     }
     if (this.attributes !== null) {
-      for (let key in this.attributes) {
-        let value = this.attributes[key];
-        let valueType = typeof value;
+      for (const key in this.attributes) {
+        const value = this.attributes[key];
+        const valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
           element.setAttribute(key, value);
           element[key] = value;
@@ -798,7 +798,7 @@ class Node {
       }
     }
     if (this.events !== null) {
-      for (let key in this.events) {
+      for (const key in this.events) {
         // set event callback, bind current Node to callback
         // constructor must not be arrow function to get proper 'this'
         element_set_listener(element, key, this.events[key].bind(this));
@@ -813,7 +813,7 @@ class Node {
 
 }
 
-let warning = (text) => e('div', {
+const warning = (text) => e('div', {
   style: {
     backgroundColor: 'yellow',
     color: 'red',
@@ -821,8 +821,8 @@ let warning = (text) => e('div', {
   },
 }, text);
 
-let element_events = {};
-let element_set_listener = (() => {
+const element_events = {};
+const element_set_listener = (() => {
   let next_element_serial = 1;
   return function(element, ev_type, fn) {
     let serial = element.__element_serial;

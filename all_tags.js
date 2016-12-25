@@ -1,4 +1,4 @@
-export let all_tags = [
+export const all_tags = [
 
   // html
   'a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio',

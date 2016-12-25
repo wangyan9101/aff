@@ -101,25 +101,25 @@ export let $filter = (fn) => ({
 
 // predictions
 
-export let $any = { __predict_any: true };
+export const $any = { __predict_any: true };
 
 // utils
 
 export function pick(obj, ...keys) {
   if (typeof obj === 'object') {
     if (Array.isArray(obj)) {
-      let new_obj = [];
+      const new_obj = [];
       for (let i = 0; i < keys.length; i++) {
-        let key = keys[i];
+        const key = keys[i];
         if (obj[key] !== undefined) {
           new_obj.push(obj[key]);
         }
       }
       return new_obj;
     } else {
-      let new_obj = {};
+      const new_obj = {};
       for (let i = 0; i < keys.length; i++) {
-        let key = keys[i];
+        const key = keys[i];
         if (obj[key] !== undefined) {
           new_obj[key] = obj[key];
         }

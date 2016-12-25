@@ -1,7 +1,7 @@
 import {e} from './app'
 import { all_tags } from './all_tags'
 
-let helpers = all_tags.reduce((helpers, tag) => {
+const helpers = all_tags.reduce((helpers, tag) => {
   helpers[tag] = function(...args) {
     return e(tag, ...args);
   };
