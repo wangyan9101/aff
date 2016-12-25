@@ -1,5 +1,5 @@
 import { alias } from '../alias'
-import { App } from '../app'
+import { App, div, $, t } from '../index'
 
 test('alias', () => {
   let init_state = {
@@ -71,4 +71,43 @@ test('nested init state alias', () => {
   };
   let app = new App(init_state);
   expect(app.state.bar.baz.qux).toBe('FOO');
+});
+
+test('alias change', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let app = new App(
+    element,
+    {
+      foo: 'FOO',
+      bar: {
+        foo: alias('foo'),
+        bar: {
+          bar: alias('bar', 'foo'),
+        },
+      },
+    },
+  );
+  app.init((state) => {
+    return div(
+      div($`#a`, state.foo),
+      t('bar', (state) => {
+        return div(
+          div($`#b`, state.foo), 
+          t('baz', (state) => {
+            return div($`#c`, state.bar);
+          }, state.bar),
+        );
+      }, state.bar),
+    );
+  });
+  expect(root.querySelector('#a').textContent).toBe('FOO');
+  expect(root.querySelector('#b').textContent).toBe('FOO');
+  expect(root.querySelector('#c').textContent).toBe('FOO');
+  app.update('foo', 'BAR');
+  //TODO FIXME
+  //expect(root.querySelector('#a').textContent).toBe('BAR');
+  //expect(root.querySelector('#b').textContent).toBe('BAR');
+  //expect(root.querySelector('#c').textContent).toBe('BAR');
 });

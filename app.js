@@ -195,6 +195,91 @@ export class App {
     }
   }
 
+  args_changed(arg, last_arg) {
+    let arg_type = typeof arg;
+    let last_arg_type = typeof last_arg;
+
+    // different type
+    if (arg_type !== last_arg_type) {
+      return true;
+    }
+
+    // sub state
+    else if (arg instanceof SubState && last_arg instanceof SubState) {
+      // check path and dirty state
+      let max_dirty_index = -1;
+      let max_same_index = -1;
+      let dirty_tree = this.dirty_tree;
+      let last_path = last_arg.path;
+      for (let index = 0; index < arg.path.length; index++) {
+        if (dirty_tree && dirty_tree[arg.path[index]]) {
+          dirty_tree = dirty_tree[arg.path[index]];
+          max_dirty_index = index;
+        }
+        if (last_path[index] == arg.path[index]) {
+          max_same_index = index;
+        }
+      }
+      if (max_dirty_index == arg.path.length - 1) {
+        return true;
+      }
+      if (max_same_index != arg.path.length - 1) {
+        return true;
+      }
+    } 
+
+    // patch_tick
+    else if (
+      arg === last_arg 
+      && typeof arg === 'object' 
+      && arg !== null 
+      && arg.__aff_tick === this.patch_tick
+    ) {
+      return true;
+    }
+
+    // array
+    else if (Array.isArray(arg) && Array.isArray(last_arg)) {
+      // different length
+      if (arg.length != last_arg.length) {
+        return true;
+      }
+      // check items
+      for (let i = 0; i < arg.length; i++ ){
+        if (this.args_changed(arg[i], last_arg[i])) {
+          return true;
+        }
+      }
+    } 
+
+    // deep compare object
+    else if (arg_type === 'object') {
+      // different keys length
+      if (Object.keys(arg).length != Object.keys(last_arg).length) {
+        return true;
+      }
+      for (let key in arg) {
+        if (this.args_changed(arg[key], last_arg[key])) {
+          return true;
+        }
+      }
+    }
+
+    // function
+    else if (arg_type === 'function') {
+      if (arg.name !== last_arg.name) {
+        return true;
+      }
+    }
+
+    // compare
+    else if (arg !== last_arg) {
+      return true;
+    }
+
+    return false;
+  }
+
   // patch last_element to represent node attributes, with diffing last_node
   patch(last_element, node, last_node) {
     // thunk
@@ -208,50 +293,16 @@ export class App {
       thunk = node;
     }
 
-    let should_update = false;
-    if (!thunk || !last_thunk) {
-      should_update = true;
-    } else if (thunk.name != last_thunk.name) {
-      should_update = true;
-    } else if (thunk.args.length != last_thunk.args.length) {
-      should_update = true;
-    } else {
-      for (let i = 0; i < thunk.args.length; i++) {
-        let arg = thunk.args[i];
-        let last_arg = last_thunk.args[i];
-        if (arg instanceof SubState && last_arg instanceof SubState) {
-          let max_dirty_index = -1;
-          let max_same_index = -1;
-          let dirty_tree = this.dirty_tree;
-          let last_path = last_arg.path;
-          for (let index = 0; index < arg.path.length; index++) {
-            if (dirty_tree && dirty_tree[arg.path[index]]) {
-              dirty_tree = dirty_tree[arg.path[index]];
-              max_dirty_index = index;
-            }
-            if (last_path[index] == arg.path[index]) {
-              max_same_index = index;
-            }
-          }
-          if (max_dirty_index == arg.path.length - 1) {
-            should_update = true;
-            break
-          }
-          if (max_same_index != arg.path.length - 1) {
-            should_update = true;
-            break
-          }
-        } else if (arg === last_arg && typeof arg === 'object' && arg !== null && arg.__aff_tick === this.patch_tick) {
-          should_update = true;
-          break
-        } else if (!equal(arg, last_arg)) {
-          should_update = true;
-          break
-        }
-      }
-    }
-
     if (thunk) {
+      let should_update = false;
+      if (!last_thunk) {
+        should_update = true;
+      } else if (thunk.name != last_thunk.name) {
+        should_update = true;
+      } else if (this.args_changed(thunk.args, last_thunk.args)) {
+        should_update = true;
+      }
+
       if (last_thunk && !should_update) {
         // reuse node
         thunk.node = last_thunk.node;
@@ -822,34 +873,3 @@ let element_set_listener = (() => {
     event_set[ev_type] = fn;
   }
 })();
-
-export function equal(a, b) {
-  if (a === b) {
-    return true;
-  }
-  let type_a = typeof a;
-  let type_b = typeof b;
-  if (type_a !== type_b) {
-    return false;
-  }
-  if (type_a === 'object' && a !== null) {
-    if (a instanceof SubState && b instanceof SubState) {
-      return equal(a.get(), b.get());
-    }
-    // deep compare
-    let keys_a = Object.keys(a);
-    let keys_b = Object.keys(b);
-    if (keys_a.length != keys_b.length) {
-      return false;
-    }
-    for (let key in a) {
-      if (!equal(a[key], b[key])) {
-        return false;
-      }
-    }
-    return true;
-  } else if (type_a === 'function') {
-    return a.name === b.name;
-  }
-  return false;
-}

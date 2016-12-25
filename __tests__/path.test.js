@@ -1,8 +1,9 @@
-import { App, equal } from '../app'
+import { App } from '../app'
 import { $any } from '../state'
 import { t } from '../dom'
 import { div } from '../tags'
 import { $, css } from '../tagged'
+import './__helpers'
 
 test('path', () => {
   let init_state = {
@@ -32,7 +33,7 @@ test('path', () => {
 
   let p1 = app.sub('foo', 'bar');
   let p2 = app.sub('foo', 'bar');
-  expect(equal(p1, p2));
+  expect(p1).toMatchObject(p2);
 
   path = app.sub('foo');
   path.update($any, $any, $any, 'FOO');
