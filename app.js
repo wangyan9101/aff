@@ -2,6 +2,7 @@ import { $any } from './state'
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Event } from './event'
+import { Alias } from './alias'
 
 export class App {
   constructor(...args) {
@@ -28,6 +29,7 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
+        this.setup_alias(this.state);
       }
     }
     if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
@@ -116,11 +118,12 @@ export class App {
       if (typeof args[0] === 'object' && args[0] !== null && args[0].__is_op) {
         ret = args[0].apply(obj, this);
         if (ret === obj) {
-          this.setup_state_object(ret);
+          this.setup_patch_tick(ret);
         }
       } else {
         ret = args[0];
       }
+      this.setup_alias(ret, true);
       return ret;
     } else {
       if (!obj) {
@@ -128,7 +131,7 @@ export class App {
       }
       if (typeof obj === 'object' && obj !== null) {
         if (!obj.hasOwnProperty('__aff_tick')) {
-          this.setup_state_object(obj);
+          this.setup_patch_tick(obj);
         }
         let key = args[0];
         for (let k in obj) {
@@ -146,6 +149,7 @@ export class App {
           obj[key] = this.update_state(dirty_tree[key], undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patch_tick + 1;
+        this.setup_alias(obj);
         return obj;
       } else {
         throw['bad update path', obj, args];
@@ -153,17 +157,42 @@ export class App {
     }
   }
 
-  setup_state_object(obj) {
+  setup_patch_tick(obj) {
     if (obj.hasOwnProperty('__aff_tick')) {
       obj.__aff_tick = this.patch_tick + 1;
+    } else {
+      Object.defineProperty(obj, '__aff_tick', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: this.patch_tick + 1,
+      });
+    }
+  }
+
+  setup_alias(obj, recursive) {
+    if (typeof obj !== 'object' || obj === null) {
       return
     }
-    Object.defineProperty(obj, '__aff_tick', {
-      configurable: false,
-      enumerable: false,
-      writable: true,
-      value: this.patch_tick + 1,
-    });
+    for (let key in obj) {
+      if (obj[key] instanceof Alias) {
+        const path = obj[key].path;
+        const app = this;
+        Object.defineProperty(obj, key, {
+          enumerable: true,
+          get: function() {
+            return app.get(path);
+          },
+          set: function(v) {
+            app.update(...path, v);
+          },
+        });
+      } else {
+        if (recursive) {
+          this.setup_alias(obj[key], true);
+        }
+      }
+    }
   }
 
   // patch last_element to represent node attributes, with diffing last_node
