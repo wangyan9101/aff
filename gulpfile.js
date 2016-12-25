@@ -20,6 +20,14 @@ gulp.task('default', function() {
             loader: 'babel-loader',
           },
         ],
+        plugins: [
+          new wp.optimize.UglifyJsPlugin({
+            compress: {
+              warnings: false,
+            },
+          }),
+          new wp.optimize.OccurrenceOrderPlugin(),
+        ],
       },
     }))
   .pipe(gulp.dest('lib'));
@@ -45,14 +53,6 @@ gulp.task('default', function() {
             },
           ],
         },
-        plugins: [
-          new wp.optimize.UglifyJsPlugin({
-            compress: {
-              warnings: false,
-            },
-          }),
-          new wp.optimize.OccurrenceOrderPlugin(),
-        ],
       }))
       .pipe(gulp.dest('examples/' + what));
   });
