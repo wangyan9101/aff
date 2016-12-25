@@ -2,7 +2,6 @@ import { $any } from './state'
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Event } from './event'
-import { Alias } from './alias'
 
 export class App {
   constructor(...args) {
@@ -29,7 +28,6 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
-        this.setup_alias(this.state, true);
       }
     }
     if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
@@ -123,7 +121,6 @@ export class App {
       } else {
         ret = args[0];
       }
-      this.setup_alias(ret, true);
       return ret;
     } else {
       if (!obj) {
@@ -149,7 +146,6 @@ export class App {
           obj[key] = this.update_state(dirty_tree[key], undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patch_tick + 1;
-        this.setup_alias(obj);
         return obj;
       } else {
         throw['bad update path', obj, args];
@@ -167,31 +163,6 @@ export class App {
         writable: true,
         value: this.patch_tick + 1,
       });
-    }
-  }
-
-  setup_alias(obj, recursive) {
-    if (typeof obj !== 'object' || obj === null) {
-      return
-    }
-    for (let key in obj) {
-      if (obj[key] instanceof Alias) {
-        const path = obj[key].path;
-        const app = this;
-        Object.defineProperty(obj, key, {
-          enumerable: true,
-          get: function() {
-            return app.get(path);
-          },
-          set: function(v) {
-            app.update(...path, v);
-          },
-        });
-      } else {
-        if (recursive) {
-          this.setup_alias(obj[key], true);
-        }
-      }
     }
   }
 
