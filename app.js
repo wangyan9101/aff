@@ -741,7 +741,13 @@ class Node {
       // use cached element
       if (app && app.element_cache[this.tag] && app.element_cache[this.tag].length > 0) {
         let [element, last_node] = app.element_cache[this.tag].pop();
-        return app.patch_node(element, this, last_node)[0];
+        let node;
+        [element, node] = app.patch_node(element, this, last_node);
+        this.element = element;
+        if (this.hooks && this.hooks.created) {
+          this.hooks.created.forEach(fn => fn(element));
+        }
+        return element;
       }
       element = document.createElement(this.tag);
     }

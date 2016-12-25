@@ -5,6 +5,7 @@ import {
   setBeforeThunkCallFunc,
 } from '../dom'
 import { $push } from '../state'
+import { on } from '../index'
 
 test('thunk func call optimize', () => {
   let n = 0;
@@ -122,6 +123,7 @@ test('element reuse', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
+  let n = 0;
   let app = new App(
     element,
     0,
@@ -135,7 +137,10 @@ test('element reuse', () => {
       } else {
         let list = [];
         for (let i = 0; i < step; i++) {
-          list.push(p(i));
+          list.push(p(i, on('created', (elem) => {
+            expect(elem).toBeTruthy();
+            n++;
+          })));
         }
         return div(list);
       }
@@ -153,4 +158,5 @@ test('element reuse', () => {
       expect(root.textContent).toBe(s);
     }
   }
+  expect(n).toBe(256);
 });
