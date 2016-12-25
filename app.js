@@ -28,6 +28,7 @@ export class App {
         this.node_func = arg;
       } else {
         this.state = arg;
+        this.setup_uses(this.state);
       }
     }
     if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
@@ -173,6 +174,94 @@ export class App {
     }
   }
 
+  setup_uses(obj, path) {
+    if (typeof obj !== 'object' || obj === null) {
+      return
+    }
+
+    path = path || [];
+    const app = this;
+    if ('$use' in obj) {
+      const use = obj['$use'];
+      let use_keys = [];
+      if (typeof use === 'object' && use !== null) {
+
+        if (Array.isArray(use)) {
+          for (let i = 0; i < use.length; i++) {
+            let key = use[i];
+            if (key in obj) {
+              throw['use key conflict', key];
+            }
+            use_keys.push(key);
+            let src = path.slice(0);
+            src.pop();
+            src.push(key);
+            let src_parent = src.slice(0);
+            src_parent.pop();
+            Object.defineProperty(obj, key, {
+              configurable: false,
+              enumerable: true,
+              get: function() {
+                // sync source parent's tick
+                obj.__aff_tick = app.get(src_parent).__aff_tick;
+                return app.get(src);
+              },
+              set: function(v) {
+                app.update(...src, v);
+              },
+            });
+          }
+        } 
+
+        else {
+          for (let key in use) {
+            if (key in obj) {
+              throw['use key conflict', key];
+            }
+            use_keys.push(key);
+            let src = path.slice(0);
+            src.pop();
+            src.push(use[key]);
+            let src_parent = src.slice(0);
+            src_parent.pop();
+            Object.defineProperty(obj, key, {
+              configurable: false,
+              enumerable: true,
+              get: function() {
+                // sync source parent's tick
+                obj.__aff_tick = app.get(src_parent).__aff_tick;
+                return app.get(src);
+              },
+              set: function(v) {
+                app.update(...src, v);
+              },
+            });
+          }
+        }
+
+        delete obj['$use'];
+
+        // mark object as using $use
+        Object.defineProperty(obj, '__aff_use_keys', {
+          configurable: false,
+          writable: false,
+          enumerable: false,
+          value: use_keys,
+        });
+
+      } else {
+        throw['bad use', use];
+      }
+    }
+
+    for (let key in obj) {
+      let p = path.slice(0);
+      p.push(key);
+      this.setup_uses(obj[key], p);
+    }
+
+  }
+
   args_changed(arg, last_arg) {
     const arg_type = typeof arg;
     const last_arg_type = typeof last_arg;
@@ -182,8 +271,21 @@ export class App {
       return true;
     }
 
+    // trigger update of used keys
+    if (
+      arg === last_arg
+      && typeof arg === 'object'
+      && arg != null
+      && arg.__aff_use_keys
+    ) {
+      for (let i = 0; i < arg.__aff_use_keys.length; i++) {
+        // trigger getter
+        arg[arg.__aff_use_keys[i]];
+      }
+    }
+
     // sub state
-    else if (arg instanceof SubState && last_arg instanceof SubState) {
+    if (arg instanceof SubState && last_arg instanceof SubState) {
       // check path and dirty state
       let max_dirty_index = -1;
       let max_same_index = -1;
