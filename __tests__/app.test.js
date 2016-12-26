@@ -1,6 +1,6 @@
 import {App} from '../app'
 import {div, none, input, style} from '../tags'
-import { t } from '../dom'
+import { t } from '../index'
 import { $inc } from '../state'
 import { $, css } from '../tagged'
 

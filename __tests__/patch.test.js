@@ -1,9 +1,9 @@
 import { App } from '../app'
 import { div, p, none } from '../tags'
-import { t, patch } from '../dom'
+import { t, patch } from '../index'
 import {
   setBeforeThunkCallFunc,
-} from '../dom'
+} from '../index'
 import { $push } from '../state'
 import { on } from '../index'
 

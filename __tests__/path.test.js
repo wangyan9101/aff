@@ -1,6 +1,6 @@
 import { App } from '../app'
 import { $any } from '../state'
-import { t } from '../dom'
+import { t } from '../index'
 import { div } from '../tags'
 import { $, css } from '../tagged'
 import './__helpers'

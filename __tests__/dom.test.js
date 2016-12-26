@@ -1,4 +1,4 @@
-import {t, e, setAfterThunkCallFunc} from '../dom'
+import {t, e, setAfterThunkCallFunc} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../state'

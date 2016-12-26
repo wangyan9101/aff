@@ -1,4 +1,4 @@
-import {e, t} from '../dom'
+import {e, t} from '../index'
 import {div, DIV, Div, P} from '../tags'
 import {$, css} from '../tagged'
 import './__helpers'
