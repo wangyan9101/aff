@@ -1,15 +1,13 @@
-import { $any } from './operations'
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Event } from './event'
+import { MutableState } from './mutable_state'
+import { SubState } from './state'
 
 export class App {
   constructor(...args) {
     this.node = null;
     this.patching = false;
-    this.patch_tick = 1;
-    this.dirty_tree = {};
-    this.next_dirty_tree = {};
     this.updated = false;
     this.update_count = 0;
     this.element_cache = {};
@@ -27,11 +25,15 @@ export class App {
       } else if (typeof arg == 'function') {
         this.node_func = arg;
       } else {
-        this.state = arg;
-        this.setup_uses(this.state);
+        this._state = new MutableState(this);
+        this._state.init(arg);
       }
     }
-    if (this.element !== undefined && this.node_func !== undefined && this.state !== undefined) {
+    if (
+      this.element !== undefined 
+      && this.node_func !== undefined 
+      && this._state !== undefined
+    ) {
       this.update();
     }
   }
@@ -42,6 +44,10 @@ export class App {
   afterUpdate() {
   }
 
+  get state() {
+    return this._state.get();
+  }
+
   update(...args) {
     return this.update_multi(args);
   }
@@ -50,30 +56,34 @@ export class App {
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
       this.beforeUpdate(this.state, ...arg);
-      this.state = this.update_state(this.next_dirty_tree, this.state, ...arg);
+      this._state.update(...arg);
       this.afterUpdate(this.state, ...arg);
     }
     if (!this.element) {
-      return this.state;
+      return this._state.get();
     }
     if (!this.patching) {
       this.patching = true;
       this.updated = false;
       this.update_count = 0;
-      this.patch_tick++;
-      this.dirty_tree = this.next_dirty_tree;
-      this.next_dirty_tree = {};
-      [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
+      this._state.beforePatch();
+      [this.element, this.node] = this.patch(
+        this.element, 
+        this.node_func(this.state), 
+        this.node,
+      );
       while (this.updated) {
         if (this.update_count > 4096) { // infinite loop
           throw['infinite loop in updating', args];
         }
         // if state is updated when patching, patch again
         this.updated = false;
-        this.patch_tick++;
-        this.dirty_tree = this.next_dirty_tree;
-        this.next_dirty_tree = {};
-        [this.element, this.node] = this.patch(this.element, this.node_func(this.state), this.node);
+        this._state.beforePatch();
+        [this.element, this.node] = this.patch(
+          this.element,
+          this.node_func(this.state),
+          this.node,
+        );
       }
       this.patching = false;
       this.update_count = 0;
@@ -116,250 +126,6 @@ export class App {
     return new SubState(this, path);
   }
 
-  update_state(dirty_tree, obj, ...args) {
-    if (args.length === 0) {
-      return obj;
-    } else if (args.length === 1) {
-      let ret;
-      if (typeof args[0] === 'object' && args[0] !== null && args[0].__is_op) {
-        ret = args[0].apply(obj, this);
-        if (ret === obj) {
-          this.setup_patch_tick(ret);
-        }
-      } else {
-        ret = args[0];
-      }
-      return ret;
-    } else {
-      if (!obj) {
-        obj = {};
-      }
-      if (typeof obj === 'object' && obj !== null) {
-        if (!obj.hasOwnProperty('__aff_tick')) {
-          this.setup_patch_tick(obj);
-        }
-        const key = args[0];
-        for (const k in obj) {
-          if (k == key || key === $any) {
-            if (!dirty_tree[k]) {
-              dirty_tree[k] = {};
-            }
-            obj[k] = this.update_state(dirty_tree[k], obj[k], ...args.slice(1));
-          }
-        }
-        if (key !== $any && !(key in obj)) {
-          if (!dirty_tree[key]) {
-            dirty_tree[key] = {};
-          }
-          obj[key] = this.update_state(dirty_tree[key], undefined, ...args.slice(1));
-        }
-        obj.__aff_tick = this.patch_tick + 1;
-        return obj;
-      } else {
-        throw['bad update path', obj, args];
-      }
-    }
-  }
-
-  setup_patch_tick(obj) {
-    if (obj.hasOwnProperty('__aff_tick')) {
-      obj.__aff_tick = this.patch_tick + 1;
-    } else {
-      Object.defineProperty(obj, '__aff_tick', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: this.patch_tick + 1,
-      });
-    }
-  }
-
-  setup_uses(obj, path) {
-    if (typeof obj !== 'object' || obj === null) {
-      return
-    }
-
-    path = path || [];
-    const app = this;
-    if ('$use' in obj) {
-      const use = obj['$use'];
-      let use_keys = [];
-      if (typeof use === 'object' && use !== null) {
-
-        if (Array.isArray(use)) {
-          for (let i = 0; i < use.length; i++) {
-            let key = use[i];
-            if (key in obj) {
-              throw['use key conflict', key];
-            }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(key);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
-          }
-        } 
-
-        else {
-          for (let key in use) {
-            if (key in obj) {
-              throw['use key conflict', key];
-            }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(use[key]);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
-          }
-        }
-
-        delete obj['$use'];
-
-        // mark object as using $use
-        Object.defineProperty(obj, '__aff_use_keys', {
-          configurable: false,
-          writable: false,
-          enumerable: false,
-          value: use_keys,
-        });
-
-      } else {
-        throw['bad use', use];
-      }
-    }
-
-    for (let key in obj) {
-      let p = path.slice(0);
-      p.push(key);
-      this.setup_uses(obj[key], p);
-    }
-
-  }
-
-  args_changed(arg, last_arg) {
-    const arg_type = typeof arg;
-    const last_arg_type = typeof last_arg;
-
-    // different type
-    if (arg_type !== last_arg_type) {
-      return true;
-    }
-
-    // trigger update of used keys
-    if (
-      arg === last_arg
-      && typeof arg === 'object'
-      && arg != null
-      && arg.__aff_use_keys
-    ) {
-      for (let i = 0; i < arg.__aff_use_keys.length; i++) {
-        // trigger getter
-        arg[arg.__aff_use_keys[i]];
-      }
-    }
-
-    // sub state
-    if (arg instanceof SubState && last_arg instanceof SubState) {
-      // check path and dirty state
-      let max_dirty_index = -1;
-      let max_same_index = -1;
-      let dirty_tree = this.dirty_tree;
-      const last_path = last_arg.path;
-      for (let index = 0; index < arg.path.length; index++) {
-        if (dirty_tree && dirty_tree[arg.path[index]]) {
-          dirty_tree = dirty_tree[arg.path[index]];
-          max_dirty_index = index;
-        }
-        if (last_path[index] == arg.path[index]) {
-          max_same_index = index;
-        }
-      }
-      if (max_dirty_index == arg.path.length - 1) {
-        return true;
-      }
-      if (max_same_index != arg.path.length - 1) {
-        return true;
-      }
-    } 
-
-    // patch_tick
-    else if (
-      arg === last_arg 
-      && typeof arg === 'object' 
-      && arg !== null 
-      && arg.__aff_tick === this.patch_tick
-    ) {
-      return true;
-    }
-
-    // array
-    else if (Array.isArray(arg) && Array.isArray(last_arg)) {
-      // different length
-      if (arg.length != last_arg.length) {
-        return true;
-      }
-      // check items
-      for (let i = 0; i < arg.length; i++ ){
-        if (this.args_changed(arg[i], last_arg[i])) {
-          return true;
-        }
-      }
-    } 
-
-    // deep compare object
-    else if (arg_type === 'object') {
-      // different keys length
-      if (Object.keys(arg).length != Object.keys(last_arg).length) {
-        return true;
-      }
-      for (const key in arg) {
-        if (this.args_changed(arg[key], last_arg[key])) {
-          return true;
-        }
-      }
-    }
-
-    // function
-    else if (arg_type === 'function') {
-      if (arg.name !== last_arg.name) {
-        return true;
-      }
-    }
-
-    // compare
-    else if (arg !== last_arg) {
-      return true;
-    }
-
-    return false;
-  }
-
   // patch last_element to represent node attributes, with diffing last_node
   patch(last_element, node, last_node) {
     // thunk
@@ -379,7 +145,7 @@ export class App {
         should_update = true;
       } else if (thunk.name != last_thunk.name) {
         should_update = true;
-      } else if (this.args_changed(thunk.args, last_thunk.args)) {
+      } else if (this._state.args_changed(thunk.args, last_thunk.args)) {
         should_update = true;
       }
 
@@ -579,29 +345,6 @@ export class App {
     }
 
     return [last_element, node];
-  }
-}
-
-class SubState {
-  constructor(app, path) {
-    this.app = app;
-    this.path = path;
-  }
-
-  get() {
-    return this.app.get(this.path);
-  }
-
-  update(...args) {
-    return this.app.update(...this.path, ...args);
-  }
-
-  sub(...args) {
-    let subpath = args;
-    if (subpath.length == 1 && Array.isArray(subpath[0])) {
-      subpath = subpath[0];
-    }
-    return new SubState(this.app, [...this.path, ...subpath]);
   }
 }
 

@@ -33,7 +33,7 @@ test('path', () => {
 
   let p1 = app.sub('foo', 'bar');
   let p2 = app.sub('foo', 'bar');
-  expect(p1).toMatchObject(p2);
+  expect(p1.get()).toBe(p2.get());
 
   path = app.sub('foo');
   path.update($any, $any, $any, 'FOO');
