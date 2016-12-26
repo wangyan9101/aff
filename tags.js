@@ -10,6 +10,10 @@ const helpers = all_tags.reduce((helpers, tag) => {
   return helpers;
 }, {});
 
+const checkbox = (...args) => e('input', {
+  type: 'checkbox',
+}, ...args);
+
 module.exports = {
   ...helpers,
 
@@ -24,4 +28,8 @@ module.exports = {
       clear: 'both',
     },
   }),
+
+  checkbox: checkbox,
+  Checkbox: checkbox,
+  CHECKBOX: checkbox,
 };

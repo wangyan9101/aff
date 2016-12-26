@@ -1,7 +1,7 @@
 import {
   App, t, on, css, $,
   section, header, footer, h1, p, a, div, span,
-  input, ul, li, none, button, strong, label,
+  input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $del_at, $filter,
 } from '../../index'
 
@@ -43,8 +43,7 @@ const Header = header($`.header`,
 const Todo = (todo, i) => li(
   { class: { completed: todo.completed, editing: todo.editing } },
   div($`.view`,
-    input($`.toggle`, {
-      type: 'checkbox',
+    checkbox($`.toggle`, {
       checked: todo.completed ? 'checked' : false,
     }, on('click', function() {
       app.update('todos', i, 'completed', this.element.checked);
@@ -117,9 +116,7 @@ const Main = (state) => div(
   section($`.todoapp`,
     Header,
     state.todos.length > 0 ? section($`.main`,
-      input($`.toggle-all`, {
-        type: 'checkbox',
-      }, on('click', () => {
+      checkbox($`.toggle-all`, on('click', () => {
         let all_completed = app.state.todos.reduce((b, c) => b && c.completed, true);
         app.update('todos', $any, 'completed', all_completed ? false : true);
       })),
