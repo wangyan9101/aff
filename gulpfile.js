@@ -53,6 +53,14 @@ gulp.task('default', function() {
             },
           ],
         },
+        plugins: [
+          new wp.optimize.UglifyJsPlugin({
+            compress: {
+              warnings: false,
+            },
+          }),
+          new wp.optimize.OccurrenceOrderPlugin(),
+        ],
       }))
       .pipe(gulp.dest('examples/' + what));
   });
