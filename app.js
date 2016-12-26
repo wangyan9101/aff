@@ -405,6 +405,9 @@ export function t(...args) {
     thunk.name = thunk.func.name;
     break
   }
+  if (!thunk.func) {
+    throw['invalid thunk func', thunk.func];
+  }
   return thunk
 }
 

@@ -1,9 +1,8 @@
 import {
-  App, t, on, css,
+  App, t, on, css, $,
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label,
   $any, $push, $del_at, $filter,
-  $,
 } from '../../index'
 
 const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
