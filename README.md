@@ -752,6 +752,8 @@ app.init(Main);
 
 如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
 
+还要注意的是，需要用到 this 的时候，回调函数不能用箭头函数 (即 () => {} 这样的)，因为箭头函数的 this 不能绑定，this.element 无效。
+
 <h2 id="child-state">子状态</h2>
 
 App对象可以用 sub 方法得到一个 SubState 类型的对象。这个对象类似一个指针，指向状态树中的某个子状态。例如：
