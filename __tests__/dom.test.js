@@ -1,7 +1,7 @@
 import {t, e, setAfterThunkCallFunc} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
-import {$inc} from '../state'
+import {$inc} from '../operations'
 import { $ } from '../tagged'
 import { on } from '../index'
 

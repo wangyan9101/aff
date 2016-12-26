@@ -4,7 +4,7 @@ import { t, patch } from '../index'
 import {
   setBeforeThunkCallFunc,
 } from '../index'
-import { $push } from '../state'
+import { $push } from '../operations'
 import { on } from '../index'
 
 test('thunk func call optimize', () => {

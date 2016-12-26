@@ -1,4 +1,4 @@
-import { pick } from '../state'
+import { pick } from '../index'
 
 test('pick', () => {
   expect(pick([], 'foo')).toEqual([]);

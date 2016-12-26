@@ -1,4 +1,4 @@
-import {$map, $inc, $dec, $any, $filter, $reduce, versioned_update, $del_at, $push} from '../state'
+import {$map, $inc, $dec, $any, $filter, $reduce, versioned_update, $del_at, $push} from '../operations'
 import { App } from '../app'
 
 test('filter', () => {

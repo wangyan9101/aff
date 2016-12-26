@@ -1,4 +1,4 @@
-import { $any } from './state'
+import { $any } from './operations'
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Event } from './event'

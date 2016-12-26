@@ -1,7 +1,7 @@
 import {App} from '../app'
 import {div, none, input, style} from '../tags'
 import { t } from '../index'
-import { $inc } from '../state'
+import { $inc } from '../operations'
 import { $, css } from '../tagged'
 
 test('app', () => {

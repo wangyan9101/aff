@@ -3,7 +3,8 @@ export {
   t, e, 
   setBeforeThunkCallFunc, setAfterThunkCallFunc,
 } from './app';
-export * from './state';
+export * from './operations';
 export * from './tags';
 export * from './tagged';
 export * from './event';
+export * from './utils'
