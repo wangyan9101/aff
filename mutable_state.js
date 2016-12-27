@@ -176,7 +176,7 @@ export class MutableState extends State {
 
   }
 
-  args_changed(arg, last_arg) {
+  argsChanged(arg, last_arg) {
     const arg_type = typeof arg;
     const last_arg_type = typeof last_arg;
 
@@ -240,7 +240,7 @@ export class MutableState extends State {
       }
       // check items
       for (let i = 0; i < arg.length; i++ ){
-        if (this.args_changed(arg[i], last_arg[i])) {
+        if (this.argsChanged(arg[i], last_arg[i])) {
           return true;
         }
       }
@@ -253,7 +253,7 @@ export class MutableState extends State {
         return true;
       }
       for (const key in arg) {
-        if (this.args_changed(arg[key], last_arg[key])) {
+        if (this.argsChanged(arg[key], last_arg[key])) {
           return true;
         }
       }

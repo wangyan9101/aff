@@ -28,5 +28,5 @@ test('cover', () => {
   state.get();
   state.update();
   state.beforePatch();
-  state.args_changed();
+  state.argsChanged();
 });

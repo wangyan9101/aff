@@ -145,7 +145,7 @@ export class App {
         should_update = true;
       } else if (thunk.name != last_thunk.name) {
         should_update = true;
-      } else if (this._state.args_changed(thunk.args, last_thunk.args)) {
+      } else if (this._state.argsChanged(thunk.args, last_thunk.args)) {
         should_update = true;
       }
 

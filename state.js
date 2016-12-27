@@ -3,7 +3,7 @@ export class State {
   get() {}
   update() {}
   beforePatch() {}
-  args_changed() {}
+  argsChanged() {}
 }
 
 export class SubState {
