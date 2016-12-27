@@ -418,10 +418,11 @@ export class App {
     for (const key in node.events) {
       element_set_listener(last_element, key, node.events[key].bind(node));
     }
-    const serial = last_element.__element_serial;
-    for (const key in element_events[serial]) {
-      if (!node.events || !(key in node.events)) {
-        element_events[serial][key] = false;
+    if (last_element.__aff_events) {
+      for (const key in last_element.__aff_events) {
+        if (!node.events || !(key in node.events)) {
+          last_element.__aff_events[key] = false;
+        }
       }
     }
 
@@ -758,26 +759,16 @@ const warning = (text) => e('div', {
   },
 }, text);
 
-const element_events = {};
-const element_set_listener = (() => {
-  let next_element_serial = 1;
-  return function(element, ev_type, fn) {
-    let serial = element.__element_serial;
-    if (!serial) {
-      serial = next_element_serial;
-      next_element_serial++;
-      element.__element_serial = serial;
-    }
-    let event_set = element_events[serial];
-    if (!event_set) {
-      event_set = {};
-      element_events[serial] = event_set;
-    }
-    if (!(ev_type in event_set)) {
-      element.addEventListener(ev_type.substr(2), function(ev) {
-        return element_events[serial][ev_type](ev);
-      });
-    }
-    event_set[ev_type] = fn;
+function element_set_listener(element, ev_type, fn) {
+  let events = element.__aff_events;
+  if (!events) {
+    events = {};
+    element.__aff_events = events;
   }
-})();
+  if (!(ev_type in events)) {
+    element.addEventListener(ev_type.substr(2), function(ev) {
+      return events[ev_type](ev);
+    });
+  }
+  events[ev_type] = fn;
+}
