@@ -1,4 +1,4 @@
-import {e, t} from '../index'
+import {e, t, checkbox} from '../index'
 import {div, DIV, Div, P} from '../tags'
 import {$, css} from '../tagged'
 import './__helpers'
@@ -201,4 +201,11 @@ test('empty class', () => {
     class: '',
   });
   div($``);
+});
+
+test('checkbox', () => {
+  let elem = div(
+    checkbox(),
+  ).toElement();
+  expect(elem.innerHTML).toBe('<input type="checkbox">');
 });

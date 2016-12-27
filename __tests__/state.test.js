@@ -1,4 +1,4 @@
-import { pick } from '../index'
+import { pick, State } from '../index'
 
 test('pick', () => {
   expect(pick([], 'foo')).toEqual([]);
@@ -20,4 +20,13 @@ test('pick false', () => {
   expect(() => {
     pick(false, 'foo');
   }).toThrowError('not pickable');
+});
+
+test('cover', () => {
+  let state = new State();
+  state.init();
+  state.get();
+  state.update();
+  state.beforePatch();
+  state.args_changed();
 });

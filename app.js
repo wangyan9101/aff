@@ -226,45 +226,38 @@ export class App {
     // styles
     const style_type = typeof node.style;
     const last_style_type = typeof last_node.style;
-    if (style_type != last_style_type || style_type == 'string') {
-      // not diffable
-      if (style_type == 'object' && node.style !== null) {
-        // remove all existing style
-        last_element.style = null;
-        // reset
+    // different type, no diff
+    if (style_type !== last_style_type) {
+      if (style_type === 'string') {
+        last_element.style = node.style;
+      } else if (style_type === 'object' && node.style !== null) {
+        last_element.style = undefined;
         for (const key in node.style) {
           last_element.style[key] = node.style[key];
         }
-      } else {
-        // set string style
-        if (node.style != last_node.style) {
-          last_element.style = node.style;
-        }
       }
-    } else {
-      if (node.style && last_node.style) {
-        // common styles
+    } 
+    // diff object
+    else if (style_type === 'object') {
+      if (node.style !== null) {
         for (const key in node.style) {
-          if (node.style[key] != last_node.style[key]) {
+          if (!last_node.style || node.style[key] != last_node.style[key]) {
             last_element.style[key] = node.style[key];
           }
         }
-        // delete styles exist in old Node but not in new
-        if (typeof last_node.style === 'object' && last_node.style !== null) {
-          for (const key in last_node.style) {
-            if (!(key in node.style)) {
-              last_element.style[key] = '';
-            }
+      }
+      if (last_node.style !== null) {
+        for (const key in last_node.style) {
+          if (!node.style || !(key in node.style)) {
+            last_element.style[key] = '';
           }
         }
-      } else if (node.style) {
-        // new Node only
-        for (const key in node.style) {
-          last_element.style[key] = node.style[key];
-        }
-      } else if (last_node.style) {
-        // no style in new Node, delete all
-        last_element.style = undefined;
+      }
+    } 
+    // string, compare
+    else if (style_type === 'string') {
+      if (node.style !== last_node.style) {
+        last_element.style = node.style;
       }
     }
 

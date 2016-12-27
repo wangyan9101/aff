@@ -289,10 +289,16 @@ test('change style', () => {
           marginTop: '3px',
         },
       });
-    } else if (state.step == 4) {
+    } else if (state.step == 4 || state.step == 6) {
       return div({
         style: `
           margin-top: 5px;
+        `,
+      });
+    } else if (state.step == 7) {
+      return div({
+        style: `
+          border-top: 5px;
         `,
       });
     }
@@ -309,6 +315,10 @@ test('change style', () => {
   expect(root.innerHTML).toBe('<div style="margin-top: 5px;"></div>');
   app.update('step', 5);
   expect(root.innerHTML).toBe('<div style="border: 1px solid red;"></div>');
+  app.update('step', 6);
+  expect(root.innerHTML).toBe('<div style="margin-top: 5px;"></div>');
+  app.update('step', 7);
+  expect(root.innerHTML).toBe('<div style="border-top: 5px;"></div>');
 });
 
 test('change id', () => {
