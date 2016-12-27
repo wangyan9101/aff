@@ -14,6 +14,7 @@
 	* [状态更新操作一览](#6)
 	* [引用浏览器元素](#10)
 	* [子状态](#child-state)
+	* [组件状态的逐层传递](#state-passing)
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
@@ -871,6 +872,173 @@ app.init(Main);
 
 另外，可以看到 Checkbox 组件并没有使用 app 这个变量去更新状态树，而是使用传入的 SubState 参数。
 这是实现可复用的组件的重要手段，后面会有专门的一节讲组件的可复用性。
+
+<h2 id="state-passing">组件状态的逐层传递</h2>
+
+一个组件嵌套另一个组件，外层的组件可以称为父组件，内层的组件可以称为子组件。
+
+子组件观察的状态，必须是父组件所观察的状态，或者它的子状态。
+因为子组件的更新过程，从属于父组件的更新过程。父组件的更新，会因为它所观察的状态出现变化，而触发。
+所以，如果子组件观察的状态，不属于父组件观察的状态的一部分，那就算子组件观察的状态发生了变化，子组件也不会触发更新。
+因为父组件观察的状态，和子组件的没有关联，父组件没有触发更新，子组件自然不会更新。
+
+也可以这样理解，父组件不需要更新的时候，子组件也不会更新。
+在状态发生变化，需要检测哪些组件需要更新的时候，这样的策略对提高检测效率是很有益处的。
+
+当然，这会给开发者带来一些麻烦。
+在组件多重嵌套的场景下，叶子组件需要的状态，要逐层传递给它。例如：
+
+```js
+import { App, div, t } from 'affjs'
+
+const init_state = {
+  foo: 'FOO',
+};
+
+const app = new App(
+  document.getElementById('app'),
+  init_state,
+);
+
+const Element = (state) => div(state.foo);
+
+const InnerWrapper = (state) => {
+  return t(Element, {
+    foo: state.foo,
+  });
+};
+
+const Wrapper = (state) => {
+  return t(InnerWrapper, {
+    foo: state.foo,
+  });
+};
+
+const OutterWrapper = (state) => {
+  return t(Wrapper, {
+    foo: state.foo,
+  });
+};
+
+const Main = (state) => {
+  return t(OutterWrapper, {
+    foo: state.foo,
+  });
+};
+
+app.init(Main);
+```
+
+Element 需要 foo 状态，所以要从 Main -> OutterWrapper -> Wrapper -> InnerWrapper -> Element 这样逐层传递。
+
+Element 如果需要多一个状态，那就要改动多处代码，逐层增加。减少一个状态也是一样，需要改动多处。相当不便。
+
+框架对这种情况，提供了一个解决办法。先看最终的代码：
+
+```js
+import { App, div, t } from 'affjs'
+
+const init_state = {
+  foo: 'FOO',
+  outter_wrapper: {
+    wrapper: {
+      inner_wrapper: {
+        element: {
+          $use: ['foo'],
+        }
+      }
+    },
+  }
+};
+
+const app = new App(
+  document.getElementById('app'),
+  init_state,
+);
+
+const Element = (state) => div(state.foo);
+
+const InnerWrapper = (state) => {
+  return t(Element, state.element);
+};
+
+const Wrapper = (state) => {
+  return t(InnerWrapper, state.inner_wrapper);
+};
+
+const OutterWrapper = (state) => {
+  return t(Wrapper, state.wrapper);
+};
+
+const Main = (state) => {
+  return t(OutterWrapper, state.outter_wrapper);
+};
+
+app.init(Main);
+```
+
+可以看出，传递给各个子组件的状态，定义在了 init_state 里。
+在传递的时候，直接传递相应的子状态就可以了。
+组件树和状态树的结构相同，就可以有这个便利。
+
+另外，element 子状态里面有一个 $use 成员，这是框架提供的特殊机制。
+它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
+也就是说，outter_wrapper、wrapper、inner_wrapper、element 对应的这些对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
+
+如果 Element 组件需要观察多一个状态，例如 bar，改动可以很少：
+
+```js
+const init_state = {
+  foo: 'FOO',
+  outter_wrapper: {
+    bar: 'BAR', // 假设 bar 定义在这里
+    wrapper: {
+      inner_wrapper: {
+        element: {
+          $use: ['foo', 'bar'],
+        }
+      }
+    },
+  }
+};
+```
+
+只需要改变 $use 的定义即可。删除同理，只需要改动一处，就可以完成逐层传递的目的。
+
+$use 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
+
+```js
+const init_state = {
+  foo: 'FOO',
+  outter_wrapper: {
+    bar: 'BAR', 
+    wrapper: {
+      inner_wrapper: {
+        element: {
+          $use: {
+            FOO: 'foo',
+            BAR: 'bar',
+          },
+        }
+      }
+    },
+  }
+};
+
+// ...
+
+const Element = (state) => div(state.FOO, state.BAR);
+
+```
+
+这样 Element 组件里用到的就是 FOO 和 BAR，而不是 foo 和 bar 了。
+
+$use 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
+查找是初始化 App 的时候做的，不是在读取状态的时候。
+所以从一开始就要在 init_state 里定义好相关的状态。
+
+$use 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
+因为解析 $use 标记开销比较大，如果更新一个大对象，就算不包含 $use 标记，也要进行解析的话，对性能影响比较大。
 
 <h2 id="7">跟踪状态变化</h2>
 
