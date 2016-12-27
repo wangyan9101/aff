@@ -98,9 +98,9 @@ export class MutableState extends State {
       && arg != null
       && arg.__aff_use_keys
     ) {
-      for (let i = 0; i < arg.__aff_use_keys.length; i++) {
-        // trigger getter
-        arg[arg.__aff_use_keys[i]];
+      for (const key in arg.__aff_use_keys) {
+        // trigger getter to update __aff_tick
+        arg[key];
       }
     }
 

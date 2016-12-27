@@ -38,90 +38,112 @@ export class App {
     }
   }
 
-  setup_uses(obj, path) {
-    if (typeof obj !== 'object' || obj === null) {
+  setup_uses(obj, path, scopes) {
+    // skip non-object
+    if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
       return
     }
 
+    // default arguments
     path = path || [];
-    const app = this;
+    scopes = scopes || [];
+
+    // parse $use
+    let useInfos;
     if ('$use' in obj) {
       const use = obj['$use'];
-      let use_keys = [];
       if (typeof use === 'object' && use !== null) {
-
         if (Array.isArray(use)) {
+          useInfos = {};
           for (let i = 0; i < use.length; i++) {
-            let key = use[i];
+            const key = use[i];
             if (key in obj) {
               throw['use key conflict', key];
             }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(key);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
+            useInfos[key] = key;
           }
-        } 
-
-        else {
-          for (let key in use) {
+        } else {
+          for (const key in use) {
             if (key in obj) {
               throw['use key conflict', key];
             }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(use[key]);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
           }
+          useInfos = use;
         }
-
         delete obj['$use'];
-
-        // mark object as using $use
-        Object.defineProperty(obj, '__aff_use_keys', {
-          configurable: false,
-          writable: false,
-          enumerable: false,
-          value: use_keys,
-        });
-
       } else {
         throw['bad use', use];
       }
     }
 
+    const app = this;
+    function set_user_getter(obj, key, from) {
+      const parentPathOfFrom = from.slice(0);
+      parentPathOfFrom.pop();
+      if (!(key in obj)) {
+        Object.defineProperty(obj, key, {
+          configurable: false,
+          enumerable: true,
+          get: function() {
+            obj.__aff_tick = app.get(parentPathOfFrom).__aff_tick;
+            return app.get(from);
+          },
+          set: function(v) {
+            app.update(...from, v);
+          },
+        });
+      }
+      if (!obj.__aff_use_keys) {
+        Object.defineProperty(obj, '__aff_use_keys', {
+          configurable: false,
+          writable: true,
+          enumerable: false,
+          value: {},
+        });
+      }
+      obj.__aff_use_keys[key] = true;
+    }
+
+    // setup
+    for (const key in useInfos) {
+      const name = useInfos[key];
+      // search in scopes
+      let found = false;
+      for (let i = 0; i < scopes.length; i++) {
+        const bindings = scopes[i];
+        if (name in bindings) { // found
+          found = true;
+          let stop_path = bindings[name].slice(0);
+          stop_path.pop();
+          const stop_length = stop_path.length;
+          let setup_path = path.slice(0);
+          while (setup_path.length > stop_length) {
+            //console.log('get', setup_path, key, 'from', bindings[name]);
+            set_user_getter(this.get(setup_path), key, bindings[name]);
+            setup_path.pop();
+          }
+        }
+      }
+      if (!found) {
+        throw[`no state named ${name}`];
+      }
+    }
+
+    // collect bindings
+    const bindings = {};
+    for (const key in obj) {
+      const p = path.slice(0);
+      p.push(key);
+      bindings[key] = p;
+    }
+    scopes = scopes.slice(0); // copy
+    scopes.push(bindings);
+
+    // recursively
     for (let key in obj) {
       let p = path.slice(0);
       p.push(key);
-      this.setup_uses(obj[key], p);
+      this.setup_uses(obj[key], p, scopes);
     }
 
   }

@@ -128,3 +128,40 @@ test('bad use', () => {
     });
   }).toThrowError('bad use,42');
 });
+
+test('passthrough use', () => {
+  let app = new App({
+    foo: 'FOO',
+    bar1: {
+      bar2: {
+        foo2: 'foo',
+        bar3: {
+          bar4: {
+            $use: ['foo', 'foo2'],
+          },
+        },
+      },
+    },
+  });
+  expect(app.state.bar1.foo).toBe('FOO');
+  expect(app.state.bar1.bar2.foo).toBe('FOO');
+  expect(app.state.bar1.bar2.bar3.foo).toBe('FOO');
+  expect(app.state.bar1.bar2.bar3.bar4.foo).toBe('FOO');
+  expect(app.state.bar1.bar2.bar3.foo2).toBe('foo');
+  expect(app.state.bar1.bar2.bar3.bar4.foo2).toBe('foo');
+});
+
+test('no state', () => {
+  expect(() => {
+    let app = new App({
+      $use: ['foo'],
+    });
+  }).toThrowError('no state named foo');
+  expect(() => {
+    let app = new App({
+      bar: {
+        $use: ['foo'],
+      },
+    });
+  }).toThrowError('no state named foo');
+});
