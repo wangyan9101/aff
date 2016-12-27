@@ -1,5 +1,4 @@
 export class State {
-  init(arg) {}
   get() {}
   update() {}
   beforePatch() {}

@@ -2,18 +2,12 @@ import { State, SubState } from './state'
 import { $any } from './operations'
 
 export class MutableState extends State {
-  constructor(app) {
+  constructor(init_state) {
     super();
-    this.app = app;
     this.patch_tick = 1;
     this.dirty_tree = {};
     this.next_dirty_tree = {};
-    this.state = null;
-  }
-
-  init(arg) {
-    this.state = arg;
-    this.setup_uses(this.state);
+    this.state = init_state;
   }
 
   get() {
@@ -86,94 +80,6 @@ export class MutableState extends State {
         value: this.patch_tick + 1,
       });
     }
-  }
-
-  setup_uses(obj, path) {
-    if (typeof obj !== 'object' || obj === null) {
-      return
-    }
-
-    path = path || [];
-    const app = this.app;
-    if ('$use' in obj) {
-      const use = obj['$use'];
-      let use_keys = [];
-      if (typeof use === 'object' && use !== null) {
-
-        if (Array.isArray(use)) {
-          for (let i = 0; i < use.length; i++) {
-            let key = use[i];
-            if (key in obj) {
-              throw['use key conflict', key];
-            }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(key);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
-          }
-        } 
-
-        else {
-          for (let key in use) {
-            if (key in obj) {
-              throw['use key conflict', key];
-            }
-            use_keys.push(key);
-            let src = path.slice(0);
-            src.pop();
-            src.push(use[key]);
-            let src_parent = src.slice(0);
-            src_parent.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                // sync source parent's tick
-                obj.__aff_tick = app.get(src_parent).__aff_tick;
-                return app.get(src);
-              },
-              set: function(v) {
-                app.update(...src, v);
-              },
-            });
-          }
-        }
-
-        delete obj['$use'];
-
-        // mark object as using $use
-        Object.defineProperty(obj, '__aff_use_keys', {
-          configurable: false,
-          writable: false,
-          enumerable: false,
-          value: use_keys,
-        });
-
-      } else {
-        throw['bad use', use];
-      }
-    }
-
-    for (let key in obj) {
-      let p = path.slice(0);
-      p.push(key);
-      this.setup_uses(obj[key], p);
-    }
-
   }
 
   argsChanged(arg, last_arg) {

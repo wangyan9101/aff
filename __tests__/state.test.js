@@ -24,7 +24,6 @@ test('pick false', () => {
 
 test('cover', () => {
   let state = new State();
-  state.init();
   state.get();
   state.update();
   state.beforePatch();
