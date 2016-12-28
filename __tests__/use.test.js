@@ -165,3 +165,25 @@ test('no state', () => {
     });
   }).toThrowError('no state named foo');
 });
+
+test('loop in $use', () => {
+  expect(() => {
+    let app = new App({
+      foo: {
+        $use: ['foo'],
+      },
+    })
+  }).toThrowError('loop in $use,foo,foo');
+});
+
+test('loop in $use', () => {
+  expect(() => {
+    let app = new App({
+      foo: {
+        foo: {
+          $use: ['foo'],
+        },
+      },
+    })
+  }).toThrowError('loop in $use,foo,foo,foo');
+});

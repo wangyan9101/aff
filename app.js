@@ -114,6 +114,18 @@ export class App {
         if (name in bindings) { // found
           found = true;
           let stop_path = bindings[name].slice(0);
+          // check loop
+          let same_len = 0;
+          for (let idx = 0; idx < stop_path.length && idx < path.length; idx++) {
+            if (stop_path[idx] == path[idx]) {
+              same_len++
+            } else {
+              break
+            }
+          }
+          if (same_len == stop_path.length || same_len == path.length) {
+            throw['loop in $use', path, stop_path];
+          }
           stop_path.pop();
           const stop_length = stop_path.length;
           let setup_path = path.slice(0);
