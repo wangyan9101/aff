@@ -1,5 +1,6 @@
-import {$map, $inc, $dec, $any, $filter, $reduce, versioned_update, $del_at, $push} from '../operations'
+import {$map, $inc, $dec, $any, $filter, $reduce, versioned_update, $del_at, $push, $func} from '../operations'
 import { App } from '../app'
+import './__helpers'
 
 test('filter', () => {
   let obj = {
@@ -66,4 +67,12 @@ test('ops', () => {
   expect(app.state.foo[0]).toBe(4);
   expect(app.state.foo[1]).toBe(8);
   expect(app.state.foo[2]).toBe(10);
+});
+
+test('func', () => {
+  let app = new App(
+    [1, 2, 3, 4, 5],
+  );
+  app.update($any, $func(x => x + 1));
+  expect(app.state).toMatchObject([2, 3, 4, 5, 6]);
 });

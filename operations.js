@@ -1,5 +1,14 @@
 // operations 
 
+export let $func = (fn) => ({
+  __is_op: true,
+  op: 'func',
+  args: [fn],
+  apply(obj) {
+    return fn(obj);
+  },
+});
+
 export let $inc = {
   __is_op: true,
   op: 'inc',
