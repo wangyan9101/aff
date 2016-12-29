@@ -427,13 +427,17 @@ export class App {
     }
 
     // events
+    const event_keys = {};
     for (const key in node.events) {
-      element_set_listener(last_element, key, node.events[key].bind(node));
+      let k = element_set_event(last_element, key, node.events[key].bind(node));
+      event_keys[k] = true;
     }
     if (last_element.__aff_events) {
-      for (const key in last_element.__aff_events) {
-        if (!node.events || !(key in node.events)) {
-          last_element.__aff_events[key] = false;
+      for (const ev_type in last_element.__aff_events) {
+        for (const ev_subtype in last_element.__aff_events[ev_type]) {
+          if (!(ev_type + ':' + ev_subtype in event_keys)) {
+            last_element.__aff_events[ev_type][ev_subtype] = false;
+          }
         }
       }
     }
@@ -751,7 +755,7 @@ class Node {
       for (const key in this.events) {
         // set event callback, bind current Node to callback
         // constructor must not be arrow function to get proper 'this'
-        element_set_listener(element, key, this.events[key].bind(this));
+        element_set_event(element, key, this.events[key].bind(this));
       }
     }
     this.element = element;
@@ -771,16 +775,23 @@ const warning = (text) => e('div', {
   },
 }, text);
 
-function element_set_listener(element, ev_type, fn) {
+function element_set_event(element, ev_type, fn) {
   let events = element.__aff_events;
   if (!events) {
     events = {};
     element.__aff_events = events;
   }
+  const parts = ev_type.split(/[$:]/);
+  ev_type = parts[0];
+  const ev_subtype = parts.slice(1).join(':') || '__default';
   if (!(ev_type in events)) {
+    events[ev_type] = {};
+  }
+  if (!(ev_subtype in events[ev_type])) {
     element.addEventListener(ev_type.substr(2), function(ev) {
-      return events[ev_type](ev);
+      return events[ev_type][ev_subtype](ev);
     });
   }
-  events[ev_type] = fn;
+  events[ev_type][ev_subtype] = fn;
+  return ev_type + ':' + ev_subtype;
 }

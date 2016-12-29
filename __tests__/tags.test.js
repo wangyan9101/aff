@@ -1,4 +1,4 @@
-import {e, t, checkbox} from '../index'
+import {e, t, checkbox, App, on} from '../index'
 import {div, DIV, Div, P} from '../tags'
 import {$, css} from '../tagged'
 import './__helpers'
@@ -208,4 +208,74 @@ test('checkbox', () => {
     checkbox(),
   ).toElement();
   expect(elem.innerHTML).toBe('<input type="checkbox">');
+});
+
+test('event sub type', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let n = 0;
+  new App(
+    element,
+    {},
+    () => {
+      return div(
+        on('click', () => {
+          n++;
+        }),
+        on('click:foo', () => {
+          n++;
+        }),
+        on('click$foo', () => {
+          n++;
+        }),
+        on('click$bar', () => {
+          n++;
+        }),
+        {
+          onclick$baz() {
+            n++;
+          },
+        },
+        on('created', (elem) => {
+          let ev = new MouseEvent('click');
+          elem.dispatchEvent(ev);
+        }),
+      );
+    },
+  );
+  expect(n).toBe(4);
+});
+
+test('event unset', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  let count = 0;
+  let app = new App(
+    element,
+    0,
+    (n) => {
+      if (n == 0) {
+        return div(
+          on('click', () => {
+            count++;
+          }),
+          on('created', (elem) => {
+            let ev = new MouseEvent('click');
+            elem.dispatchEvent(ev);
+          }),
+        );
+      } else if (n == 1) {
+        return div(
+          on('patched', (elem) => {
+            let ev = new MouseEvent('click');
+            elem.dispatchEvent(ev);
+          }),
+        );
+      }
+    },
+  );
+  app.update(1);
+  expect(count).toBe(1);
 });
