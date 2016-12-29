@@ -1,5 +1,4 @@
 import { State, SubState } from './state'
-import { $any } from './operations'
 
 export class MutableState extends State {
   constructor(init_state) {
@@ -41,15 +40,21 @@ export class MutableState extends State {
           this.setup_patch_tick(obj);
         }
         const key = args[0];
+        const key_type = typeof key;
         for (const k in obj) {
-          if (k == key || key === $any) {
+          if ((key_type === 'number' || key_type === 'string') && k == key) {
+            if (!dirty_tree[k]) {
+              dirty_tree[k] = {};
+            }
+            obj[k] = this.update_state(dirty_tree[k], obj[k], ...args.slice(1));
+          } else if (key_type === 'function' && key(k)) {
             if (!dirty_tree[k]) {
               dirty_tree[k] = {};
             }
             obj[k] = this.update_state(dirty_tree[k], obj[k], ...args.slice(1));
           }
         }
-        if (key !== $any && !(key in obj)) {
+        if ((key_type === 'string' || key_type === 'number') && !(key in obj)) {
           if (!dirty_tree[key]) {
             dirty_tree[key] = {};
           }

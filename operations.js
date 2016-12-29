@@ -81,4 +81,6 @@ export let $filter = (fn) => ({
 
 // predictions
 
-export const $any = { __predict_any: true };
+export function $any(k) {
+  return true;
+}

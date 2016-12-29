@@ -1,5 +1,5 @@
 import { App } from '../app'
-import { $any } from '../operations'
+import { $any, $inc } from '../operations'
 import { t } from '../index'
 import { div } from '../tags'
 import { $, css } from '../tagged'
@@ -72,4 +72,12 @@ test('path change', () => {
   expect(root.querySelector('#bar').textContent).toBe('QUX');
   app.update('bar', 'baz', 'qux', 'qux');
   expect(root.querySelector('#bar').textContent).toBe('qux');
+});
+
+test('path filter', () => {
+  let app = new App(
+    [0, 1, 2, 3, 4, 5],
+  );
+  app.update((idx) => idx > 2, $inc);
+  expect(app.state).toMatchObject([0, 1, 2, 4, 5, 6]);
 });
