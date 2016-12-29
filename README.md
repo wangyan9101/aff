@@ -11,7 +11,7 @@
 	* [html 标签的表示法](#3)
 	* [组件](#4)
 	* [App类](#5)
-	* [状态更新操作一览](#6)
+	* [状态更新操作](#6)
 	* [引用浏览器元素](#10)
 	* [子状态](#child-state)
 	* [组件状态的逐层传递](#state-passing)
@@ -684,99 +684,78 @@ App类常用的方法及属性如下：
 将App实例的 element 元素赋值为非真值，可以使它停止渲染：`app.element = undefined`。
 后续仍然可以用 app.init 渲染到某一元素上。
 
-<h2 id="6">状态更新操作一览</h2>
+<h2 id="6">状态更新操作</h2>
 
-App类关联的状态树是一个普通的对象，对状态的读操作是普通的对象读操作。
-而写操作则需要通过App类的update方法进行。因为状态树中的对象会保存额外的版本信息，供patch函数使用。
-直接对状态树对象做赋值操作，会使其失去部分版本信息，影响重渲染的效率（渲染结果倒是不会影响），且无法自动触发重渲染。
-update函数会触发一次或者多次的组件及元素状态的更新，以及其他关联的动作如beforeUpdate、afterUpdate等。
+更新 App 实例所关联的状态，需要用 update 方法。
+不能直接用赋值操作来更新，因为状态更新之后，框架需要重新检测各个组件依赖的状态，决定是否更新元素。
+以及执行其他一些钩子函数等等。
+直接用赋值操作，是不会触发这些动作的。
 
-App的update方法的参数先是要改变的状态的路径，最后是改变的操作。
-
-各种操作的示例如下：
+update 方法的参数，先是指定一个更新的路径，最后是要执行的操作。示例：
 
 ```js
-import {
-  App,
-  div,
-  $inc, $dec, $push, $reduce, 
-  $del_at, $map, $filter, $any,
-} from 'affjs'
+import { App, div } from 'affjs'
 
-let app = new App(
-  document.getElementById('app'),
-  () => div(),
-  {},
-);
-let assert = console.assert;
-
-// 赋值
-app.update('number', 1);
-assert(app.state.number == 1);
-app.update('string', 'foo');
-assert(app.state.string == 'foo');
-
-// $inc 自增
-app.update('number', $inc);
-assert(app.state.number == 2);
-
-// $dec 自减
-app.update('number', $dec);
-assert(app.state.number == 1);
-
-// $push array.push
-app.update('array', [1, 2, 3]);
-assert(app.state.array.length == 3);
-app.update('array', $push(4));
-assert(app.state.array.length == 4);
-
-// $reduce object或array的reduce
-app.update('array', $reduce((acc, cur, key) => {
-  acc.push(cur * 2);
-  return acc;
-}, []));
-assert(app.state.array[0] == 2);
-assert(app.state.array[1] == 4);
-assert(app.state.array[2] == 6);
-assert(app.state.array[3] == 8);
-
-// $del_at 删除array某个index的元素
-app.update('array', $del_at(2));
-assert(app.state.array.length == 3);
-assert(app.state.array[0] == 2);
-assert(app.state.array[1] == 4);
-assert(app.state.array[2] == 8);
-
-// $map array的map
-app.update('array', $map(v => v / 2));
-assert(app.state.array[0] == 1);
-assert(app.state.array[1] == 2);
-assert(app.state.array[2] == 4);
-
-// $filter 对object和array，传入各个key和value，其他类型直接传入
-app.update('array', $filter((value, i) => {
-  return value <= 2;
-}));
-assert(app.state.array.length == 2);
-assert(app.state.array[0] == 1);
-assert(app.state.array[1] == 2);
-app.update('number', $filter(n => n * 2));
-assert(app.state.number, 4);
-
-// $any 匹配所有路径，这是寻路用的，不是对状态的操作
-app.update('array', $any, 42);
-assert(app.state.array[0] == 42);
-assert(app.state.array[1] == 42);
-
-// 自定义操作，如果object的__is_op为真，即认为是一个操作，调用其apply成员实施操作
-app.update('array', {
-  __is_op: true,
-  apply(obj) {
-    return obj.map(x => x * 2);
+const app = new App(
+  // 初始状态
+  {
+    n: 0,
   },
-});
-assert(app.state.array[0] == 84);
-assert(app.state.array[1] == 84);
+  // 不要初始元素和根组件，也可以进行状态操作
+);
+
+// 路径为 'n'，用字符串表示属性名
+// 最后一个参数为 1，表示更新该路径对应的属性值为 1
+app.update('n', 1);
+// 输出 1
+console.log(app.state.n); 
+```
+
+嵌套的对象，用多个属性名字符串表示路径：
+
+```js
+import { App, div } from 'affjs'
+
+const app = new App(
+  {
+    foo: {
+      bar: {
+        baz: 0,
+      },
+    },
+  },
+);
+
+// 表示 app.state.foo.bar.baz 更改为 42
+app.update('foo', 'bar', 'baz', 42);
+// 输出 42
+console.log(app.state.foo.bar.baz); 
+```
+
+同时更新多条路径，用 update_multi 方法：
+
+```js
+import { App, div } from 'affjs'
+
+const app = new App(
+  {
+    n: 0,
+    foo: {
+      bar: {
+        baz: 0,
+      },
+    },
+  },
+);
+
+// 更新多条路径，各个参数列表作为 array 传入
+app.update_multi(
+  ['n', 1],
+  ['foo', 'bar', 'baz', 42],
+);
+// 输出 1 和 42
+console.log(app.state.n);
+console.log(app.state.foo.bar.baz); 
 ```
 
 <h2 id="10">引用浏览器元素</h2>
