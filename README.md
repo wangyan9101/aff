@@ -429,7 +429,58 @@ button('CLICK ME', {
 })
 ```
 
-因为实现上的限制，同类型事件回调只能设置一个。
+用上面的方法，同类型的事件，只能设置一个。例如：
+
+```js
+import { App, button, on } from 'affjs'
+
+new App(
+  document.getElementById('app'),
+  {},
+  () => button(
+    'CLICK ME',
+    on('click', () => {
+      console.log('foo');
+    }),
+    on('click', () => {
+      console.log('bar');
+    }),
+  ),
+);
+```
+
+点击这个按钮，只会输出 'bar'。输出 'foo' 的回调被覆盖了。
+
+要想让一个事件响应多个回调，可以给事件增加一个子类型。子类型用 `:` 或者 `$` 隔开。例如：
+
+```js
+import { App, button, on } from 'affjs'
+
+new App(
+  document.getElementById('app'),
+  {},
+  () => button(
+    'CLICK ME',
+    on('click:foo', () => {
+      console.log('foo');
+    }),
+    on('click:bar', () => {
+      console.log('bar');
+    }),
+    {
+      onclick$baz() {
+        console.log('baz');
+      },
+    },
+  ),
+);
+```
+
+这样点击按钮时，三个回调都会调用，分别输出 'foo', 'bar', 'baz'。
+
+如果不加子类型，默认子类型为 `__default`。也就是 `on('click', ...)` 相当于 `on('click:__default', ...)`。
+
+这样设计的原因是，让事件处理代码变成声明式的，而不是让开发者过程式地手工处理事件 handler。
 
 <h3>attribute 和 property</h3>
 
