@@ -758,6 +758,97 @@ console.log(app.state.n);
 console.log(app.state.foo.bar.baz); 
 ```
 
+路径也可以是一个函数，这个函数的参数是属性名，返回值如果为 true，表示匹配这个属性名对应的路径，为 false 表示不匹配。示例：
+
+```js
+import { App, div, $inc } from 'affjs'
+
+const app = new App(
+  // 初始状态为数组
+  [1, 2, 3, 4, 5, 6, 7, 8],
+);
+
+app.update(
+  // 匹配索引大于等于 2 的路径
+  index => index >= 2,
+  // 自增
+  $inc,
+);
+
+// 输出 [1, 2, 4, 5, 6, 7, 8, 9]
+// 索引大于等于 2 的元素，都 +1 了
+console.log(app.state);
+```
+
+上面 update 调用的最后一个参数不是要更新的值，而是一个操作符。
+$inc 这个操作符表示的是将数值的状态更新为 +1 的值。
+
+除了 $inc，还有 $dec，表示 -1：
+
+```js
+import { App, div, $dec } from 'affjs'
+
+const app = new App(
+  [1, 2, 3, 4, 5, 6, 7, 8],
+);
+
+app.update(
+  index => index >= 2,
+  $dec,
+);
+
+// 输出 [1, 2, 2, 3, 4, 5, 6, 7]
+console.log(app.state);
+```
+
+$func 操作符可以接受一个函数参数，状态将作为参数传入这个函数，这个函数的输出将作为更新值：
+
+```js
+import { App, div, $func } from 'affjs'
+
+const app = new App(
+  [1, 2, 3, 4, 5, 6, 7, 8],
+);
+
+app.update(
+  index => index >= 2,
+  $func(x => x * x),
+);
+
+// 输出 [1, 4, 9, 16, 25, 36, 49, 64]
+console.log(app.state);
+```
+
+上面这些操作符，实际都是一个对象或者返回一个对象。
+这些对象都有名为 `__is_op` 值为 true 的属性，以及一个名为 apply 值为一个函数的属性。
+所以可以直接使用一个对象来定义操作：
+
+```js
+import { App, div } from 'affjs'
+
+const app = new App(
+  [1, 2, 3, 4, 5, 6, 7, 8],
+);
+
+app.update(
+  index => index >= 2,
+  {
+    __is_op: true,
+    apply(obj) {
+      return obj * obj;
+    },
+    // 可以定义更多信息，便于调试时查看
+    op: 'power',
+  },
+);
+
+// 输出 [1, 4, 9, 16, 25, 36, 49, 64]
+console.log(app.state);
+```
+
+对象的方式可以增加一些额外的属性，调试时可以查看。
+一般用在定义通用的操作符时，例如框架提供的操作符就是这样定义出来的，业务代码出于简洁的目的，不应该出现用对象定义的操作符。
+
 <h2 id="10">引用浏览器元素</h2>
 
 在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
