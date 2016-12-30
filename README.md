@@ -1061,10 +1061,10 @@ import { App, div, t } from 'affjs'
 
 const init_state = {
   foo: 'FOO',
-  outter_wrapper: {
-    wrapper: {
-      inner_wrapper: {
-        element: {
+  OutterWrapper: {
+    Wrapper: {
+      InnerWrapper: {
+        Element: {
           $use: ['foo'],
         }
       }
@@ -1080,42 +1080,45 @@ const app = new App(
 const Element = (state) => div(state.foo);
 
 const InnerWrapper = (state) => {
-  return t(Element, state.element);
+  return t(Element, state.Element);
 };
 
 const Wrapper = (state) => {
-  return t(InnerWrapper, state.inner_wrapper);
+  return t(InnerWrapper, state.InnerWrapper);
 };
 
 const OutterWrapper = (state) => {
-  return t(Wrapper, state.wrapper);
+  return t(Wrapper, state.Wrapper);
 };
 
 const Main = (state) => {
-  return t(OutterWrapper, state.outter_wrapper);
+  return t(OutterWrapper, state.OutterWrapper);
 };
 
 app.init(Main);
 ```
 
 可以看出，传递给各个子组件的状态，定义在了 init_state 里。
+而且这些子状态的属性名，都与组件名相同，表明这是一个将传递给相应组件的状态。
 在传递的时候，直接传递相应的子状态就可以了。
 组件树和状态树的结构相同，就可以有这个便利。
+或者可以将这些子状态视作 "view model"。
 
 另外，element 子状态里面有一个 $use 成员，这是框架提供的特殊机制。
 它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
-也就是说，outter_wrapper、wrapper、inner_wrapper、element 对应的这些对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
+也就是说，OutterWrapper、Wrapper、InnerWrapper、Element 对应的这些状态对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
+$use 指定的状态，是逐层传递的。
 
 如果 Element 组件需要观察多一个状态，例如 bar，改动可以很少：
 
 ```js
 const init_state = {
   foo: 'FOO',
-  outter_wrapper: {
+  OutterWrapper: {
     bar: 'BAR', // 假设 bar 定义在这里
-    wrapper: {
-      inner_wrapper: {
-        element: {
+    Wrapper: {
+      InnerWrapper: {
+        Element: {
           $use: ['foo', 'bar'],
         }
       }
@@ -1131,11 +1134,11 @@ $use 的定义也可以是一个对象，对象属性名对应设置的属性名
 ```js
 const init_state = {
   foo: 'FOO',
-  outter_wrapper: {
+  OutterWrapper: {
     bar: 'BAR', 
-    wrapper: {
-      inner_wrapper: {
-        element: {
+    Wrapper: {
+      InnerWrapper: {
+        Element: {
           $use: {
             FOO: 'foo',
             BAR: 'bar',
