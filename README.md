@@ -827,6 +827,7 @@ console.log(app.state);
 * $sort
 * $filter
 * $map
+
 上面这些操作符的参数和同名的 Array 方法是一样的。
 
 下面这些 Array 操作符不需要参数：
