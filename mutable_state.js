@@ -198,6 +198,9 @@ export class MutableState extends State {
     if (typeof state != 'object' || state === null) {
       return
     }
+    if (state.__aff_read_only) {
+      return
+    }
 
     if (!state.hasOwnProperty('$update')) {
       // set
@@ -239,4 +242,17 @@ export class MutableState extends State {
     }
 
   }
+}
+
+export function read_only(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  Object.defineProperty(obj, '__aff_read_only', {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: true,
+  });
+  return obj;
 }
