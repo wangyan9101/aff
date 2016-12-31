@@ -1,6 +1,44 @@
 // operations 
 
-export let $func = (fn) => ({
+function make_argumented_method_op(name, method) {
+  return function(...args) {
+    return {
+      __is_op: true,
+      op: name,
+      args: args,
+      apply(obj) {
+        method.apply(obj, args);
+        return obj;
+      },
+    };
+  };
+}
+
+function make_argumented_method_op_new_value(name, method) {
+  return function(...args) {
+    return {
+      __is_op: true,
+      op: name,
+      args: args,
+      apply(obj) {
+        return method.apply(obj, args);
+      },
+    };
+  };
+}
+
+function make_method_op(name, method) {
+  return {
+    __is_op: true,
+    op: name,
+    apply(obj) {
+      method.apply(obj);
+      return obj;
+    },
+  };
+}
+
+let $func = (fn) => ({
   __is_op: true,
   op: 'func',
   args: [fn],
@@ -9,7 +47,21 @@ export let $func = (fn) => ({
   },
 });
 
-export let $inc = {
+let $delete = (prop) => ({
+  __is_op: true,
+  op: 'delete',
+  args: [prop],
+  apply(obj) {
+    delete obj[prop];
+    return obj;
+  },
+});
+
+let $del = $delete;
+
+// numbers
+
+let $inc = {
   __is_op: true,
   op: 'inc',
   apply(obj) {
@@ -17,7 +69,7 @@ export let $inc = {
   },
 };
 
-export let $dec = {
+let $dec = {
   __is_op: true,
   op: 'dec',
   apply(obj) {
@@ -25,71 +77,49 @@ export let $dec = {
   }
 };
 
-export let $push = (elem) => ({
-  __is_op: true,
-  op: 'push',
-  args: [elem],
-  apply(obj) {
-    obj.push(elem);
-    return obj;
-  },
+// arrays
+
+let array_ops = {};
+
+[
+  ['push', Array.prototype.push],
+  ['unshift', Array.prototype.unshift],
+  ['splice', Array.prototype.splice],
+  ['fill', Array.prototype.fill],
+  ['sort', Array.prototype.sort],
+].forEach(info => {
+  array_ops['$' + info[0]] = make_argumented_method_op(...info);
 });
 
-export let $reduce = (fn, accumulated, what = 'reduce') => ({
-  __is_op: true,
-  op: what,
-  args: [fn, accumulated],
-  apply(obj) {
-    for (let key in obj) {
-      accumulated = fn(accumulated, obj[key], key);
-    }
-    return accumulated;
-  },
+[
+  ['filter', Array.prototype.filter],
+  ['map', Array.prototype.map],
+].forEach(info => {
+  array_ops['$' + info[0]] = make_argumented_method_op_new_value(...info);
 });
 
-export let $del_at = (i) => $reduce((acc, cur, index) => {
-  if (index != i) {
-    acc.push(cur);
-  }
-  return acc;
-}, [], 'del_at');
-
-export let $map = (fn) => $reduce((acc, cur, index) => {
-  acc.push(fn(cur));
-  return acc;
-}, [], 'map');
-
-export let $filter = (fn) => ({
-  __is_op: true,
-  op: 'filter',
-  args: [fn],
-  apply(obj) {
-    if (typeof obj == 'object') {
-      if (Array.isArray(obj)) {
-        let o2 = [];
-        for (let i = 0; i < obj.length; i++) {
-          if (fn(obj[i], i)) {
-            o2.push(obj[i]);
-          }
-        }
-        return o2;
-      } else {
-        let o2 = {};
-        for (let k in obj) {
-          if (fn(obj[k], k) === true) {
-            o2[k] = obj[k];
-          }
-        }
-        return o2;
-      }
-    } else {
-      return fn(obj);
-    }
-  },
+[
+  ['pop', Array.prototype.pop],
+  ['shift', Array.prototype.shift],
+  ['reverse', Array.prototype.reverse],
+].forEach(info => {
+  array_ops['$' + info[0]] = make_method_op(...info);
 });
 
 // predictions
 
-export function $any(k) {
+function $any(k) {
   return true;
 }
+
+// export
+
+module.exports = {
+  $func,
+  $delete,
+  $del,
+  $inc,
+  $dec,
+  ...array_ops,
+  $any,
+};

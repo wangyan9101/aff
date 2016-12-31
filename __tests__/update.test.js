@@ -1,33 +1,32 @@
-import {$map, $inc, $dec, $any, $filter, $reduce, versioned_update, $del_at, $push, $func} from '../operations'
+import {
+  $map, $inc, $dec, $any, $filter, $reduce, $delete, 
+  $push, $func, $unshift, $splice, $fill, $sort,
+  $pop, $shift, $reverse,
+} from '../operations'
 import { App } from '../app'
 import './__helpers'
 
-test('filter', () => {
+test('delete', () => {
   let obj = {
-    foo: 42,
-    bar: 90,
+    foo: 'foo',
+    bar: 'bar',
   };
   let app = new App(obj);
-  app.update('foo', $filter(v => v * 2));
-  expect(app.state.foo).toBe(84);
-  app.update($filter((v, k) => {
-    return k != 'foo';
-  }));
+  app.update($delete('foo'));
   expect(app.state.foo).toBe(undefined);
-  expect(app.state.bar).toBe(90);
-});
-
-test('del_at', () => {
-  let obj = [1, 2, 3, 4, 5];
-  let app = new App(obj);
-  app.update($del_at(0));
-  expect(app.state.length).toBe(4);
 });
 
 test('push', () => {
   let app = new App([]);
   app.update($push('foo'));
   expect(app.state.length).toBe(1);
+  expect(app.state[0]).toBe('foo');
+});
+
+test('unshift', () => {
+  let app = new App([1]);
+  app.update($unshift('foo'));
+  expect(app.state.length).toBe(2);
   expect(app.state[0]).toBe('foo');
 });
 
@@ -75,4 +74,55 @@ test('func', () => {
   );
   app.update($any, $func(x => x + 1));
   expect(app.state).toMatchObject([2, 3, 4, 5, 6]);
+});
+
+test('inc', () => {
+  let app = new App(0);
+  app.update($inc);
+  expect(app.state).toBe(1);
+  app = new App(false);
+  app.update($inc);
+  expect(app.state).toBe(1);
+});
+
+test('dec', () => {
+  let app = new App(9);
+  app.update($dec);
+  expect(app.state).toBe(8);
+});
+
+test('splice', () => {
+  let app = new App([1, 2, 3]);
+  app.update($splice(1, 1));
+  expect(app.state).toMatchObject([1, 3]);
+});
+
+test('fill', () => {
+  let app = new App([1, 2, 3]);
+  app.update($fill(42));
+  expect(app.state).toMatchObject([42, 42, 42]);
+});
+
+test('sort', () => {
+  let app = new App([3, 2, 1]);
+  app.update($sort());
+  expect(app.state).toMatchObject([1, 2, 3]);
+});
+
+test('pop', () => {
+  let app = new App([3, 2, 1]);
+  app.update($pop);
+  expect(app.state).toMatchObject([3, 2]);
+});
+
+test('shift', () => {
+  let app = new App([3, 2, 1]);
+  app.update($shift);
+  expect(app.state).toMatchObject([2, 1]);
+});
+
+test('reverse', () => {
+  let app = new App([3, 2, 1]);
+  app.update($reverse);
+  expect(app.state).toMatchObject([1, 2, 3]);
 });

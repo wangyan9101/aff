@@ -819,35 +819,22 @@ app.update(
 console.log(app.state);
 ```
 
-上面这些操作符，实际都是一个对象或者返回一个对象。
-这些对象都有名为 `__is_op` 值为 true 的属性，以及一个名为 apply 值为一个函数的属性。
-所以可以直接使用一个对象来定义操作：
+框架还提供了 Array 的一些方法：
+* $push
+* $unshift
+* $splice
+* $fill
+* $sort
+* $filter
+* $map
+上面这些操作符的参数和同名的 Array 方法是一样的。
 
-```js
-import { App, div } from 'affjs'
+下面这些 Array 操作符不需要参数：
+* $pop
+* $shift
+* $reverse
 
-const app = new App(
-  [1, 2, 3, 4, 5, 6, 7, 8],
-);
-
-app.update(
-  index => index >= 2,
-  {
-    __is_op: true,
-    apply(obj) {
-      return obj * obj;
-    },
-    // 可以定义更多信息，便于调试时查看
-    op: 'power',
-  },
-);
-
-// 输出 [1, 4, 9, 16, 25, 36, 49, 64]
-console.log(app.state);
-```
-
-对象的方式可以增加一些额外的属性，调试时可以查看。
-一般用在定义通用的操作符时，例如框架提供的操作符就是这样定义出来的，业务代码出于简洁的目的，不应该出现用对象定义的操作符。
+另外还有 $delete 操作符，作用和 js 的 delete 操作符一样，参数是属性名。
 
 <h2 id="10">引用浏览器元素</h2>
 
