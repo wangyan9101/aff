@@ -15,6 +15,7 @@
 	* [引用浏览器元素](#10)
 	* [子状态](#child-state)
 	* [组件状态的逐层传递](#state-passing)
+	* [状态对象的 $update 和 $sub 方法](#update-and-sub)
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
@@ -1151,6 +1152,51 @@ $use 只会向上查找，直到根状态。如果到根状态都没有找到，
 
 $use 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
 因为解析 $use 标记开销比较大，如果更新一个大对象，就算不包含 $use 标记，也要进行解析的话，对性能影响比较大。
+
+<h2 id="update-and-sub">状态对象的 $update 和 $sub 方法</h2>
+
+前面介绍了 App 类的 update 和 sub 方法，这两个方法的路径参数，是从根结点开始的绝对路径。
+实际上状态树里每一个 object 类型的子状态，都会被加上 $update 和 $sub 方法。
+$update 和 $sub 方法的作用和 App 类的 update 和 sub 方法是一样的。
+不同的是路径参数，子状态对象的这两个方法的路径参数，是以子对象在全局状态树中的路径，为根路径。
+
+通过示例代码可能更容易理解：
+
+```js
+import { App } from 'affjs'
+
+const app = new App({
+  foo: {
+    bar: {
+      baz: {
+        qux: 'QUX',
+      },
+    },
+  },
+});
+
+// App 的 update 方法
+app.update('foo', 'bar', 'baz', 'qux', 'new QUX');
+
+// 子状态对象的 update 方法
+const sub_state = app.state.foo.bar.baz;
+sub_state.$update('qux', 'New QUX');
+
+// 子状态对象也可以创建 SubState 
+const qux_state = sub_state.$sub('qux');
+// 通过 SubState 更新
+qux_state.update('A New Qux');
+```
+
+这个机制的作用是，让深层传递的状态，在更新的时候，可以不用管它在全局状态树中处于什么位置。
+例如上面的代码里，更新 qux 的时候，不需要知道它前面的路径是 ['foo', 'bar', 'baz']。
+因为 sub_state 这个对象，已经保存了这个路径的信息，直接调用 $update 方法，就会使用它保存的路径，放在前面作为完整的路径。
+
+这个设计也使组件有了更好的可复用性。不论传入组件的子状态处于全局状态树的什么路径，更新的代码都是一样的。
+传入不同路径的状态，不需要对组件代码进行改动。
+也使得对全局状态的更新，就如更新本地状态一样方便了。
+
+当然，如果组件需要更新的状态，不是传入组件函数的参数，那还是得用 App.update 方法去更新。
 
 <h2 id="7">跟踪状态变化</h2>
 
