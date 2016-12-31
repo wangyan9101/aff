@@ -201,43 +201,34 @@ export class MutableState extends State {
 
     if (!state.hasOwnProperty('$update')) {
       // set
-      const path = base_path.slice(0);
       const app = this.app;
       Object.defineProperty(state, '$update', {
         configurable: false,
         enumerable: false,
         writable: false,
         value: function(...args) {
-          app.update(...path, ...args);
-          return app.get(path);
+          app.update(...this.$path, ...args);
+          return app.get(this.$path);
         },
-      });
-      Object.defineProperty(state, '$path', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: path,
       });
       Object.defineProperty(state, '$sub', {
         configurable: false,
         enumerable: false,
         writable: false,
         value: function(...args) {
-          return app.sub(...path, ...args);
+          return app.sub(...this.$path, ...args);
         },
+      });
+      Object.defineProperty(state, '$path', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: base_path.slice(0),
       });
 
     } else {
-      // check path
-      const state_path = state.$path;
-      if (
-        state_path.length != base_path.length
-        || !state_path.reduce((acc, cur, i) => {
-          return acc && cur === base_path[i];
-        }, true)
-      ) {
-        throw["cannot change state object's path"];
-      }
+      // update path
+      state.$path = base_path.slice(0);
     }
 
     // recursively
