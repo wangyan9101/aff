@@ -25,7 +25,7 @@ export class App {
       } else if (typeof arg == 'function') {
         this.node_func = arg;
       } else {
-        this._state = new MutableState(arg);
+        this._state = new MutableState(arg, this);
         this.setup_uses(this._state.get());
       }
     }
