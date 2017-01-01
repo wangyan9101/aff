@@ -2,7 +2,7 @@ import {
   App, t, on, css, $,
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
-  $any, $push, $del_at, $filter,
+  $any, $push, $splice, $filter,
 } from '../../index'
 
 const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
@@ -52,7 +52,7 @@ const Todo = (todo, i) => li(
       app.update('todos', i, 'editing', true);
     })),
     button($`.destroy`, on('click', () => {
-      app.update('todos', $del_at(i));
+      app.update('todos', $splice(i, 1));
     })),
   ),
   input($`.edit`, {
