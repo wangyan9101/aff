@@ -1,6 +1,6 @@
 import { on } from './event'
 
-export function bind_focus(state) {
+export function bindFocus(state) {
   const path = state.path.join(':');
   return {
     ['onfocus$' + path]: function() {
@@ -12,7 +12,7 @@ export function bind_focus(state) {
   };
 }
 
-export function bind_enter(state) {
+export function bindEnter(state) {
   const path = state.path.join(':');
   return {
     ['onmouseenter$' + path]: function() {
@@ -24,7 +24,7 @@ export function bind_enter(state) {
   };
 }
 
-export function bind_over(state) {
+export function bindOver(state) {
   const path = state.path.join(':');
   return {
     ['onmouseover$' + path]: function() {
@@ -36,4 +36,4 @@ export function bind_over(state) {
   };
 }
 
-export let bind_hover = bind_over;
+export let bindHover = bindOver;

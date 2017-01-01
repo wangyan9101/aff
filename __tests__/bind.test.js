@@ -1,4 +1,4 @@
-import { App, input, bind_focus, div, bind_hover, bind_enter, $ } from '../index'
+import { App, input, bindFocus, div, bindHover, bindEnter, $ } from '../index'
 
 test('bind focus', () => {
   let root = document.createElement('div');
@@ -13,7 +13,7 @@ test('bind focus', () => {
   app.init(
     (state) => {
       return input($`#foo`,
-        bind_focus(app.sub('focus')),
+        bindFocus(app.sub('focus')),
       );
     },
   );
@@ -37,7 +37,7 @@ test('bind hover', () => {
   app.init(
     (state) => {
       return div($`#foo`,
-        bind_hover(app.sub('hover')),
+        bindHover(app.sub('hover')),
       );
     },
   );
@@ -63,7 +63,7 @@ test('bind enter', () => {
   app.init(
     (state) => {
       return div($`#foo`,
-        bind_enter(app.sub('enter')),
+        bindEnter(app.sub('enter')),
       );
     },
   );
