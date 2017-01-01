@@ -8,7 +8,7 @@ export class MutableState extends State {
     this.dirty_tree = {};
     this.next_dirty_tree = {};
     this.state = init_state;
-    this.setup_state(this.state, []);
+    this.setupState(this.state, []);
   }
 
   get() {
@@ -16,10 +16,10 @@ export class MutableState extends State {
   }
 
   update(...arg) {
-    this.state = this.update_state(this.next_dirty_tree, [], this.state, ...arg);
+    this.state = this.updateState(this.next_dirty_tree, [], this.state, ...arg);
   }
 
-  update_state(dirty_tree, base_path, obj, ...args) {
+  updateState(dirty_tree, base_path, obj, ...args) {
     if (args.length === 0) {
       return obj;
     } else if (args.length === 1) {
@@ -27,12 +27,12 @@ export class MutableState extends State {
       if (typeof args[0] === 'object' && args[0] !== null && args[0].__is_op) {
         ret = args[0].apply(obj, this);
         if (ret === obj) {
-          this.setup_patch_tick(ret);
+          this.setupPatchTick(ret);
         }
       } else {
         ret = args[0];
       }
-      this.setup_state(ret, base_path);
+      this.setupState(ret, base_path);
       return ret;
     } else {
       if (!obj) {
@@ -40,7 +40,7 @@ export class MutableState extends State {
       }
       if (typeof obj === 'object' && obj !== null) {
         if (!obj.hasOwnProperty('__aff_tick')) {
-          this.setup_patch_tick(obj);
+          this.setupPatchTick(obj);
         }
         const key = args[0];
         const key_type = typeof key;
@@ -51,14 +51,14 @@ export class MutableState extends State {
             }
             let path = base_path.slice(0);
             path.push(k);
-            obj[k] = this.update_state(dirty_tree[k], path, obj[k], ...args.slice(1));
+            obj[k] = this.updateState(dirty_tree[k], path, obj[k], ...args.slice(1));
           } else if (key_type === 'function' && key(k)) {
             if (!dirty_tree[k]) {
               dirty_tree[k] = {};
             }
             let path = base_path.slice(0);
             path.push(k);
-            obj[k] = this.update_state(dirty_tree[k], path, obj[k], ...args.slice(1));
+            obj[k] = this.updateState(dirty_tree[k], path, obj[k], ...args.slice(1));
           }
         }
         if ((key_type === 'string' || key_type === 'number') && !(key in obj)) {
@@ -67,7 +67,7 @@ export class MutableState extends State {
           }
           let path = base_path.slice(0);
           path.push(key);
-          obj[key] = this.update_state(dirty_tree[key], path, undefined, ...args.slice(1));
+          obj[key] = this.updateState(dirty_tree[key], path, undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patch_tick + 1;
         return obj;
@@ -83,7 +83,7 @@ export class MutableState extends State {
     this.next_dirty_tree = {};
   }
 
-  setup_patch_tick(obj) {
+  setupPatchTick(obj) {
     if (obj.hasOwnProperty('__aff_tick')) {
       obj.__aff_tick = this.patch_tick + 1;
     } else {
@@ -194,7 +194,7 @@ export class MutableState extends State {
     return false;
   }
 
-  setup_state(state, base_path) {
+  setupState(state, base_path) {
     if (typeof state != 'object' || state === null) {
       return
     }
@@ -238,13 +238,13 @@ export class MutableState extends State {
     for (let key in state) {
       let sub_path = base_path.slice(0);
       sub_path.push(key);
-      this.setup_state(state[key], sub_path);
+      this.setupState(state[key], sub_path);
     }
 
   }
 }
 
-export function read_only(obj) {
+export function readOnly(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }

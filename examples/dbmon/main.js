@@ -1,7 +1,7 @@
 import {
   App, t,
   table, tbody, tr, td, div, span ,
-  $, read_only,
+  $, readOnly,
 } from '../../index'
 
 function DBMon(databases) {
@@ -39,11 +39,11 @@ function DB(database) {
 let app = new App(
   document.getElementById('app'),
   DBMon,
-  read_only(ENV.generateData().toArray()),
+  readOnly(ENV.generateData().toArray()),
 );
 
 function load() {
-  app.update(read_only(ENV.generateData().toArray()));
+  app.update(readOnly(ENV.generateData().toArray()));
   Monitoring.renderRate.ping();
   setTimeout(load, ENV.timeout);
 };

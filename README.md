@@ -733,7 +733,7 @@ app.update('foo', 'bar', 'baz', 42);
 console.log(app.state.foo.bar.baz); 
 ```
 
-同时更新多条路径，用 update_multi 方法：
+同时更新多条路径，用 updateMulti 方法：
 
 ```js
 import { App, div } from 'affjs'
@@ -750,7 +750,7 @@ const app = new App(
 );
 
 // 更新多条路径，各个参数列表作为 array 传入
-app.update_multi(
+app.updateMulti(
   ['n', 1],
   ['foo', 'bar', 'baz', 42],
 );
@@ -1199,7 +1199,7 @@ qux_state.update('A New Qux');
 当然，如果组件需要更新的状态，不是传入组件函数的参数，那还是得用 App.update 方法去更新。
 
 框架会将所有进入状态树的对象都加上 $update 和 $sub 方法。
-这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 read_only 函数标记一下。
+这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 readOnly 函数标记一下。
 将对象作为参数传入即可，返回的对象会带上只读标记，框架不会为对象加上这两个方法。
 
 <h2 id="7">跟踪状态变化</h2>
@@ -1506,7 +1506,7 @@ let routes = {
 for (let key in routes) {
   route(routes[key], (...args) => {
     // 将key和参数放入状态树
-		app.update_multi(
+		app.updateMulti(
 			['route_key', key],
 			['route_args', args],
 		);

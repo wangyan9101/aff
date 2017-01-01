@@ -1,14 +1,14 @@
-import { App, read_only } from '../index'
+import { App, readOnly } from '../index'
 
 test('read only', () => {
   let app = new App(
-    read_only({
+    readOnly({
       foo: 'foo',
     }),
   );
   expect(app.state.foo).toBe('foo');
   expect(app.state.foo.$update).toBe(undefined);
 
-  app = new App(read_only(1));
+  app = new App(readOnly(1));
   expect(app.state).toBe(1);
 });

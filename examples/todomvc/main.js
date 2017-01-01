@@ -59,7 +59,7 @@ const Todo = (todo, i) => li(
     value: todo.content,
   }, on('keypress', function(e) {
     if (e.keyCode == 13) {
-      app.update_multi(
+      app.updateMulti(
         ['todos', i, 'content', this.element.value],
         ['todos', i, 'editing', false],
       );

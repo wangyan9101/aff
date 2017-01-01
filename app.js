@@ -26,7 +26,7 @@ export class App {
         this.node_func = arg;
       } else {
         this._state = new MutableState(arg, this);
-        this.setup_uses(this._state.get());
+        this.setupUses(this._state.get());
       }
     }
     if (
@@ -38,7 +38,7 @@ export class App {
     }
   }
 
-  setup_uses(obj, path, scopes) {
+  setupUses(obj, path, scopes) {
     // skip non-object
     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
       return
@@ -155,7 +155,7 @@ export class App {
     for (let key in obj) {
       let p = path.slice(0);
       p.push(key);
-      this.setup_uses(obj[key], p, scopes);
+      this.setupUses(obj[key], p, scopes);
     }
 
   }
@@ -171,10 +171,10 @@ export class App {
   }
 
   update(...args) {
-    return this.update_multi(args);
+    return this.updateMulti(args);
   }
 
-  update_multi(...args) {
+  updateMulti(...args) {
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
       this.beforeUpdate(this.state, ...arg);
@@ -326,10 +326,10 @@ export class App {
       thunk.element = last_element;
     }
 
-    return this.patch_node(last_element, node, last_node);
+    return this.patchNode(last_element, node, last_node);
   }
 
-  patch_node(last_element, node, last_node) {
+  patchNode(last_element, node, last_node) {
     // innerHTML
     if (node.innerHTML != last_node.innerHTML) {
       last_element.innerHTML = node.innerHTML;
@@ -429,7 +429,7 @@ export class App {
     // events
     const event_keys = {};
     for (const key in node.events) {
-      let k = element_set_event(last_element, key, node.events[key].bind(node));
+      let k = elementSetEvent(last_element, key, node.events[key].bind(node));
       event_keys[k] = true;
     }
     if (last_element.__aff_events) {
@@ -541,25 +541,25 @@ export function e(tag, ...args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg instanceof Node || arg instanceof Thunk) {
-      node.set_children(arg);
+      node.setChildren(arg);
     } else if (arg instanceof Selector) {
-      node.set_selector(arg.str);
+      node.setSelector(arg.str);
     } else if (arg instanceof Css) {
-      node.set_properties({
+      node.setProperties({
         style: arg.str,
       });
     } else if (arg instanceof Event) {
-      node.set_properties({
+      node.setProperties({
         ['on' + arg.ev_type]: arg.fn,
       });
     } else if (typeof arg === 'object' && arg !== null) {
       if (Array.isArray(arg)) {
-        node.set_children(arg)
+        node.setChildren(arg)
       } else {
-        node.set_properties(arg);
+        node.setProperties(arg);
       }
     } else {
-      node.set_children(arg);
+      node.setChildren(arg);
     }
   }
   return node;
@@ -589,7 +589,7 @@ class Node {
     this.hooks = null;
   }
 
-  set_selector(selector) {
+  setSelector(selector) {
     const parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
     if (parts) {
       for (let i = 0, l = parts.length; i < l; i++) {
@@ -604,7 +604,7 @@ class Node {
     }
   }
 
-  set_properties(properties) {
+  setProperties(properties) {
     for (const key in properties) {
       if (key == 'id' || key == 'innerHTML') {
         // id, innerHTML
@@ -658,14 +658,14 @@ class Node {
     }
   }
 
-  set_children(children) {
+  setChildren(children) {
     this.children = this.children || [];
     const type = typeof children;
     if (type === 'object' && children !== null) {
       if (Array.isArray(children)) {
         // flatten
         for (let i = 0, l = children.length; i < l; i++) {
-          this.set_children(children[i]);
+          this.setChildren(children[i]);
         }
       } else {
         this.children.push(children);
@@ -675,7 +675,7 @@ class Node {
       child.text = children.toString();
       this.children.push(child);
     } else if (type === 'function') {
-      this.set_children(children());
+      this.setChildren(children());
     } else {
       throw['bad child', children];
     }
@@ -690,7 +690,7 @@ class Node {
       if (app && app.element_cache[this.tag] && app.element_cache[this.tag].length > 0) {
         let [element, last_node] = app.element_cache[this.tag].pop();
         let node;
-        [element, node] = app.patch_node(element, this, last_node);
+        [element, node] = app.patchNode(element, this, last_node);
         this.element = element;
         if (this.hooks && this.hooks.created) {
           this.hooks.created.forEach(fn => fn(element));
@@ -757,7 +757,7 @@ class Node {
       for (const key in this.events) {
         // set event callback, bind current Node to callback
         // constructor must not be arrow function to get proper 'this'
-        element_set_event(element, key, this.events[key].bind(this));
+        elementSetEvent(element, key, this.events[key].bind(this));
       }
     }
     this.element = element;
@@ -777,7 +777,7 @@ const warning = (text) => e('div', {
   },
 }, text);
 
-function element_set_event(element, ev_type, fn) {
+function elementSetEvent(element, ev_type, fn) {
   let events = element.__aff_events;
   if (!events) {
     events = {};
