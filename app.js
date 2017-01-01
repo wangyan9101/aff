@@ -724,14 +724,16 @@ class Node {
       element.className = className.trim();
     }
     if (this.children !== null) {
+      const childFragment = document.createDocumentFragment();
       for (let i = 0, l = this.children.length; i < l; i++) {
         if (!this.children[i] || !this.children[i].toElement) {
-          element.appendChild(warning(`RENDER ERROR: cannot render ${this.children[i]}`).toElement());
+          childFragment.appendChild(warning(`RENDER ERROR: cannot render ${this.children[i]}`).toElement());
           console.warn('cannot render', this.children[i]);
         } else {
-          element.appendChild(this.children[i].toElement(undefined, app));
+          childFragment.appendChild(this.children[i].toElement(undefined, app));
         }
       }
+      element.appendChild(childFragment);
     }
     if (this.attributes !== null) {
       for (const key in this.attributes) {
