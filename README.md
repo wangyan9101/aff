@@ -19,6 +19,7 @@
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
+	* [可复用的组件](#reusable)
 	* [内联 css 样式技巧](#16)
 	* [路由](#11)
 	* [异步竞态问题](#12)
@@ -1319,6 +1320,170 @@ patch的过程中，如果触发了状态更新，那patch完成后，会再次�
 
 这也是这个框架不仅仅做视图层，而是加入状态管理的原因。
 或者说，这个本来就是个状态管理的框架，界面组件只不过是状态的观察者，对状态的改变作出适当的反应。
+
+<h2 id="reusable">可复用的组件</h2>
+
+前面讲述基础用法的章节，已经提到了各种有益于组件的可复用性的机制。
+下面将用具体的例子说明组件如何复用。
+
+<h3>同一组件用于不同的状态子树</h3>
+
+```js
+import {
+  App, on, t, css, $any,
+  div, ul, li, checkbox, span, button,
+} from 'affjs'
+
+const app = new App(document.getElementById('app'));
+
+// 状态树
+app.init({
+  // 列表1
+  list1: [
+    { desc: 'task foo', done: false },
+    { desc: 'task bar', done: true },
+    { desc: 'task baz', done: false },
+  ],
+
+  // 列表2
+  list2: [
+    { desc: 'task FOO', done: true },
+    { desc: 'task BAR', done: false },
+    { desc: 'task BAZ', done: true },
+  ],
+});
+
+// 组件
+const TodoList = (list) => ul(
+  // 列表
+  list.map(item => li(
+    // 是否完成
+    checkbox(
+      on('click', function() {
+        item.$update('done', this.element.checked);
+      }),
+      {
+        checked: item.done,
+      },
+    ),
+    // 描述
+    span(
+      css`
+        text-decoration: ${item.done ? 'line-through' : 'none'};
+      `,
+      item.desc,
+    ),
+  )),
+  // 全部切换按钮
+  button(on('click', () => {
+    const allDone = list.reduce((acc, cur) => acc && cur.done, true);
+    list.$update($any, 'done', !allDone);
+  }), 'Toggle All'),
+);
+
+// 根组件
+const Main = (state) => {
+  return div(
+    t(TodoList, state.list1),
+    t(TodoList, state.list2),
+  );
+};
+
+app.init(Main);
+```
+
+![reusable](images/reusable.gif)
+
+上面的 TodoList 就具备良好的可复用性。只需要将状态树中的任务列表传递给它，就可以正常工作。
+
+而且状态更新，也只依赖传入的子状态，使用 $update 方法进行。不依赖任何全局对象。
+
+<h3>同一组件用于不同 App 中</h3>
+
+TodoList 组件因为不依赖任何外部对象，所以用于不同 App，传入不同状态树的子状态，都没有问题：
+
+```js
+import {
+  App, on, t, css, $any, $,
+  div, ul, li, checkbox, span, button,
+} from 'affjs'
+
+// 组件
+const TodoList = (list) => ul(
+  list.map(item => li(
+    checkbox(
+      on('click', function() {
+        item.$update('done', this.element.checked);
+      }),
+      {
+        checked: item.done,
+      },
+    ),
+    span(
+      css`
+        text-decoration: ${item.done ? 'line-through' : 'none'};
+      `,
+      item.desc,
+    ),
+  )),
+  button(on('click', () => {
+    const allDone = list.reduce((acc, cur) => acc && cur.done, true);
+    list.$update($any, 'done', !allDone);
+  }), 'Toggle All'),
+);
+
+// 容器 app
+const container = new App(
+  document.getElementById('app'),
+  {},
+  () => div(
+    div($`#app1`),
+    div($`#app2`),
+  ),
+);
+
+// App 1
+const app1 = new App(
+  container.element.querySelector('#app1'),
+  // 列表1
+  {
+    todos: [
+      { desc: 'task foo', done: false },
+      { desc: 'task bar', done: true },
+      { desc: 'task baz', done: false },
+    ],
+  },
+  // 根组件
+  (state) => div(
+    t(TodoList, state.todos),
+  ),
+);
+
+// App 2
+const app2 = new App(
+  container.element.querySelector('#app2'),
+  // 列表2
+  {
+    todos: [
+      { desc: 'task FOO', done: true },
+      { desc: 'task BAR', done: false },
+      { desc: 'task BAZ', done: true },
+    ],
+  },
+  // 根组件
+  (state) => div(
+    t(TodoList, state.todos),
+  ),
+);
+```
+
+这段程序实现的交互，和上一节的是一样的。不同之处是 TodoList 组件被两个 App 使用。
+
+由此可见，如果想让组件可以跨 App 复用，就不能依赖任何与特定 App 相关的对象。
+
+有的框架，只使用组件的内部状态，也可以实现复用。但是牺牲掉的是全局状态树带来的便利。
+TodoList 关联的状态处于全局唯一的状态树内，其他组件需要使用这些状态，直接使用就可以了。
+不需要 TodoList 组件暴露出获取状态的接口。
 
 <h2 id="16">内联 css 样式技巧</h2>
 
