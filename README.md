@@ -131,26 +131,26 @@ import {
   $inc,
 } from 'affjs'
 
-let colors = [
+const colors = [
   '#f26522', '#7fb80e', '#33a3dc', '#8552a1',
   '#ffe600', '#426ab3', '#d71345', '#00ae9d',
 ];
 
 // 初始状态，一个app使用唯一的对象保存所有状态
-let init_state = {
+const init_state = {
   animation_tick: 0,
 };
 
 // 根组件，所有组件都表示为函数
-let Main = (state) => div(
+const Main = (state) => div(
 
   // 样式定义，使用 es6 的 tagged literal
   css` font-size: 32px; `,
 
   // 字符串分解成单个字符，并构造span
   'Hello, world!'.split('').map((c, i) => {
-    let color_index = state.animation_tick - i;
-    let color = color_index < 0 ? 
+    const color_index = state.animation_tick - i;
+    const color = color_index < 0 ? 
       'transparent' : colors[color_index % colors.length];
     // 返回的span作为div的子元素
     return span(c, css`
@@ -162,7 +162,7 @@ let Main = (state) => div(
 );
 
 // 生成app
-let app = new App(
+const app = new App(
   // 初始渲染的元素
   document.getElementById('app'),
   // 根组件
@@ -175,6 +175,7 @@ setInterval(() => {
   // 更新状态，触发app重新渲染
   app.update('animation_tick', $inc);
 }, 100);
+
 
 ```
 
@@ -390,8 +391,8 @@ p('Hello, world!', {
 用 tagged literal 表示样式的好处是，里面可以使用 js 表达式：
 
 ```js
-let color = '#09C';
-let fontSize = 24;
+const color = '#09C';
+const fontSize = 24;
 
 p(css`
   color: ${color};
@@ -550,7 +551,7 @@ import {
 } from 'affjs'
 
 // 一个按钮组件，文字和点击事件都作为参数，从外部传入
-let Button = (text, onclick) => button(
+const Button = (text, onclick) => button(
   text,
   on('click', onclick),
   css`
@@ -564,7 +565,7 @@ let Button = (text, onclick) => button(
 );
 
 // 一个布局组件，在圆周上均匀分布所有子元素
-let Layout = (radius, base_degree, elems) => {
+const Layout = (radius, base_degree, elems) => {
   return div(
     css`
       width: ${radius * 2}px;
@@ -575,10 +576,10 @@ let Layout = (radius, base_degree, elems) => {
       position: relative;
     `,
     elems.map((elem, i) => {
-      let degree = (i / elems.length * 360 + base_degree) % 360;
-      let theta = 2 * 3.14 * (degree / 360);
-      let x = radius * Math.cos(theta) + radius;
-      let y = radius * Math.sin(theta) + radius;
+      const degree = (i / elems.length * 360 + base_degree) % 360;
+      const theta = 2 * 3.14 * (degree / 360);
+      const x = radius * Math.cos(theta) + radius;
+      const y = radius * Math.sin(theta) + radius;
       return div(elem, css`
         position: absolute;
         left: ${x}px;
@@ -590,7 +591,7 @@ let Layout = (radius, base_degree, elems) => {
 };
 
 // 初始化app
-let app = new App(
+const app = new App(
   // 在这个元素处渲染
   document.getElementById('app'),
   // 初始状态
@@ -602,13 +603,13 @@ let app = new App(
 
 // Main也是一个组件
 // state参数是app当前的状态
-let Main = (state) => {
+const Main = (state) => {
   // 计数加一
-  let inc = () => {
+  const inc = () => {
     app.update('counter', $inc);
   };
   // 计数减一
-  let dec = () => {
+  const dec = () => {
     app.update('counter', $dec);
   };
   // 构造根组件
@@ -651,10 +652,6 @@ setInterval(() => {
 ```
 
 ![counter](images/counter.gif)
-
-如果觉得 thunk 这个概念不好理解，也没有关系，用就是了。
-把一个组件函数的调用：Foo(arg1, arg2) 写成 thunk，只需要将 Foo 放入参数列表内，将调用的函数改成 t，就行了：t(Foo, arg1, arg2)。
-框架会自动优化Foo的渲染，arg1和arg2有变化了，才重新调用Foo，更新界面。
 
 <h2 id="5">App类</h2>
 
@@ -852,14 +849,14 @@ import {
   $inc,
 } from 'affjs'
 
-let app = new App(
+const app = new App(
   document.getElementById('app'),
   {
     count: 0,
   },
 );
 
-let Main = (state) => {
+const Main = (state) => {
   return div([
     button({
       // 点击回调
@@ -894,7 +891,7 @@ App对象可以用 sub 方法得到一个 SubState 类型的对象。这个对�
 ```js
 import { App } from 'affjs'
 
-let app = new App(
+const app = new App(
 	// 初始状态
   {
     foo: {
@@ -908,7 +905,7 @@ let app = new App(
 );
 
 // 一个子状态，指向 app.state.foo.bar.baz
-let baz_state = app.sub('foo', 'bar', 'baz');
+const baz_state = app.sub('foo', 'bar', 'baz');
 ```
 
 SubState 对象有三个方法：
@@ -927,7 +924,7 @@ SubState 对象的路径变化，或者路径指向的状态的变化，会被�
 ```js
 import { App, input, div, p } from 'affjs'
 
-let app = new App(
+const app = new App(
   document.getElementById('app'),
   {
     // checkbox 各自的状态
@@ -937,7 +934,7 @@ let app = new App(
   },
 );
 
-let Checkbox = (state) => {
+const Checkbox = (state) => {
   return input({
     type: 'checkbox',
     // 读传入的子状态，并对应地设置
@@ -949,7 +946,7 @@ let Checkbox = (state) => {
   });
 }
 
-let Main = (state) => {
+const Main = (state) => {
   return div([
     p([
       // checkbox 组件
@@ -1232,11 +1229,11 @@ class StateTracingApp extends App {
   }
 }
 
-let init_state = {
+const init_state = {
   foo: [1, 2, 3, 4, 5],
 };
 
-let app = new StateTracingApp(
+const app = new StateTracingApp(
   document.getElementById('app'),
   () => div(),
   init_state,
@@ -1253,7 +1250,7 @@ app.update('foo', $map(v => v * 2));
 设置默认状态，最简单的方法是写在 init_state 里：
 
 ```js
-let init_state = {
+const init_state = {
   sort_by: 'timestamp',
 };
 ```
@@ -1261,7 +1258,7 @@ let init_state = {
 或者写在组件函数里：
 
 ```js
-let List = (state) => {
+const List = (state) => {
   if (!state.sort_by) {
     // 注意要将update方法的返回值赋值给state变量，不然state还是指向旧状态
     state = app.update('sort_by', 'timestamp');
@@ -1273,7 +1270,7 @@ let List = (state) => {
 衍生状态，指将某些状态通过一定运算得出的状态，可以在init_state里用getter实现：
 
 ```js
-let init_state = {
+const init_state = {
   r: 0,
   g: 0,
   b: 0,
@@ -1492,7 +1489,7 @@ TodoList 关联的状态处于全局唯一的状态树内，其他组件需要�
 如果用css文件实现这个，要用到 media query，繁琐且散布在各处，修改不易。
 
 ```js
-let screen_width = window.screen.width;
+const screen_width = window.screen.width;
 
 // 根据屏幕宽度，分成不同的类型
 let screen;
@@ -1504,7 +1501,7 @@ if (screen_width <= 320) {
   screen = 'i6s';
 }
 
-let style = `
+const style = `
 	// 根据屏幕类型取对象属性，如果类型不存在，就取默认值50
   margin-left: ${{
     i5: 20,
@@ -1529,7 +1526,7 @@ let style = `
 import { div, css } from 'affjs'
 
 // 字符串式
-let clickable = `
+const clickable = `
 	cursor: pointer;
 	user-select: none;
 `;
@@ -1557,7 +1554,7 @@ div({
 另一个例子，绝对定位的样式，要写position、top、left等等，做成可复用的样式函数：
 
 ```js
-let abs = (top, right, bottom, left) => {
+const abs = (top, right, bottom, left) => {
   return `
     position: absolute;
     ${top === 0 || top ? 'top: ' + top + ';' : ''}
@@ -1614,13 +1611,13 @@ import {
 import route from 'riot-route';
 
 // 子组件
-let Index = () => div(`INDEX`);
-let Foo = (a1, a2) => div(`FOO route args: ${a1} ${a2}`);
-let Bar = (a1) => div(`BAR route args: ${a1}`);
-let Baz = (a1, a2) => div(`BAZ route args: ${a1} ${a2}`);
+const Index = () => div(`INDEX`);
+const Foo = (a1, a2) => div(`FOO route args: ${a1} ${a2}`);
+const Bar = (a1) => div(`BAR route args: ${a1}`);
+const Baz = (a1, a2) => div(`BAZ route args: ${a1} ${a2}`);
 
 // 根组件
-let Main = (state) => {
+const Main = (state) => {
   return div([
     // 几个路由切换链接
     [
@@ -1650,7 +1647,7 @@ let Main = (state) => {
   ]);
 };
 
-let app = new App(
+const app = new App(
   document.getElementById('app'),
   Main,
   {
@@ -1662,13 +1659,13 @@ let app = new App(
 );
 
 // 路由定义
-let routes = {
+const routes = {
   index: '/',
   foo: '/foo/*/*',
   bar: '/bar/*',
   baz: '/baz-*-*',
 };
-for (let key in routes) {
+for (const key in routes) {
   route(routes[key], (...args) => {
     // 将key和参数放入状态树
 		app.updateMulti(
@@ -1747,21 +1744,21 @@ dbmon: https://github.com/reusee/aff/blob/master/examples/dbmon/main.js
 <h3>开发环境和线上环境使用不同init_state</h3>
 
 ```js
-let dev_state = {
+const dev_state = {
   __env: 'dev',
 };
 
-let production_state = {
+const production_state = {
   __env: 'production',
 };
 
-let init_state = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? dev_state : production_state;
+const init_state = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? dev_state : production_state;
 ```
 
 <h3>用 local storage 保存状态</h3>
 
 ```js
-let init_state = JSON.parse(window.localStorage.getItem('state')) || {
+const init_state = JSON.parse(window.localStorage.getItem('state')) || {
   // ...
 };
 
