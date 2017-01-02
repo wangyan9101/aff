@@ -187,3 +187,21 @@ test('loop in $use', () => {
     })
   }).toThrowError('loop in $use,foo,foo,foo');
 });
+
+test('update in $use', () => {
+  let app = new App({
+    foo: 'FOO',
+    c1: {
+      $use: ['foo'],
+      c2: {
+        $use: ['foo'],
+      },
+    },
+  });
+  expect(app.state.c1.foo).toBe('FOO');
+  expect(app.state.c1.c2.foo).toBe('FOO');
+  app.state.c1.c2.$update('foo', 'foo');
+  expect(app.state.foo).toBe('foo');
+  expect(app.state.c1.foo).toBe('foo');
+  expect(app.state.c1.c2.foo).toBe('foo');
+});
