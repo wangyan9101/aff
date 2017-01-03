@@ -84,7 +84,6 @@ export class App {
           configurable: false,
           enumerable: true,
           get: function() {
-            obj.__aff_tick = app.get(parentPathOfFrom).__aff_tick;
             return app.get(from);
           },
           set: function(v) {
@@ -100,7 +99,7 @@ export class App {
           value: {},
         });
       }
-      obj.__aff_use_keys[key] = true;
+      obj.__aff_use_keys[key] = from;
     }
 
     // setup

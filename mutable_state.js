@@ -100,8 +100,12 @@ export class MutableState extends State {
       && arg.__aff_use_keys
     ) {
       for (const key in arg.__aff_use_keys) {
-        // trigger getter to update __aff_tick
-        arg[key];
+        const fromPath = arg.__aff_use_keys[key].slice(0);
+        fromPath.pop();
+        const tick = this.app.get(fromPath).__aff_tick;
+        if (tick == this.patch_tick) {
+          arg.__aff_tick = tick;
+        }
       }
     }
 

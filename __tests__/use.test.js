@@ -1,4 +1,4 @@
-import { App, div, $, t } from '../index'
+import { App, div, $, t, p } from '../index'
 
 test('use', () => {
   let init_state = {
@@ -191,4 +191,35 @@ test('update in $use', () => {
   expect(app.state.foo).toBe('foo');
   expect(app.state.c1.foo).toBe('foo');
   expect(app.state.c1.c2.foo).toBe('foo');
+});
+
+test('tick in $use', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {
+      a: {
+        x: 'foo',
+        b: {
+          y: 'bar',
+          c: {
+            z: 'baz',
+            d: {
+              $use: ['x', 'y', 'z'],
+            }
+          },
+        },
+      },
+    },
+    (state) => div(
+      t('foo', (state) => {
+        return p($`#p`, state.x);
+      }, state.a.b.c.d),
+    ),
+  );
+  expect(root.querySelector('#p').textContent).toBe('foo');
+  app.update('a', 'x', 'FOO');
+  expect(root.querySelector('#p').textContent).toBe('FOO');
 });
