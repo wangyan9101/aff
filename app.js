@@ -420,7 +420,7 @@ export class App {
       for (const ev_type in last_element.__aff_events) {
         for (const ev_subtype in last_element.__aff_events[ev_type]) {
           if (!(ev_type + ':' + ev_subtype in event_keys)) {
-            last_element.__aff_events[ev_type][ev_subtype] = false;
+            delete last_element.__aff_events[ev_type][ev_subtype];
           }
         }
       }
