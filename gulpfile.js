@@ -21,14 +21,14 @@ gulp.task('default', function() {
           },
         ],
       },
-      plugins: [
-        new wp.optimize.UglifyJsPlugin({
-          compress: {
-            warnings: false,
-          },
-        }),
-        new wp.optimize.OccurrenceOrderPlugin(),
-      ],
+      // plugins: [
+      //   new wp.optimize.UglifyJsPlugin({
+      //     compress: {
+      //       warnings: false,
+      //     },
+      //   }),
+      //   new wp.optimize.OccurrenceOrderPlugin(),
+      // ],
     }))
   .pipe(gulp.dest('lib'));
 });
