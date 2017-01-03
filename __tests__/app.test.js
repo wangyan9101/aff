@@ -50,9 +50,7 @@ test('app patch again', () => {
       t('calculated', ({n}, a2, a3) => {
         expect(a2).toBe('foo');
         expect(a3[0]).toBe(1);
-        app.tap((state) => {
-          return ['m', state.n + 1];
-        });
+        app.update('m', app.state.n + 1);
         return none;
       }, {
         n: state.n

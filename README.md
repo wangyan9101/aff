@@ -667,7 +667,6 @@ App类的构造函数会根据参数类型的不同，初始化不同的成员
 App类常用的方法及属性如下：
 
 * update(...path, operation)，用于更新状态树
-* tap(function(state))，用于读写状态树，如果传入的函数有返回值，返回值将传入update方法，更新状态树
 * html()，返回根组件的innerHTML
 * state，当前状态
 

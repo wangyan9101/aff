@@ -216,13 +216,6 @@ export class App {
     return this.state;
   }
 
-  tap(fn) {
-    const res = fn(this.state);
-    if (res) {
-      this.update(...(Array.isArray(res) ? res : [res]));
-    }
-  }
-
   html() {
     return this.element.innerHTML;
   }
