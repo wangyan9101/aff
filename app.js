@@ -772,10 +772,12 @@ function elementSetEvent(element, ev_type, fn) {
   const ev_subtype = parts.slice(1).join(':') || '__default';
   if (!(ev_type in events)) {
     events[ev_type] = {};
-  }
-  if (!(ev_subtype in events[ev_type])) {
     element.addEventListener(ev_type.substr(2), function(ev) {
-      return events[ev_type][ev_subtype](ev);
+      let ret;
+      for (const ev_subtype in events[ev_type]) {
+        ret = events[ev_type][ev_subtype](ev);
+      }
+      return ret;
     });
   }
   events[ev_type][ev_subtype] = fn;
