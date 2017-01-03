@@ -81,19 +81,6 @@ test('use', () => {
   expect(root.querySelector('#b').textContent).toBe('bar');
   expect(root.querySelector('#c').textContent).toBe('foo');
   expect(root.querySelector('#d').textContent).toBe('bar');
-
-  const p1 = app.sub('foo');
-  p1.update('FOO');
-  expect(app.state.foo).toBe('FOO');
-  expect(root.querySelector('#a').textContent).toBe('FOO');
-  expect(root.querySelector('#c').textContent).toBe('FOO');
-
-  const p2 = app.sub('baz', 'baz', 'FOO');
-  p2.update('foo');
-  expect(app.state.foo).toBe('foo');
-  expect(root.querySelector('#a').textContent).toBe('foo');
-  expect(root.querySelector('#c').textContent).toBe('foo');
-
 });
 
 test('use conflict', () => {

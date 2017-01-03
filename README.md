@@ -13,9 +13,8 @@
 	* [App类](#5)
 	* [状态更新操作](#6)
 	* [引用浏览器元素](#10)
-	* [子状态](#child-state)
 	* [组件状态的逐层传递](#state-passing)
-	* [状态对象的 $update 和 $sub 方法](#update-and-sub)
+	* [状态对象的 $update 方法](#update)
 * 进阶话题
 	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
@@ -884,103 +883,6 @@ app.init(Main);
 
 还要注意的是，需要用到 this 的时候，回调函数不能用箭头函数 (即 () => {} 这样的)，因为箭头函数的 this 不能绑定，this.element 无效。
 
-<h2 id="child-state">子状态</h2>
-
-App对象可以用 sub 方法得到一个 SubState 类型的对象。这个对象类似一个指针，指向状态树中的某个子状态。例如：
-
-```js
-import { App } from 'affjs'
-
-const app = new App(
-	// 初始状态
-  {
-    foo: {
-      bar: {
-        baz: {
-          qux: 'QUX',
-        },
-      },
-    },
-  },
-);
-
-// 一个子状态，指向 app.state.foo.bar.baz
-const baz_state = app.sub('foo', 'bar', 'baz');
-```
-
-SubState 对象有三个方法：
-
-* get()，返回指向的状态值，例如 `baz_state.get()` 返回 `{ qux: 'QUX' }` 这个对象
-* update(...args)，和 App.update 方法类似，只是以指向的路径为起始路径，例如 `baz_state.update('qux', 'QUUX')` 相当于 `app.update('foo', 'bar', 'baz', 'qux', 'QUUX')`
-* sub(...args)，和 App.sub 方法类似，返回其自身的子状态，例如 `baz_state.sub('qux')` 相当于 `app.sub('foo', 'bar', 'baz', 'qux')`
-
-SubState 对象作为组件函数的参数使用时，框架是有特别处理的。
-SubState 对象的路径变化，或者路径指向的状态的变化，会被组件函数观察到并作出反应。
-
-如果一个组件需要同时观察并且更新某个状态，并且需要可复用，就可以使用子状态作为组件函数的参数。
-
-例如一个 checkbox 组件，既要观察某个状态作为 checked 状态，也要在用户点击的时候，更新该状态，就可以这样实现：
-
-```js
-import { App, input, div, p } from 'affjs'
-
-const app = new App(
-  document.getElementById('app'),
-  {
-    // checkbox 各自的状态
-    aChecked: false,
-    bChecked: false,
-    cChecked: false,
-  },
-);
-
-const Checkbox = (state) => {
-  return input({
-    type: 'checkbox',
-    // 读传入的子状态，并对应地设置
-    checked: state.get(),
-    // 点击时，更新该子状态为元素的 checked 状态
-    onclick() {
-      state.update(this.element.checked);
-    },
-  });
-}
-
-const Main = (state) => {
-  return div([
-    p([
-      // checkbox 组件
-      Checkbox(app.sub('aChecked')),
-      // 显示状态，会跟随上面的组件的状态
-      state.aChecked ? 'checked' : 'unchecked',
-    ]),
-    p([
-      Checkbox(app.sub('bChecked')),
-      state.bChecked ? 'checked' : 'unchecked',
-    ]),
-    p([
-      Checkbox(app.sub('cChecked')),
-      state.cChecked ? 'checked' : 'unchecked',
-    ]),
-  ]);
-};
-
-app.init(Main);
-```
-
-![checkbox](images/checkbox.gif)
-
-上面实现的，有点类似某些框架提供的双向绑定功能。传入一个状态的路径，组件既会反映该状态，也会改变该状态。
-
-实际上所有 input 标签都应该这样，在 onclick、onchange 等事件发生的时候，将元素的 checked、text 等属性同步入状态树，而不应依赖浏览器元素自己维护的值。
-因为重渲染的时候，可能会渲染到其他的元素上，如果状态树里没有保存这些属性，就有可能丢失了。
-
-同步入状态树后，如果其他组件需要用到或者观察这些值，就比较方便。
-例如搜索框，一边输入，一边提示关键词或者搜索结果，那输入框组件，和显示结果的组件，就通过状态树进行协作。
-
-另外，可以看到 Checkbox 组件并没有使用 app 这个变量去更新状态树，而是使用传入的 SubState 参数。
-这是实现可复用的组件的重要手段，后面会有专门的一节讲组件的可复用性。
-
 <h2 id="state-passing">组件状态的逐层传递</h2>
 
 一个组件嵌套另一个组件，外层的组件可以称为父组件，内层的组件可以称为子组件。
@@ -1151,11 +1053,11 @@ $use 只会向上查找，直到根状态。如果到根状态都没有找到，
 $use 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
 因为解析 $use 标记开销比较大，如果更新一个大对象，就算不包含 $use 标记，也要进行解析的话，对性能影响比较大。
 
-<h2 id="update-and-sub">状态对象的 $update 和 $sub 方法</h2>
+<h2 id="update">状态对象的 $update 方法</h2>
 
-前面介绍了 App 类的 update 和 sub 方法，这两个方法的路径参数，是从根结点开始的绝对路径。
-实际上状态树里每一个 object 类型的子状态，都会被加上 $update 和 $sub 方法。
-$update 和 $sub 方法的作用和 App 类的 update 和 sub 方法是一样的。
+前面介绍了 App 类的 update 方法，这个方法的路径参数，是从根结点开始的绝对路径。
+实际上状态树里每一个 object 类型的子状态，都会被加上 $update 方法。
+$update 方法的作用和 App 类的 update 方法是一样的。
 不同的是路径参数，子状态对象的这两个方法的路径参数，是以子对象在全局状态树中的路径，为根路径。
 
 通过示例代码可能更容易理解：
@@ -1177,18 +1079,13 @@ const app = new App({
 app.update('foo', 'bar', 'baz', 'qux', 'new QUX');
 
 // 子状态对象的 update 方法
-const sub_state = app.state.foo.bar.baz;
-sub_state.$update('qux', 'New QUX');
-
-// 子状态对象也可以创建 SubState 
-const qux_state = sub_state.$sub('qux');
-// 通过 SubState 更新
-qux_state.update('A New Qux');
+const childState = app.state.foo.bar.baz;
+childState.$update('qux', 'New QUX');
 ```
 
 这个机制的作用是，让深层传递的状态，在更新的时候，可以不用管它在全局状态树中处于什么位置。
 例如上面的代码里，更新 qux 的时候，不需要知道它前面的路径是 ['foo', 'bar', 'baz']。
-因为 sub_state 这个对象，已经保存了这个路径的信息，直接调用 $update 方法，就会使用它保存的路径，放在前面作为完整的路径。
+因为 childState 这个对象，已经保存了这个路径的信息，直接调用 $update 方法，就会使用它保存的路径，放在前面作为完整的路径。
 
 这个设计也使组件有了更好的可复用性。不论传入组件的子状态处于全局状态树的什么路径，更新的代码都是一样的。
 传入不同路径的状态，不需要对组件代码进行改动。
@@ -1196,7 +1093,7 @@ qux_state.update('A New Qux');
 
 当然，如果组件需要更新的状态，不是传入组件函数的参数，那还是得用 App.update 方法去更新。
 
-框架会将所有进入状态树的对象都加上 $update 和 $sub 方法。
+框架会将所有进入状态树的对象都加上 $update 方法。
 这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 readOnly 函数标记一下。
 将对象作为参数传入即可，返回的对象会带上只读标记，框架不会为对象加上这两个方法。
 
@@ -1723,8 +1620,6 @@ URL 的改变引起状态树某些状态的改变，界面因而根据状态的�
 还有其他封装写操作的方式，例如对某个路径的写操作，实现成一个 update 函数的 operation。
 前面介绍更新操作的一节的最后有介绍，返回一个符合 update 接口的对象即可。
 这样 update 的时候可以省略路径，修改路径也只需要修改 operation 的实现。
-
-又或者使用 SubState 对象传递状态，它可以隔离一部分状态路径的设计，在结构变动时，影响范围会被局限。
 
 对状态的读操作，因为并没有封装，就直接是读对象，所以只能手工改动了。或者在旧路径埋一个会抛异常的getter，有读操作就出错，提示需要修改。
 

@@ -32,10 +32,6 @@ test('relative update', () => {
   app.state.foo.bar.baz.array.$update(0, 99);
   expect(app.state.foo.bar.baz.array[0]).toBe(99);
 
-  let sub = app.state.foo.bar.baz.array.$sub(0);
-  sub.update(42);
-  expect(app.state.foo.bar.baz.array[0]).toBe(42);
-
   app.update('bar', app.state.foo.bar);
   app.state.bar.$update('baz', 'qux', 'yes');
   expect(app.state.foo.bar.baz.qux).toBe('yes');

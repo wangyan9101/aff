@@ -2,7 +2,6 @@ import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Event } from './event'
 import { MutableState } from './mutable_state'
-import { SubState } from './state'
 
 export class App {
   constructor(...args) {
@@ -238,14 +237,6 @@ export class App {
       obj = obj[path[i]];
     }
     return obj;
-  }
-
-  sub(...args) {
-    let path = args;
-    if (path.length == 1 && Array.isArray(path[0])) {
-      path = path[0];
-    }
-    return new SubState(this, path);
   }
 
   // patch last_element to represent node attributes, with diffing last_node

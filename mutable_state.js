@@ -1,12 +1,10 @@
-import { State, SubState } from './state'
+import { State } from './state'
 
 export class MutableState extends State {
   constructor(init_state, app) {
     super();
     this.app = app;
     this.patch_tick = 1;
-    this.dirty_tree = {};
-    this.next_dirty_tree = {};
     this.state = init_state;
     this.setupState(this.state, []);
   }
@@ -16,10 +14,10 @@ export class MutableState extends State {
   }
 
   update(...arg) {
-    this.state = this.updateState(this.next_dirty_tree, [], this.state, ...arg);
+    this.state = this.updateState([], this.state, ...arg);
   }
 
-  updateState(dirty_tree, base_path, obj, ...args) {
+  updateState(base_path, obj, ...args) {
     if (args.length === 0) {
       return obj;
     } else if (args.length === 1) {
@@ -46,28 +44,19 @@ export class MutableState extends State {
         const key_type = typeof key;
         for (const k in obj) {
           if ((key_type === 'number' || key_type === 'string') && k == key) {
-            if (!dirty_tree[k]) {
-              dirty_tree[k] = {};
-            }
             let path = base_path.slice(0);
             path.push(k);
-            obj[k] = this.updateState(dirty_tree[k], path, obj[k], ...args.slice(1));
+            obj[k] = this.updateState(path, obj[k], ...args.slice(1));
           } else if (key_type === 'function' && key(k)) {
-            if (!dirty_tree[k]) {
-              dirty_tree[k] = {};
-            }
             let path = base_path.slice(0);
             path.push(k);
-            obj[k] = this.updateState(dirty_tree[k], path, obj[k], ...args.slice(1));
+            obj[k] = this.updateState(path, obj[k], ...args.slice(1));
           }
         }
         if ((key_type === 'string' || key_type === 'number') && !(key in obj)) {
-          if (!dirty_tree[key]) {
-            dirty_tree[key] = {};
-          }
           let path = base_path.slice(0);
           path.push(key);
-          obj[key] = this.updateState(dirty_tree[key], path, undefined, ...args.slice(1));
+          obj[key] = this.updateState(path, undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patch_tick + 1;
         return obj;
@@ -79,8 +68,6 @@ export class MutableState extends State {
 
   beforePatch() {
     this.patch_tick++;
-    this.dirty_tree = this.next_dirty_tree;
-    this.next_dirty_tree = {};
   }
 
   setupPatchTick(obj) {
@@ -118,32 +105,8 @@ export class MutableState extends State {
       }
     }
 
-    // sub state
-    if (arg instanceof SubState && last_arg instanceof SubState) {
-      // check path and dirty state
-      let max_dirty_index = -1;
-      let max_same_index = -1;
-      let dirty_tree = this.dirty_tree;
-      const last_path = last_arg.path;
-      for (let index = 0; index < arg.path.length; index++) {
-        if (dirty_tree && dirty_tree[arg.path[index]]) {
-          dirty_tree = dirty_tree[arg.path[index]];
-          max_dirty_index = index;
-        }
-        if (last_path[index] == arg.path[index]) {
-          max_same_index = index;
-        }
-      }
-      if (max_dirty_index == arg.path.length - 1) {
-        return true;
-      }
-      if (max_same_index != arg.path.length - 1) {
-        return true;
-      }
-    } 
-
     // patch_tick
-    else if (
+    if (
       arg === last_arg 
       && typeof arg === 'object' 
       && arg !== null 
@@ -212,14 +175,6 @@ export class MutableState extends State {
         value: function(...args) {
           app.update(...this.$path, ...args);
           return app.get(this.$path);
-        },
-      });
-      Object.defineProperty(state, '$sub', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: function(...args) {
-          return app.sub(...this.$path, ...args);
         },
       });
       Object.defineProperty(state, '$path', {

@@ -13,7 +13,7 @@ test('bind focus', () => {
   app.init(
     (state) => {
       return input($`#foo`,
-        bindFocus(app.sub('focus')),
+        bindFocus(state, 'focus'),
       );
     },
   );
@@ -37,7 +37,7 @@ test('bind hover', () => {
   app.init(
     (state) => {
       return div($`#foo`,
-        bindHover(app.sub('hover')),
+        bindHover(state, 'hover'),
       );
     },
   );
@@ -63,7 +63,7 @@ test('bind enter', () => {
   app.init(
     (state) => {
       return div($`#foo`,
-        bindEnter(app.sub('enter')),
+        bindEnter(state, 'enter'),
       );
     },
   );
