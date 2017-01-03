@@ -32,18 +32,8 @@ test('relative update', () => {
   app.state.foo.bar.baz.array.$update(0, 99);
   expect(app.state.foo.bar.baz.array[0]).toBe(99);
 
-  app.update('bar', app.state.foo.bar);
-  app.state.bar.$update('baz', 'qux', 'yes');
-  expect(app.state.foo.bar.baz.qux).toBe('yes');
-
-  app.update('foo', 'bar', 'BAR');
-  expect(app.state.bar).toMatchObject({
-    baz: {
-      qux: 'yes',
-    },
-  });
-  app.state.bar.$update('foo');
-  expect(app.state.bar).toBe('foo');
-  app.update('foo', 'bar', 'BAR');
+  expect(() => {
+    app.update('bar', app.state.foo.bar);
+  }).toThrowError('cannot change state object path,bar,foo,bar');
 
 });

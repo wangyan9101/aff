@@ -180,13 +180,15 @@ export class MutableState extends State {
       Object.defineProperty(state, '$path', {
         configurable: false,
         enumerable: false,
-        writable: true,
+        writable: false,
         value: base_path.slice(0),
       });
 
     } else {
-      // update path
-      state.$path = base_path.slice(0);
+      if (!(state.$path.reduce((acc, cur, i) => 
+        acc && cur == base_path[i], true))) {
+        throw['cannot change state object path', base_path.slice(0), state.$path];
+      }
     }
 
     // recursively
