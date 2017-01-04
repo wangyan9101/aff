@@ -367,18 +367,18 @@ export class App {
     }
 
     // class
-    for (const key in node.class) {
+    for (const key in node.classList) {
       // should update
-      if (!last_node.class || node.class[key] != last_node.class[key]) {
-        if (node.class[key]) {
+      if (!last_node.classList || node.classList[key] != last_node.classList[key]) {
+        if (node.classList[key]) {
           last_element.classList.add(key);
         } else {
           last_element.classList.remove(key);
         }
       }
     }
-    for (const key in last_node.class) {
-      if (!node.class || !(key in node.class)) {
+    for (const key in last_node.classList) {
+      if (!node.classList || !(key in node.classList)) {
         last_element.classList.remove(key);
       }
     }
@@ -562,7 +562,7 @@ class Node {
     this.tag = null;
     this.id = null;
     this.style = null;
-    this.class = null;
+    this.classList = null;
     this.children = null;
     this.attributes = null;
     this.events = null;
@@ -580,8 +580,8 @@ class Node {
         if (part.charAt(0) == '#') {
           this.id = part.substring(1);
         } else if (part.charAt(0) == '.') {
-          this.class = this.class || {};
-          this.class[part.substring(1)] = true;
+          this.classList = this.classList || {};
+          this.classList[part.substring(1)] = true;
         }
       }
     }
@@ -592,26 +592,25 @@ class Node {
       if (key == 'id' || key == 'innerHTML') {
         // id, innerHTML
         this[key] = properties[key];
-      } else if (key == 'class') {
-        this.class = this.class || {};
-        const property = properties.class;
+      } else if (key == 'classList') {
+        this.classList = this.classList || {};
+        const property = properties.classList;
         if (typeof property == 'string') {
           const parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
           if (parts) {
             for (let i = 0, l = parts.length; i < l; i++) {
               const part = parts[i];
-              this.class[part] = true;
+              this.classList[part] = true;
             }
           }
         } else if (typeof property == 'object' && property !== null) {
           if (Array.isArray(property)) {
             for (let i = 0; i < property.length; i++) {
-              this.class[property[i]] = true;
+              this.classList[property[i]] = true;
             }
           } else {
-            const classes = [];
             for (const k in property) {
-              this.class[k] = property[k];
+              this.classList[k] = property[k];
             }
           }
         } else {
@@ -697,10 +696,10 @@ class Node {
         element.style = this.style;
       }
     }
-    if (this.class !== null) {
+    if (this.classList !== null) {
       let className = '';
-      for (let k in this.class) {
-        if (this.class[k]) {
+      for (let k in this.classList) {
+        if (this.classList[k]) {
           className = className + k + ' ';
         }
       }

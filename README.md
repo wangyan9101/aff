@@ -243,23 +243,23 @@ div($`#the-div .class-a .class-b`)
 另外一种表示方式是用一个属性对象：
 
 ```js
-div({ id: 'the-div', class: 'class-a class-b' })
+div({ id: 'the-div', classList: 'class-a class-b' })
 ```
 
 这种方式很容易理解，就是将标签的属性，表示成一个对象的属性就可以了。
 
-另外 class 属性，除了可以用字符串表示，还可以用数组，或者一个对象来表示。
+另外 classList 属性，除了可以用字符串表示，还可以用数组，或者一个对象来表示。
 
 数组方式：
 ```js
-div({ id: 'the-div', class: ['class-a', 'class-b'] })
+div({ id: 'the-div', classList: ['class-a', 'class-b'] })
 ```
 
 就是将各个 class，写成数组的元素。
 
 对象方式：
 ```js
-div({ id: 'the-div', class: {
+div({ id: 'the-div', classList: {
   ['class-a']: true,
   ['class-b']: true,
 }})
@@ -486,7 +486,7 @@ new App(
 <h3>attribute 和 property</h3>
 
 标签的 attributes 和 properties 是同时设置的，方法是将一个对象作为参数传入标签函数。
-除了前面提到过的 id、class、style、以及 onxxx 等特殊属性名之外，这个对象的属性，会作为标签的属性设置。
+除了前面提到过的 id、classList、style、以及 onxxx 等特殊属性名之外，这个对象的属性，会作为标签的属性设置。
 例如：
 
 ```js

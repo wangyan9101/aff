@@ -197,7 +197,7 @@ test('bad children', () => {
 
 test('bad class', () => {
   expect(() => div({
-    class: false,
+    classList: false,
   })).toThrowError('bad class,false');
 });
 

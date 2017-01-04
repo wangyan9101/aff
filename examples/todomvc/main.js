@@ -41,7 +41,7 @@ const Header = header($`.header`,
 );
 
 const Todo = (todo, i) => li(
-  { class: { completed: todo.completed, editing: todo.editing } },
+  { classList: { completed: todo.completed, editing: todo.editing } },
   div($`.view`,
     checkbox($`.toggle`, {
       checked: todo.completed ? 'checked' : false,
@@ -92,13 +92,13 @@ const Footer = (todos, filter) => footer($`.footer`,
   ].map(info => li(
     a(info[1], {
       style: `cursor: pointer`,
-      class: filter == info[1] ? 'selected' : '', 
+      classList: filter == info[1] ? 'selected' : '', 
     }, on('click', () => { 
       window.location.hash = info[0];
     })),
   ))),
   todos.reduce((b, c) => b || c.completed, false) ? button({
-    class: 'clear-completed',
+    classList: 'clear-completed',
     onclick() {
       app.update('todos', $filter(todo => !todo.completed));
     },

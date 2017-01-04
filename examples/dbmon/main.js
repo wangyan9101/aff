@@ -20,7 +20,7 @@ function DB(database) {
   return tr(
     td($`.dbname`, database.dbname),
     td($`.query-count`,
-      span({ class: database.lastSample.countClassName }, database.lastSample.nbQueries),
+      span({ classList: database.lastSample.countClassName }, database.lastSample.nbQueries),
     ),
     database.lastSample.topFiveQueries.map(function(query) {
       return t('Query', function(query) {

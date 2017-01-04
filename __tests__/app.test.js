@@ -574,7 +574,7 @@ test('class change', () => {
     if (step == 0) {
       return div({
         id: 'foo',
-        class: {
+        classList: {
           foo: true,
           bar: false,
         },
@@ -582,7 +582,7 @@ test('class change', () => {
     } else {
       return div({
         id: 'foo',
-        class: {
+        classList: {
           foo: false,
           bar: true,
         },

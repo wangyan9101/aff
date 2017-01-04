@@ -14,14 +14,14 @@ test('e', () => {
   let s = '.bar';
   let id = 'quux';
   node = div($`.foo ${s} .baz qux #${id}`);
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     foo: true,
     bar: true,
     baz: true,
   });
   expect(node.id).toBe('quux');
   node = div($`.foo`);
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     foo: true,
   });
   node = div($`#foo`);
@@ -29,11 +29,11 @@ test('e', () => {
 
   node = div({
     id: 'foo',
-    class: 'bar',
+    classList: 'bar',
     innerHTML: 'yes',
   });
   expect(node.id).toBe('foo');
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     bar: true,
   });
   expect(node.innerHTML).toBe('yes');
@@ -116,12 +116,12 @@ test('e 2', () => {
   expect(node.children.length).toBe(1);
 
   node = e('div', $`#foo`, {
-    class: 'bar',
+    classList: 'bar',
   }, [
     P(),
   ]);
   expect(node.id).toBe('foo');
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     bar: true,
   });
   expect(node.children.length).toBe(1);
@@ -129,23 +129,23 @@ test('e 2', () => {
 
 test('class property', () => {
   let node = e('div', {
-    class: 'foo bar baz',
+    classList: 'foo bar baz',
   });
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     foo: true,
     bar: true,
     baz: true,
   });
   node = e('div', {
-    class: ['foo', 'bar', 'baz'],
+    classList: ['foo', 'bar', 'baz'],
   });
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     foo: true,
     bar: true,
     baz: true,
   });
   node = e('div', {
-    class: {
+    classList: {
       foo: true,
       bar: true,
       baz: true,
@@ -153,7 +153,7 @@ test('class property', () => {
       quux: false,
     },
   });
-  expect(node.class).toMatchObject({
+  expect(node.classList).toMatchObject({
     foo: true,
     bar: true,
     baz: true,
@@ -198,7 +198,7 @@ test('undefined child', () => {
 
 test('empty class', () => {
   div({
-    class: '',
+    classList: '',
   });
   div($``);
 });
