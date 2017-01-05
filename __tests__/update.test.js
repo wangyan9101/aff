@@ -2,7 +2,8 @@ import {
   $map, $inc, $dec, $any, $filter, $reduce, $delete, 
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
-} from '../operations'
+  logUpdates,
+} from '../index'
 import { App } from '../app'
 import './__helpers'
 
@@ -71,6 +72,7 @@ test('ops', () => {
 test('func', () => {
   let app = new App(
     [1, 2, 3, 4, 5],
+    logUpdates,
   );
   app.update($any, $func(x => x + 1));
   expect(app.state).toMatchObject([2, 3, 4, 5, 6]);

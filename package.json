@@ -17,7 +17,7 @@
     "coveralls": "^2.11.15",
     "gulp": "^3.9.1",
     "gulp-webpack": "^1.5.0",
-    "jest": "^17.0.3",
+    "jest": "^18.0.0",
     "jsdom": "^9.8.3",
     "webpack": "^1.13.3",
     "webpack-dev-server": "^1.16.2"
