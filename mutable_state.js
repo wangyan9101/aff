@@ -6,7 +6,7 @@ export class MutableState extends State {
     this.app = app;
     this.patch_tick = 1;
     this.state = init_state;
-    this.setupState(this.state, []);
+    this.setupState(this.state, [], false);
   }
 
   get() {
@@ -30,7 +30,11 @@ export class MutableState extends State {
       } else {
         ret = args[0];
       }
-      this.setupState(ret, base_path);
+      let forceSetup = false;
+      if (ret === obj && Array.isArray(ret)) {
+        forceSetup = true;
+      }
+      this.setupState(ret, base_path, forceSetup);
       return ret;
     } else {
       if (!obj) {
@@ -161,7 +165,7 @@ export class MutableState extends State {
     return false;
   }
 
-  setupState(state, base_path) {
+  setupState(state, base_path ,forceSetup) {
     if (typeof state != 'object' || state === null) {
       return
     }
@@ -169,13 +173,13 @@ export class MutableState extends State {
       return
     }
 
-    if (!state.hasOwnProperty('$update')) {
+    if (!state.hasOwnProperty('$update') || forceSetup) {
       // set
       const app = this.app;
       Object.defineProperty(state, '$update', {
         configurable: false,
         enumerable: false,
-        writable: false,
+        writable: true,
         value: function(...args) {
           app.update(...this.$path, ...args);
           return app.get(this.$path);
@@ -184,7 +188,7 @@ export class MutableState extends State {
       Object.defineProperty(state, '$path', {
         configurable: false,
         enumerable: false,
-        writable: false,
+        writable: true,
         value: base_path.slice(0),
       });
 
@@ -199,7 +203,7 @@ export class MutableState extends State {
     for (let key in state) {
       let sub_path = base_path.slice(0);
       sub_path.push(key);
-      this.setupState(state[key], sub_path);
+      this.setupState(state[key], sub_path, forceSetup);
     }
 
   }

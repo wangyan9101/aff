@@ -128,3 +128,17 @@ test('reverse', () => {
   app.update($reverse);
   expect(app.state).toMatchObject([1, 2, 3]);
 });
+
+test('path reset', () => {
+  let app = new App(
+    [
+      { foo: 'foo', },
+      { foo: 'Foo', },
+      { foo: 'FOO', },
+    ],
+  );
+  app.update($splice(0, 1));
+  app.state[0].$update('foo', 'fOO');
+  expect(app.state[0].foo).toBe('fOO');
+  expect(app.state[1].foo).toBe('FOO');
+});
