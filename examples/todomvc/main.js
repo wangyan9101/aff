@@ -14,8 +14,8 @@ const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
 };
 
 const app = new App(
-  document.getElementById('app'),
   logUpdates,
+  document.getElementById('app'),
   on('after_update', (state, ...args) => {
     window.localStorage.setItem('todos', JSON.stringify(state));
   }),
@@ -24,29 +24,40 @@ const app = new App(
 
 const Header = header($`.header`,
   h1('todos'),
-  input($`.new-todo`, {
-    placeholder: "What needs to be done?",
-    autofocus: 'autofocus',
-  }, on('keypress', function(e) {
-    if (e.keyCode != 13 || this.element.value.length == 0) {
-      return
-    }
-    app.update('todos', $push({
-      completed: false,
-      content: this.element.value,
-    }));
-    this.element.value = '';
-  })),
+  input($`.new-todo`, 
+    {
+      placeholder: "What needs to be done?",
+      autofocus: 'autofocus',
+    }, 
+    on('keypress', function(e) {
+      if (e.keyCode != 13 || this.element.value.length == 0) {
+        return
+      }
+      app.update('todos', $push({
+        completed: false,
+        content: this.element.value,
+      }));
+      this.element.value = '';
+    }),
+  ),
 );
 
 const Todo = (todo, i) => li(
-  { classList: { completed: todo.completed, editing: todo.editing } },
+  { 
+    classList: {
+      completed: todo.completed,
+      editing: todo.editing,
+    },
+  },
   div($`.view`,
-    checkbox($`.toggle`, {
-      checked: todo.completed ? 'checked' : false,
-    }, on('click', function() {
-      app.update('todos', i, 'completed', this.element.checked);
-    })),
+    checkbox($`.toggle`, 
+      {
+        checked: todo.completed ? 'checked' : false,
+      },
+      on('click', function() {
+        app.update('todos', i, 'completed', this.element.checked);
+      }),
+    ),
     label(todo.content, on('dblclick', () => {
       app.update('todos', i, 'editing', true);
     })),
@@ -54,16 +65,19 @@ const Todo = (todo, i) => li(
       app.update('todos', $splice(i, 1));
     })),
   ),
-  input($`.edit`, {
-    value: todo.content,
-  }, on('keypress', function(e) {
-    if (e.keyCode == 13) {
-      app.updateMulti(
-        ['todos', i, 'content', this.element.value],
-        ['todos', i, 'editing', false],
-      );
-    }
-  })),
+  input($`.edit`, 
+    {
+      value: todo.content,
+    },
+    on('keypress', function(e) {
+      if (e.keyCode == 13) {
+        app.updateMulti(
+          ['todos', i, 'content', this.element.value],
+          ['todos', i, 'editing', false],
+        );
+      }
+    }),
+  ),
 );
 
 const TodoList = (todos, filter) => ul($`.todo-list`, 
