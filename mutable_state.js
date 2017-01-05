@@ -31,7 +31,8 @@ export class MutableState extends State {
         ret = args[0];
       }
       let forceSetup = false;
-      if (ret === obj && Array.isArray(ret)) {
+      if (Array.isArray(obj) && Array.isArray(ret)) {
+        // re-setup arrays conservatively
         forceSetup = true;
       }
       this.setupState(ret, base_path, forceSetup);
