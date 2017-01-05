@@ -275,3 +275,21 @@ test('null dom', () => {
   );
   expect(root.innerHTML).toBe('<div><div style="display: none;"></div></div>');
 });
+
+test('func retuning array', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {},
+    (state) => div(
+      () => {
+        return [
+          div(),
+          div(),
+        ];
+      },
+    ),
+  );
+});

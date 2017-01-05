@@ -560,6 +560,8 @@ function _e(node, ...args) {
       } else {
         node.setProperties(arg);
       }
+    } else if (typeof arg === 'function') {
+      _e(node, arg());
     } else {
       node.setChildren(arg);
     }
@@ -668,8 +670,6 @@ class Node {
       const child = new Node();
       child.text = children.toString();
       this.children.push(child);
-    } else if (type === 'function') {
-      this.setChildren(children());
     } else {
       throw['bad child', children];
     }
