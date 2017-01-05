@@ -17,7 +17,7 @@ function formatUpdatePath(arg) {
 
 function formatUpdateArg(arg) {
   if (typeof arg === 'object' && arg.__is_op) {
-    return [arg.op, ...arg.args];
+    return [arg.op, ...(arg.args || [])];
   }
   return arg;
 }
