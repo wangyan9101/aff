@@ -1,6 +1,6 @@
 {
   "name": "affjs",
-  "version": "0.0.94",
+  "version": "0.0.95",
   "description": "minimal, pure js frontend framework",
   "scripts": {
     "test": "jest --coverage",
