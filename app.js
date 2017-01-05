@@ -1,6 +1,6 @@
 import { all_tags } from './all_tags'
 import { Selector, Css } from './tagged'
-import { Event } from './event'
+import { Events } from './event'
 import { MutableState } from './mutable_state'
 
 export class App {
@@ -22,8 +22,10 @@ export class App {
       const arg = args[i];
       if (arg instanceof HTMLElement) {
         this.element = arg;
-      } else if (arg instanceof Event) {
-        this.addEvent(arg);
+      } else if (arg instanceof Events) {
+        for (let idx = 0; idx < arg.events.length; idx++) {
+          this.addEvent(arg.events[idx]);
+        }
       } else if (typeof arg == 'function') {
         this.node_func = arg;
       } else {
@@ -544,10 +546,13 @@ function _e(node, ...args) {
       node.setProperties({
         style: arg.str,
       });
-    } else if (arg instanceof Event) {
-      node.setProperties({
-        ['on' + arg.ev_type]: arg.fn,
-      });
+    } else if (arg instanceof Events) {
+      for (let idx = 0; idx < arg.events.length; idx++) {
+        const ev = arg.events[idx];
+        node.setProperties({
+          ['on' + ev.ev_type]: ev.fn,
+        });
+      }
     } else if (typeof arg === 'object' && arg !== null) {
       if (Array.isArray(arg)) {
         // flatten
