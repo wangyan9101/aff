@@ -1,4 +1,4 @@
-import {t, e, setAfterThunkCallFunc} from '../index'
+import {t, e, setAfterThunkCallFunc, css} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../operations'
@@ -292,4 +292,30 @@ test('func retuning array', () => {
       },
     ),
   );
+});
+
+test('style change to null', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {
+      n: 0,
+    },
+    (state) => {
+      if (state.n == 0) {
+        return div(
+          css`
+            margin-right: 5px;
+          `,
+        );
+      } else if (state.n == 1) {
+        return div();
+      }
+    },
+  );
+  expect(root.innerHTML).toBe('<div style="margin-right: 5px;"></div>');
+  app.update('n', 1);
+  expect(root.innerHTML).toBe('<div style=""></div>');
 });

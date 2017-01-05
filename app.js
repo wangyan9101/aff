@@ -343,10 +343,10 @@ export class App {
     const last_style_type = typeof last_node.style;
     // different type, no diff
     if (style_type !== last_style_type) {
+      last_element.style = undefined;
       if (style_type === 'string') {
         last_element.style = node.style;
       } else if (style_type === 'object' && node.style !== null) {
-        last_element.style = undefined;
         for (const key in node.style) {
           last_element.style[key] = node.style[key];
         }
