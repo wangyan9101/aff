@@ -319,3 +319,27 @@ test('style change to null', () => {
   app.update('n', 1);
   expect(root.innerHTML).toBe('<div style=""></div>');
 });
+
+test('text to div', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {
+      n: 0,
+    },
+    (state) => {
+      if (state.n == 0) {
+        return div(
+          'foo',
+        );
+      } else if (state.n == 1) {
+        return div(
+          div(),
+        );
+      }
+    },
+  );
+  app.update('n', 1);
+});

@@ -306,7 +306,7 @@ export class App {
         last_element.parentNode.removeChild(last_element);
       }
       // cache last_element
-      if (last_node) {
+      if (last_node && last_element.tagName) {
         this.element_cache[last_element.tagName.toLowerCase()].push([last_element, last_node]);
       }
 
