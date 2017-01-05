@@ -13,6 +13,7 @@ export class App {
     for (let i = 0; i < all_tags.length; i++) {
       this.element_cache[all_tags[i]] = [];
     }
+    this.events = {};
     this.init(...args);
   }
 
@@ -21,6 +22,8 @@ export class App {
       const arg = args[i];
       if (arg instanceof HTMLElement) {
         this.element = arg;
+      } else if (arg instanceof Event) {
+        this.addEvent(arg);
       } else if (typeof arg == 'function') {
         this.node_func = arg;
       } else {
@@ -158,10 +161,21 @@ export class App {
 
   }
 
-  beforeUpdate() {
+  addEvent(ev) {
+    const parts = ev.ev_type.split(/[$:]/);
+    const ev_type = parts[0];
+    const ev_subtype = parts.slice(1).join(':') || '__default';
+    if (!(ev_type in this.events)) {
+      this.events[ev_type] = {};
+    }
+    const events = this.events[ev_type];
+    events[ev_subtype] = ev.fn;
   }
 
-  afterUpdate() {
+  dispatchEvent(ev_type, ...args) {
+    for (const sub_type in this.events[ev_type]) {
+      this.events[ev_type][sub_type].apply(this, args);
+    }
   }
 
   get state() {
@@ -175,9 +189,9 @@ export class App {
   updateMulti(...args) {
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
-      this.beforeUpdate(this.state, ...arg);
+      this.dispatchEvent('before_update', this.state, ...arg);
       this._state.update(...arg);
-      this.afterUpdate(this.state, ...arg);
+      this.dispatchEvent('after_update', this.state, ...arg);
     }
     if (!this.element) {
       return this.state;

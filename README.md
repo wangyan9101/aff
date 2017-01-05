@@ -16,7 +16,6 @@
 	* [组件状态的逐层传递](#state-passing)
 	* [状态对象的 $update 方法](#update)
 * 进阶话题
-	* [跟踪状态变化](#7)
 	* [默认及衍生状态](#9)
 	* [可复用的组件](#reusable)
 	* [内联 css 样式技巧](#16)
@@ -1098,51 +1097,6 @@ childState.$update('qux', 'New QUX');
 另外，因为一个状态对象只会记录一个路径，所以一个对象的路径设定好之后，就不能变更了。
 如果将一个已经设定了路径的对象，更新到状态树的其他路径，框架将会报错。
 解决方法是避免在不同路径引用到同一个对象。或者在更新时使用 readOnly 函数标记该对象，这样就会跳过路径的检查。
-
-<h2 id="7">跟踪状态变化</h2>
-
-继承App类，并覆盖beforeUpdate和afterUpdate方法，可以在状态更新前后，执行一些动作。
-例如打印更新前后的状态，和更新操作的内容。这样可以方便地跟踪状态的变化，debug时可能用得上。
-
-```js
-import {
-  App,
-  div,
-  $map,
-} from 'affjs'
-
-class StateTracingApp extends App {
-  constructor(...args) {
-    super(...args);
-  }
-
-  // 将在状态更新前执行
-  beforeUpdate(state, ...args) {
-    console.log('%cBEFORE', 'background: #888; color: white', JSON.parse(JSON.stringify(state)));
-    console.log('%cUPDATE', 'background: #555; color: white', args);
-  }
-
-  // 将在状态更新后执行
-  afterUpdate(state, ...args) {
-    console.log('%cAFTER ', 'background: #333; color: white', JSON.parse(JSON.stringify(state)));
-  }
-}
-
-const init_state = {
-  foo: [1, 2, 3, 4, 5],
-};
-
-const app = new StateTracingApp(
-  document.getElementById('app'),
-  () => div(),
-  init_state,
-);
-
-// 更新状态
-app.update('foo', $map(v => v * 2));
-```
-
-![counter](images/state-trace.png)
 
 <h2 id="9">默认及衍生状态</h2>
 

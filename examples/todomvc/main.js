@@ -3,6 +3,7 @@ import {
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $splice, $filter,
+  logUpdates,
 } from '../../index'
 
 const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
@@ -12,14 +13,12 @@ const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
   filter: 'All',
 };
 
-class Application extends App {
-  afterUpdate(state, ...args) {
-    window.localStorage.setItem('todos', JSON.stringify(state));
-  }
-}
-
-const app = new Application(
+const app = new App(
   document.getElementById('app'),
+  logUpdates,
+  on('after_update', (state, ...args) => {
+    window.localStorage.setItem('todos', JSON.stringify(state));
+  }),
   init_state,
 );
 
