@@ -139,14 +139,15 @@ test('children append invalid', () => {
       return div();
     }
     return div([
-      new Foo(),
+      Foo,
     ]);
   };
   app.init(Main);
   expect(app.html()).toBe('');
   console.warn = jest.genMockFn();
-  app.update('ns', [1, 2, 3]);
-  expect(root.textContent).toBe('RENDER ERROR: cannot render [object Object]');
+  expect(() => {
+    app.update('ns', [1, 2, 3]);
+  }).toThrowError('bad child,');
 });
 
 test('children append invalid', () => {
@@ -164,14 +165,15 @@ test('children append invalid', () => {
     if (state.step == 0) {
       return div([1]);
     } else if (state.step == 1) {
-      return div([1, new Foo()]);
+      return div([1, Foo]);
     }
   };
   app.init(Main);
   expect(app.html()).toBe('1');
   console.warn = jest.genMockFn();
-  app.update('step', 1);
-  expect(root.textContent).toBe('1RENDER ERROR: cannot render [object Object]');
+  expect(() => {
+    app.update('step', 1);
+  }).toThrowError('bad child,');
 });
 
 test('remove event', () => {

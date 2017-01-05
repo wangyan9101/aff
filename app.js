@@ -297,13 +297,7 @@ export class App {
       // different tag, no way to patch
       || (node.tag != last_node.tag)
     ) {
-      let element;
-      if (!node || !node.toElement) {
-        element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
-        console.warn('cannot render', node);
-      } else {
-        element = node.toElement(undefined, this);
-      }
+      const element = node.toElement(undefined, this);
       // insert new then remove old
       if (last_element && last_element.parentNode) {
         last_element.parentNode.insertBefore(element, last_element);
@@ -535,6 +529,11 @@ export function e(tag, ...args) {
   }
   const node = new Node();
   node.tag = tag;
+  _e(node, ...args);
+  return node;
+}
+
+function _e(node, ...args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg instanceof Node || arg instanceof Thunk) {
@@ -551,7 +550,8 @@ export function e(tag, ...args) {
       });
     } else if (typeof arg === 'object' && arg !== null) {
       if (Array.isArray(arg)) {
-        node.setChildren(arg)
+        // flatten
+        _e(node, ...arg);
       } else {
         node.setProperties(arg);
       }
@@ -658,14 +658,7 @@ class Node {
     this.children = this.children || [];
     const type = typeof children;
     if (type === 'object' && children !== null) {
-      if (Array.isArray(children)) {
-        // flatten
-        for (let i = 0, l = children.length; i < l; i++) {
-          this.setChildren(children[i]);
-        }
-      } else {
-        this.children.push(children);
-      }
+      this.children.push(children);
     } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
       const child = new Node();
       child.text = children.toString();
@@ -722,12 +715,7 @@ class Node {
     if (this.children !== null) {
       const childFragment = document.createDocumentFragment();
       for (let i = 0, l = this.children.length; i < l; i++) {
-        if (!this.children[i] || !this.children[i].toElement) {
-          childFragment.appendChild(warning(`RENDER ERROR: cannot render ${this.children[i]}`).toElement());
-          console.warn('cannot render', this.children[i]);
-        } else {
-          childFragment.appendChild(this.children[i].toElement(undefined, app));
-        }
+        childFragment.appendChild(this.children[i].toElement(undefined, app));
       }
       element.appendChild(childFragment);
     }

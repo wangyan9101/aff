@@ -176,23 +176,18 @@ test('bad children', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
-  let checked = false;
   function Foo() {}
-  let app = new App(
-    element,
-    {},
-    () => {
-      return div({
-        oncreated(elem) {
-          expect(elem.textContent).toBe('RENDER ERROR: cannot render [object Object]');
-          checked = true;
-        },
-      }, [
-        new Foo(),
-      ]);
-    },
-  );
-  expect(checked).toBe(true);
+  expect(() => {
+    let app = new App(
+      element,
+      {},
+      () => {
+        return div([
+          Foo,
+        ]);
+      },
+    );
+  }).toThrowError('bad child,');
 });
 
 test('bad class', () => {
