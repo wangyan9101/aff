@@ -1,4 +1,4 @@
-import {t, e, setAfterThunkCallFunc, css} from '../index'
+import {t, e, setAfterThunkCallFunc, css, skip} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../operations'
@@ -342,4 +342,16 @@ test('text to div', () => {
     },
   );
   app.update('n', 1);
+});
+
+test('skip', () => {
+  const node = div(
+    div(),
+    div(),
+    div(),
+    skip,
+    div(),
+    div(),
+  );
+  expect(node.children.length).toBe(3);
 });

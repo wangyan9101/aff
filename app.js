@@ -535,6 +535,8 @@ export function e(tag, ...args) {
   return node;
 }
 
+export const skip = { skip_following_arguments: true };
+
 function _e(node, ...args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -553,6 +555,8 @@ function _e(node, ...args) {
           ['on' + ev.ev_type]: ev.fn,
         });
       }
+    } else if (arg === skip) {
+      break
     } else if (typeof arg === 'object' && arg !== null) {
       if (Array.isArray(arg)) {
         // flatten
