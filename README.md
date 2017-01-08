@@ -482,6 +482,27 @@ new App(
 
 这样设计的原因是，让事件处理代码变成声明式的，而不是让开发者过程式地手工处理事件 handler。
 
+on 函数还可以链式定义，这样能在一个表达式里面表示多个事件：
+
+```js
+import { App, button, on } from 'affjs'
+
+new App(
+  document.getElementById('app'),
+  {},
+  () => button(
+    'CLICK ME',
+    on('click:foo', () => {
+      console.log('foo');
+    }).on('click:bar', () => {
+      console.log('bar');
+    }).on('click:baz', () => {
+        console.log('baz');
+    }),
+  ),
+);
+```
+
 <h3>attribute 和 property</h3>
 
 标签的 attributes 和 properties 是同时设置的，方法是将一个对象作为参数传入标签函数。
@@ -519,9 +540,42 @@ const checkbox = (...args) => e('input', {
 checkbox 函数的参数也是不定长的，但传递给 e 函数、构造 input 标签的时候，增加了一个指定 type 属性的参数。
 这样在需要一个 type 为 checkbox 的 input 标签时，就可以直接用 checkbox 函数，而无需传入 type 属性给 input 标签。
 
+前面在嵌套标签一节提到，多个子标签可以放在 array 类型的参数里一起传递，框架会递归地将参数提取出来。
+实际上 array 中的元素不仅仅可以是子标签，事件、属性、样式等类型的元素，也会被视作参数，传入标签函数。
+这个机制对代码的复用和组合很有益。
+
 有些框架也允许使用 hyperscript 或者其他方式手工构造渲染函数，但是它们的参数解析，不是基于对象属性，就是基于参数的位置。
 无论在写法的简洁性，或者在封装的方便性，都有很大的缺陷。
 可以是可以，但这些框架主流还是用 JSX 或者 html 模板，而不是纯 js 表达，设计者并没有花心思来让纯 js 的表达方式变好用。
+
+<h3>skip</h3>
+
+参数列表中，可以使用 skip 来表示忽略它后面的参数，例如：
+
+```js
+import { div, skip } from 'affjs'
+
+div(
+    div('foo'),
+    div('bar'),
+    skip,
+    div('baz'),
+);
+```
+
+相当于
+
+```js
+import { div, skip } from 'affjs'
+
+div(
+    div('foo'),
+    div('bar'),
+    skip,
+);
+```
+
+skip 标志的主要用途是定位 bug。
 
 <h2 id="4">组件</h2>
 
