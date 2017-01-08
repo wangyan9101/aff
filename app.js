@@ -643,7 +643,23 @@ class Node {
         }
       } else if (key == 'style') {
         // styles
-        this.style = properties.style;
+        if (this.style === null) {
+          this.style = properties.style;
+        } else {
+          const style = properties.style;
+          const style_type = typeof style;
+          const current_type = typeof this.style;
+          if (style_type != current_type) {
+            throw['should not mix-use object-like style and string-like style', style, this.style];
+          }
+          if (style_type === 'string') {
+            this.style += style;
+          } else if (style_type === 'object') {
+            for (const key in style) {
+              this.style[key] = style[key];
+            }
+          }
+        }
       } else if (/^on/.test(key) && typeof properties[key] === 'function') {
         if (key == 'oncreated' || key == 'oncreate') {
           this.hooks = this.hooks || {};

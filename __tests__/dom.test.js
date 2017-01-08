@@ -355,3 +355,24 @@ test('skip', () => {
   );
   expect(node.children.length).toBe(3);
 });
+
+test('style merge', () => {
+  let node = div(
+    css`margin-right: 10px;`,
+    css`margin-left: 10px;`,
+  );
+  expect(node.style).toBe('margin-right: 10px;margin-left: 10px;');
+  node = div(
+    { style: { marginLeft: '10px' } },
+    { style: { marginRight: '5px' } },
+    { style: { marginLeft: '3px' } },
+  );
+  expect(node.style.marginLeft).toBe('3px');
+  expect(node.style.marginRight).toBe('5px');
+  expect(() => {
+    node = div(
+      css`margin-left: 5px`,
+      { style: { marginLeft: '3px' } },
+    );
+  }).toThrowError('should not mix-use object-like style and string-like style,[object Object],margin-left: 5px');
+});
