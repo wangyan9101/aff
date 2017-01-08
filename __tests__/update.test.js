@@ -142,3 +142,17 @@ test('path reset', () => {
   expect(app.state[0].foo).toBe('fOO');
   expect(app.state[1].foo).toBe('FOO');
 });
+
+test('use key tick update', () => {
+  const app = new App({
+    foo: 'FOO',
+    bar: {
+      $use: ['foo'],
+    },
+  });
+  app._state.argsChanged(app.state.bar, app.state.bar);
+  app._state.argsChanged(app.state.bar, app.state.bar);
+  app.update('foo', 'foo');
+  app._state.argsChanged(app.state.bar, app.state.bar);
+  app._state.argsChanged(app.state.bar, app.state.bar);
+});

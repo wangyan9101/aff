@@ -103,6 +103,7 @@ export class MutableState extends State {
       && typeof arg === 'object'
       && arg != null
       && arg.__aff_use_keys
+      && arg.__aff_tick_update_at != this.patch_tick
     ) {
       for (const key in arg.__aff_use_keys) {
         const fromPath = arg.__aff_use_keys[key].slice(0);
@@ -112,6 +113,7 @@ export class MutableState extends State {
           arg.__aff_tick = tick;
         }
       }
+      arg.__aff_tick_update_at = this.patch_tick;
     }
 
     // patch_tick
