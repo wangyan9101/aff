@@ -22,6 +22,7 @@ export class App {
       nativeNodeCreate: 0,
       nodeCacheHit: 0,
     };
+    this.jobs = [];
     this.events = {};
     this.init(...args);
   }
@@ -291,7 +292,12 @@ export class App {
         this.element = result[0];
         this.node = result[1];
       }
-      //TODO trigger async update
+      if (this.jobs.length > 0) {
+        for (let i = this.jobs.length - 1; i >= 0; i--) {
+          this.jobs[i]();
+        }
+        this.jobs = [];
+      }
       this.patching = false;
       this.updateCount = 0;
     } else {
@@ -471,6 +477,8 @@ export class App {
       this.cacheNode(elem, lastNode.children[i]);
     }
 
+    this.jobs.push(function() {
+
     // innerHTML
     if (node.innerHTML != lastNode.innerHTML) {
       lastElement.innerHTML = node.innerHTML;
@@ -577,7 +585,6 @@ export class App {
       }
     }
 
-    //TODO async
     // styles
     const styleType = typeof node.style;
     const lastStyleType = typeof lastNode.style;
@@ -632,6 +639,8 @@ export class App {
     if (node.hooks && node.hooks.patched) {
       node.hooks.patched.forEach(fn => fn(lastElement));
     }
+
+    }) // push job
 
     return [lastElement, node];
   }
