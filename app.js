@@ -291,6 +291,7 @@ export class App {
         this.element = result[0];
         this.node = result[1];
       }
+      //TODO trigger async update
       this.patching = false;
       this.updateCount = 0;
     } else {
@@ -574,7 +575,6 @@ export class App {
       const child = node.children[i];
       if (
         child.key 
-        && lastNode 
         && lastNode.children 
         && lastNode.children[i] 
         && lastNode.children[i].key != child.key
@@ -616,12 +616,12 @@ export class App {
           this.patch(
             childElements[i], 
             child,
-            lastNode && lastNode.children ? lastNode.children[i] : null,
+            lastNode.children[i],
           );
         }
       }
     }
-    const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
+    const lastChildLen = lastNode.children ? lastNode.children.length : 0;
     for (let i = childLen; i < lastChildLen; i++) {
       const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
       this.cacheNode(elem, lastNode.children[i]);
