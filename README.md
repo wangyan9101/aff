@@ -887,6 +887,40 @@ console.log(app.state);
 
 另外还有 $delete 操作符，作用和 js 的 delete 操作符一样，参数是属性名。
 
+最后是 $merge 操作符，用于合并另一个对象的属性：
+
+```js
+import { App, $merge, $inc } from 'affjs'
+
+const app = new App({
+  foo: {
+    bar: 'bar',
+    baz: 'baz',
+    qux: 1,
+  },
+});
+
+app.update($merge({
+  foo: {
+    bar: 'BAR',
+    baz: 'BAZ',
+    qux: $inc,
+  },
+}));
+
+// 上面的 update 相当于
+app.updateMulti(
+  ['foo', 'bar', 'BAR'],
+  ['foo', 'baz', 'BAZ'],
+  ['foo', 'qux', $inc],
+);
+```
+
+也就是递归遍历对象，将属性名作为路径，将非对象类型的属性作为更新操作。
+
+所以在使用 $merge 时需要注意，对象都是看作表达路径的。
+如果更新操作是替换成另一个对象，需要用 `$func(_ => newObject)` 包装起来，避免将对象解构成路径。
+
 <h2 id="10">引用浏览器元素</h2>
 
 在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
