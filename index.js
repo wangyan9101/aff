@@ -7,3 +7,4 @@ export * from './mutable_state';
 export * from './state';
 export * from './bind';
 export * from './debug';
+export * from './panel';
