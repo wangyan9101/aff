@@ -109,10 +109,20 @@ export class MutableState extends State {
         fromPath.pop();
         const tick = this.app.get(fromPath).__aff_tick;
         if (tick == this.patchTick) {
-          arg.__aff_tick = tick;
+          Object.defineProperty(arg, '__aff_tick', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: tick,
+          });
         }
       }
-      arg.__aff_tick_update_at = this.patchTick;
+      Object.defineProperty(arg, '__aff_tick_update_at', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: this.patchTick,
+      });
     }
 
     // patchTick
