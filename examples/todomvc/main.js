@@ -16,7 +16,7 @@ const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
 const app = new App(
   logUpdates,
   document.getElementById('app'),
-  on('after_update', (state, ...args) => {
+  on('afterUpdate: save to local storage', (state, ...args) => {
     window.localStorage.setItem('todos', JSON.stringify(state));
   }),
   init_state,

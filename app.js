@@ -191,9 +191,9 @@ export class App {
   updateMulti(...args) {
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
-      this.dispatchEvent('before_update', this.state, ...arg);
+      this.dispatchEvent('beforeUpdate', this.state, ...arg);
       this._state.update(...arg);
-      this.dispatchEvent('after_update', this.state, ...arg);
+      this.dispatchEvent('afterUpdate', this.state, ...arg);
     }
     if (!this.element) {
       return this.state;
