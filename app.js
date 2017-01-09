@@ -1,4 +1,4 @@
-import { all_tags } from './all_tags'
+import { allTags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
@@ -8,10 +8,10 @@ export class App {
     this.node = null;
     this.patching = false;
     this.updated = false;
-    this.update_count = 0;
-    this.element_cache = {};
-    for (let i = 0; i < all_tags.length; i++) {
-      this.element_cache[all_tags[i]] = [];
+    this.updateCount = 0;
+    this.elementCache = {};
+    for (let i = 0; i < allTags.length; i++) {
+      this.elementCache[allTags[i]] = [];
     }
     this.events = {};
     this.init(...args);
@@ -27,7 +27,7 @@ export class App {
           this.addEvent(arg.events[idx]);
         }
       } else if (typeof arg == 'function') {
-        this.node_func = arg;
+        this.nodeFunc = arg;
       } else {
         this._state = new MutableState(arg, this);
         this.setupUses(this._state.get());
@@ -35,7 +35,7 @@ export class App {
     }
     if (
       this.element !== undefined 
-      && this.node_func !== undefined 
+      && this.nodeFunc !== undefined 
       && this._state !== undefined
     ) {
       this.update();
@@ -81,7 +81,7 @@ export class App {
     }
 
     const app = this;
-    function set_user_getter(obj, key, from) {
+    function setGetter(obj, key, from) {
       const parentPathOfFrom = from.slice(0);
       parentPathOfFrom.pop();
       if (!(key in obj)) {
@@ -116,26 +116,26 @@ export class App {
         const bindings = scopes[i];
         if (name in bindings) { // found
           found = true;
-          let stop_path = bindings[name].slice(0);
+          let stopPath = bindings[name].slice(0);
           // check loop
-          let same_len = 0;
-          for (let idx = 0; idx < stop_path.length && idx < path.length; idx++) {
-            if (stop_path[idx] == path[idx]) {
-              same_len++
+          let sameLen = 0;
+          for (let idx = 0; idx < stopPath.length && idx < path.length; idx++) {
+            if (stopPath[idx] == path[idx]) {
+              sameLen++
             } else {
               break
             }
           }
-          if (same_len == stop_path.length || same_len == path.length) {
-            throw['loop in $use', path, stop_path];
+          if (sameLen == stopPath.length || sameLen == path.length) {
+            throw['loop in $use', path, stopPath];
           }
-          stop_path.pop();
-          const stop_length = stop_path.length;
-          let setup_path = path.slice(0);
-          while (setup_path.length > stop_length) {
-            //console.log('get', setup_path, key, 'from', bindings[name]);
-            set_user_getter(this.get(setup_path), key, bindings[name]);
-            setup_path.pop();
+          stopPath.pop();
+          const stopLen = stopPath.length;
+          let setupPath = path.slice(0);
+          while (setupPath.length > stopLen) {
+            //console.log('get', setupPath, key, 'from', bindings[name]);
+            setGetter(this.get(setupPath), key, bindings[name]);
+            setupPath.pop();
           }
         }
       }
@@ -164,19 +164,19 @@ export class App {
   }
 
   addEvent(ev) {
-    const parts = ev.ev_type.split(/[$:]/);
-    const ev_type = parts[0];
-    const ev_subtype = parts.slice(1).join(':') || '__default';
-    if (!(ev_type in this.events)) {
-      this.events[ev_type] = {};
+    const parts = ev.type.split(/[$:]/);
+    const type = parts[0];
+    const subtype = parts.slice(1).join(':') || '__default';
+    if (!(type in this.events)) {
+      this.events[type] = {};
     }
-    const events = this.events[ev_type];
-    events[ev_subtype] = ev.fn;
+    const events = this.events[type];
+    events[subtype] = ev.fn;
   }
 
-  dispatchEvent(ev_type, ...args) {
-    for (const sub_type in this.events[ev_type]) {
-      this.events[ev_type][sub_type].apply(this, args);
+  dispatchEvent(type, ...args) {
+    for (const subtype in this.events[type]) {
+      this.events[type][subtype].apply(this, args);
     }
   }
 
@@ -201,15 +201,15 @@ export class App {
     if (!this.patching) {
       this.patching = true;
       this.updated = false;
-      this.update_count = 0;
+      this.updateCount = 0;
       this._state.beforePatch();
       [this.element, this.node] = this.patch(
         this.element, 
-        this.node_func(this.state), 
+        this.nodeFunc(this.state), 
         this.node,
       );
       while (this.updated) {
-        if (this.update_count > 4096) { // infinite loop
+        if (this.updateCount > 4096) { // infinite loop
           throw['infinite loop in updating', args];
         }
         // if state is updated when patching, patch again
@@ -217,16 +217,16 @@ export class App {
         this._state.beforePatch();
         [this.element, this.node] = this.patch(
           this.element,
-          this.node_func(this.state),
+          this.nodeFunc(this.state),
           this.node,
         );
       }
       this.patching = false;
-      this.update_count = 0;
+      this.updateCount = 0;
     } else {
       // state updated when patching
       this.updated = true;
-      this.update_count++;
+      this.updateCount++;
     }
     return this.state;
   }
@@ -247,13 +247,13 @@ export class App {
     return obj;
   }
 
-  // patch last_element to represent node attributes, with diffing last_node
-  patch(last_element, node, last_node) {
+  // patch lastElement to represent node attributes, with diffing lastNode
+  patch(lastElement, node, lastNode) {
     // thunk
-    let last_thunk;
-    if (last_node && last_node instanceof Thunk) {
-      last_thunk = last_node;
-      last_node = last_thunk.node;
+    let lastThunk;
+    if (lastNode && lastNode instanceof Thunk) {
+      lastThunk = lastNode;
+      lastNode = lastThunk.node;
     }
     let thunk;
     if (node instanceof Thunk) {
@@ -261,203 +261,203 @@ export class App {
     }
 
     if (thunk) {
-      let should_update = false;
-      if (!last_thunk) {
-        should_update = true;
-      } else if (thunk.name != last_thunk.name) {
-        should_update = true;
-      } else if (this._state.argsChanged(thunk.args, last_thunk.args)) {
-        should_update = true;
+      let shouldUpdate = false;
+      if (!lastThunk) {
+        shouldUpdate = true;
+      } else if (thunk.name != lastThunk.name) {
+        shouldUpdate = true;
+      } else if (this._state.argsChanged(thunk.args, lastThunk.args)) {
+        shouldUpdate = true;
       }
 
-      if (last_thunk && !should_update) {
+      if (lastThunk && !shouldUpdate) {
         // reuse node
-        thunk.node = last_thunk.node;
+        thunk.node = lastThunk.node;
         // reuse element
-        thunk.element = last_thunk.element;
+        thunk.element = lastThunk.element;
       }
       node = thunk.getNode();
     }
 
     // Thunk.getNode may return another Thunk, patch recursively
-    if (node instanceof Thunk || last_node instanceof Thunk) {
-      return this.patch(last_element, node, last_node);
+    if (node instanceof Thunk || lastNode instanceof Thunk) {
+      return this.patch(lastElement, node, lastNode);
     }
 
     // no need to patch if two Nodes is the same object
     // if thunk's node is reuse, will return here
-    if (node === last_node) {
-      return [last_element, node];
+    if (node === lastNode) {
+      return [lastElement, node];
     }
 
     // not patchable, build a new element
     if (
       // not diffable
-      (!last_node)
+      (!lastNode)
       // no element
-      || (!last_element)
+      || (!lastElement)
       // different tag, no way to patch
-      || (node.tag != last_node.tag)
+      || (node.tag != lastNode.tag)
     ) {
       const element = node.toElement(undefined, this);
       // insert new then remove old
-      if (last_element && last_element.parentNode) {
-        last_element.parentNode.insertBefore(element, last_element);
-        last_element.parentNode.removeChild(last_element);
+      if (lastElement && lastElement.parentNode) {
+        lastElement.parentNode.insertBefore(element, lastElement);
+        lastElement.parentNode.removeChild(lastElement);
       }
-      // cache last_element
-      if (last_node && last_element.tagName) {
-        this.element_cache[last_element.tagName.toLowerCase()].push([last_element, last_node]);
+      // cache lastElement
+      if (lastNode && lastElement.tagName) {
+        this.elementCache[lastElement.tagName.toLowerCase()].push([lastElement, lastNode]);
       }
 
       return [element, node];
     }
 
     // set element
-    node.element = last_element;
+    node.element = lastElement;
     if (thunk) {
-      thunk.element = last_element;
+      thunk.element = lastElement;
     }
 
-    return this.patchNode(last_element, node, last_node);
+    return this.patchNode(lastElement, node, lastNode);
   }
 
-  patchNode(last_element, node, last_node) {
+  patchNode(lastElement, node, lastNode) {
     // innerHTML
-    if (node.innerHTML != last_node.innerHTML) {
-      last_element.innerHTML = node.innerHTML;
+    if (node.innerHTML != lastNode.innerHTML) {
+      lastElement.innerHTML = node.innerHTML;
     }
 
     // text
-    if (node.text != last_node.text) {
-      last_element.nodeValue = node.text;
+    if (node.text != lastNode.text) {
+      lastElement.nodeValue = node.text;
     }
 
     // id
-    if (node.id != last_node.id) {
-      last_element.id = node.id;
+    if (node.id != lastNode.id) {
+      lastElement.id = node.id;
     }
 
     // styles
-    const style_type = typeof node.style;
-    const last_style_type = typeof last_node.style;
+    const styleType = typeof node.style;
+    const lastStyleType = typeof lastNode.style;
     // different type, no diff
-    if (style_type !== last_style_type) {
-      last_element.style = undefined;
-      if (style_type === 'string') {
-        last_element.style = node.style;
-      } else if (style_type === 'object' && node.style !== null) {
+    if (styleType !== lastStyleType) {
+      lastElement.style = undefined;
+      if (styleType === 'string') {
+        lastElement.style = node.style;
+      } else if (styleType === 'object' && node.style !== null) {
         for (const key in node.style) {
-          last_element.style[key] = node.style[key];
+          lastElement.style[key] = node.style[key];
         }
       }
     } 
     // diff object
-    else if (style_type === 'object') {
+    else if (styleType === 'object') {
       if (node.style !== null) {
         for (const key in node.style) {
-          if (!last_node.style || node.style[key] != last_node.style[key]) {
-            last_element.style[key] = node.style[key];
+          if (!lastNode.style || node.style[key] != lastNode.style[key]) {
+            lastElement.style[key] = node.style[key];
           }
         }
       }
-      if (last_node.style !== null) {
-        for (const key in last_node.style) {
+      if (lastNode.style !== null) {
+        for (const key in lastNode.style) {
           if (!node.style || !(key in node.style)) {
-            last_element.style[key] = '';
+            lastElement.style[key] = '';
           }
         }
       }
     } 
     // string, compare
-    else if (style_type === 'string') {
-      if (node.style !== last_node.style) {
-        last_element.style = node.style;
+    else if (styleType === 'string') {
+      if (node.style !== lastNode.style) {
+        lastElement.style = node.style;
       }
     }
 
     // class
     for (const key in node.classList) {
       // should update
-      if (!last_node.classList || node.classList[key] != last_node.classList[key]) {
+      if (!lastNode.classList || node.classList[key] != lastNode.classList[key]) {
         if (node.classList[key]) {
-          last_element.classList.add(key);
+          lastElement.classList.add(key);
         } else {
-          last_element.classList.remove(key);
+          lastElement.classList.remove(key);
         }
       }
     }
-    for (const key in last_node.classList) {
+    for (const key in lastNode.classList) {
       if (!node.classList || !(key in node.classList)) {
-        last_element.classList.remove(key);
+        lastElement.classList.remove(key);
       }
     }
 
     // attributes
     for (const key in node.attributes) {
-      if (!last_node.attributes || node.attributes[key] != last_node.attributes[key]) {
+      if (!lastNode.attributes || node.attributes[key] != lastNode.attributes[key]) {
         const value = node.attributes[key];
         const valueType = typeof value;
         if (valueType == 'string' || valueType == 'number') {
-          last_element.setAttribute(key, value);
-          last_element[key] = value
+          lastElement.setAttribute(key, value);
+          lastElement[key] = value
         } else if (valueType == 'boolean') {
           if (value) {
-            last_element.setAttribute(key, true);
-            last_element[key] = true;
+            lastElement.setAttribute(key, true);
+            lastElement[key] = true;
           } else {
-            last_element.removeAttribute(key);
-            last_element[key] = false;
+            lastElement.removeAttribute(key);
+            lastElement[key] = false;
           }
         }
       }
     }
-    for (const key in last_node.attributes) {
+    for (const key in lastNode.attributes) {
       if (!node.attributes || !(key in node.attributes)) {
-        last_element.removeAttribute(key);
-        last_element[key] = undefined;
+        lastElement.removeAttribute(key);
+        lastElement[key] = undefined;
       }
     }
 
     // events
-    const event_keys = {};
+    const eventKeys = {};
     for (const key in node.events) {
-      let k = elementSetEvent(last_element, key, node.events[key].bind(node));
-      event_keys[k] = true;
+      let k = elementSetEvent(lastElement, key, node.events[key].bind(node));
+      eventKeys[k] = true;
     }
-    if (last_element.__aff_events) {
-      for (const ev_type in last_element.__aff_events) {
-        for (const ev_subtype in last_element.__aff_events[ev_type]) {
-          if (!(ev_type + ':' + ev_subtype in event_keys)) {
-            delete last_element.__aff_events[ev_type][ev_subtype];
+    if (lastElement.__aff_events) {
+      for (const type in lastElement.__aff_events) {
+        for (const subtype in lastElement.__aff_events[type]) {
+          if (!(type + ':' + subtype in eventKeys)) {
+            delete lastElement.__aff_events[type][subtype];
           }
         }
       }
     }
 
     // children
-    const child_elements = last_element.childNodes;
-    const child_len = node.children ? node.children.length : 0;
-    const last_child_len = last_node && last_node.children ? last_node.children.length : 0;
-    for (let i = 0; i < child_len; i++) {
+    const childElements = lastElement.childNodes;
+    const childLen = node.children ? node.children.length : 0;
+    const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
+    for (let i = 0; i < childLen; i++) {
       const [elem, _] = this.patch(
-        child_elements[i], 
+        childElements[i], 
         node.children[i], 
-        last_node && last_node.children ? last_node.children[i] : undefined,
+        lastNode && lastNode.children ? lastNode.children[i] : undefined,
       );
-      if (!child_elements[i]) {
-        last_element.appendChild(elem);
+      if (!childElements[i]) {
+        lastElement.appendChild(elem);
       }
     }
-    for (let i = child_len; i < last_child_len; i++) {
-      last_element.removeChild(last_element.childNodes[child_len]);
+    for (let i = childLen; i < lastChildLen; i++) {
+      lastElement.removeChild(lastElement.childNodes[childLen]);
     }
 
     if (node.hooks && node.hooks.patched) {
-      node.hooks.patched.forEach(fn => fn(last_element));
+      node.hooks.patched.forEach(fn => fn(lastElement));
     }
 
-    return [last_element, node];
+    return [lastElement, node];
   }
 }
 
@@ -535,7 +535,7 @@ export function e(tag, ...args) {
   return node;
 }
 
-export const skip = { skip_following_arguments: true };
+export const skip = { skipFollowingArguments: true };
 
 function _e(node, ...args) {
   for (let i = 0; i < args.length; i++) {
@@ -552,7 +552,7 @@ function _e(node, ...args) {
       for (let idx = 0; idx < arg.events.length; idx++) {
         const ev = arg.events[idx];
         node.setProperties({
-          ['on' + ev.ev_type]: ev.fn,
+          ['on' + ev.type]: ev.fn,
         });
       }
     } else if (arg === skip) {
@@ -647,14 +647,14 @@ class Node {
           this.style = properties.style;
         } else {
           const style = properties.style;
-          const style_type = typeof style;
-          const current_type = typeof this.style;
-          if (style_type != current_type) {
+          const styleType = typeof style;
+          const currentType = typeof this.style;
+          if (styleType != currentType) {
             throw['should not mix-use object-like style and string-like style', style, this.style];
           }
-          if (style_type === 'string') {
+          if (styleType === 'string') {
             this.style += style;
-          } else if (style_type === 'object') {
+          } else if (styleType === 'object') {
             for (const key in style) {
               this.style[key] = style[key];
             }
@@ -701,10 +701,10 @@ class Node {
       element = document.createTextNode(this.text);
     } else {
       // use cached element
-      if (app && app.element_cache[this.tag] && app.element_cache[this.tag].length > 0) {
-        let [element, last_node] = app.element_cache[this.tag].pop();
+      if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
+        let [element, lastNode] = app.elementCache[this.tag].pop();
         let node;
-        [element, node] = app.patchNode(element, this, last_node);
+        [element, node] = app.patchNode(element, this, lastNode);
         this.element = element;
         if (this.hooks && this.hooks.created) {
           this.hooks.created.forEach(fn => fn(element));
@@ -786,25 +786,25 @@ const warning = (text) => e('div', {
   },
 }, text);
 
-function elementSetEvent(element, ev_type, fn) {
+function elementSetEvent(element, type, fn) {
   let events = element.__aff_events;
   if (!events) {
     events = {};
     element.__aff_events = events;
   }
-  const parts = ev_type.split(/[$:]/);
-  ev_type = parts[0];
-  const ev_subtype = parts.slice(1).join(':') || '__default';
-  if (!(ev_type in events)) {
-    events[ev_type] = {};
-    element.addEventListener(ev_type.substr(2), function(ev) {
+  const parts = type.split(/[$:]/);
+  type = parts[0];
+  const subtype = parts.slice(1).join(':') || '__default';
+  if (!(type in events)) {
+    events[type] = {};
+    element.addEventListener(type.substr(2), function(ev) {
       let ret;
-      for (const ev_subtype in events[ev_type]) {
-        ret = events[ev_type][ev_subtype](ev);
+      for (const subtype in events[type]) {
+        ret = events[type][subtype](ev);
       }
       return ret;
     });
   }
-  events[ev_type][ev_subtype] = fn;
-  return ev_type + ':' + ev_subtype;
+  events[type][subtype] = fn;
+  return type + ':' + subtype;
 }

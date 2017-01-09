@@ -1,6 +1,6 @@
 class Event {
-  constructor(ev_type, fn) {
-    this.ev_type = ev_type;
+  constructor(type, fn) {
+    this.type = type;
     this.fn = fn;
   }
 }
@@ -10,14 +10,14 @@ export class Events {
     this.events = [];
   }
 
-  on(ev_type, fn) {
-    this.events.push(new Event(ev_type, fn));
+  on(type, fn) {
+    this.events.push(new Event(type, fn));
     return this;
   }
 }
 
-export function on(ev_type, fn) {
+export function on(type, fn) {
   const events = new Events();
-  events.on(ev_type, fn);
+  events.on(type, fn);
   return events;
 }

@@ -1,4 +1,4 @@
-export const all_tags = [
+export const allTags = [
 
   // html
   'a', 'abbr', 'acronym', 'address', 'applet', 'area', 'article', 'aside', 'audio',

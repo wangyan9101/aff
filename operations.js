@@ -1,43 +1,5 @@
 // operations 
 
-function make_argumented_method_op(name, method) {
-  return function(...args) {
-    return {
-      __is_op: true,
-      op: name,
-      args: args,
-      apply(obj) {
-        method.apply(obj, args);
-        return obj;
-      },
-    };
-  };
-}
-
-function make_argumented_method_op_new_value(name, method) {
-  return function(...args) {
-    return {
-      __is_op: true,
-      op: name,
-      args: args,
-      apply(obj) {
-        return method.apply(obj, args);
-      },
-    };
-  };
-}
-
-function make_method_op(name, method) {
-  return {
-    __is_op: true,
-    op: name,
-    apply(obj) {
-      method.apply(obj);
-      return obj;
-    },
-  };
-}
-
 let $func = (fn) => ({
   __is_op: true,
   op: 'func',
@@ -79,7 +41,7 @@ let $dec = {
 
 // arrays
 
-let array_ops = {};
+let arrayOps = {};
 
 [
   ['push', Array.prototype.push],
@@ -88,14 +50,37 @@ let array_ops = {};
   ['fill', Array.prototype.fill],
   ['sort', Array.prototype.sort],
 ].forEach(info => {
-  array_ops['$' + info[0]] = make_argumented_method_op(...info);
+  arrayOps['$' + info[0]] = ((name, method) => {
+    return function(...args) {
+      return {
+        __is_op: true,
+        op: name,
+        args: args,
+        apply(obj) {
+          method.apply(obj, args);
+          return obj;
+        },
+      };
+    };
+  })(...info);
 });
 
 [
   ['filter', Array.prototype.filter],
   ['map', Array.prototype.map],
 ].forEach(info => {
-  array_ops['$' + info[0]] = make_argumented_method_op_new_value(...info);
+  arrayOps['$' + info[0]] = ((name, method) => {
+    return function(...args) {
+      return {
+        __is_op: true,
+        op: name,
+        args: args,
+        apply(obj) {
+          return method.apply(obj, args);
+        },
+      };
+    };
+  })(...info);
 });
 
 [
@@ -103,7 +88,16 @@ let array_ops = {};
   ['shift', Array.prototype.shift],
   ['reverse', Array.prototype.reverse],
 ].forEach(info => {
-  array_ops['$' + info[0]] = make_method_op(...info);
+  arrayOps['$' + info[0]] = ((name, method) => {
+    return {
+      __is_op: true,
+      op: name,
+      apply(obj) {
+        method.apply(obj);
+        return obj;
+      },
+    };
+  })(...info);
 });
 
 // predictions
@@ -120,6 +114,6 @@ module.exports = {
   $del,
   $inc,
   $dec,
-  ...array_ops,
+  ...arrayOps,
   $any,
 };
