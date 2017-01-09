@@ -412,93 +412,68 @@ export class App {
       return [lastElement, node];
     }
 
+    // children
+    let childElements = lastElement.childNodes;
+    const childLen = node.children ? node.children.length : 0;
+    for (let i = 0; i < childLen; i++) {
+      const child = node.children[i];
+      if (
+        child.key 
+        && lastNode.children 
+        && lastNode.children[i] 
+        && lastNode.children[i].key != child.key
+      ) { // keyed
+        // search for same key
+        let found = false;
+        for (let offset = 0; offset < 10; offset++) {
+          if (lastNode.children[i + offset] && lastNode.children[i + offset].key == child.key) {
+            found = true;
+            // found same key, delete some
+            for (let n = 0; n < offset; n++) {
+              const elem = lastElement.removeChild(childElements[i]);
+              this.cacheNode(elem, lastNode.children[i]);
+              lastNode.children.splice(i, 1);
+            }
+            childElements = lastElement.childNodes;
+            // patch
+            this.patch(
+              childElements[i],
+              child,
+              lastNode.children[i],
+            );
+            break
+          }
+        }
+        if (!found) {
+          // insert new
+          const elem = child.toElement(this);
+          lastElement.insertBefore(elem, childElements[i]);
+          childElements = lastElement.childNodes;
+          lastNode.children.splice(i, 0, null);
+        }
+      } else {
+        // not keyed
+        if (!childElements[i]) {
+          const elem = child.toElement(this);
+          lastElement.appendChild(elem);
+        } else {
+          this.patch(
+            childElements[i], 
+            child,
+            lastNode.children[i],
+          );
+        }
+      }
+    }
+    const lastChildLen = lastNode.children ? lastNode.children.length : 0;
+    for (let i = childLen; i < lastChildLen; i++) {
+      const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
+      this.cacheNode(elem, lastNode.children[i]);
+    }
+
     // innerHTML
     if (node.innerHTML != lastNode.innerHTML) {
       lastElement.innerHTML = node.innerHTML;
-    }
-
-    // id
-    if (node.id != lastNode.id) {
-      lastElement.id = node.id;
-    }
-
-    // styles
-    const styleType = typeof node.style;
-    const lastStyleType = typeof lastNode.style;
-    // different type, no diff
-    if (styleType !== lastStyleType) {
-      lastElement.style = undefined;
-      if (styleType === 'string') {
-        lastElement.style = node.style;
-      } else if (styleType === 'object' && node.style !== null) {
-        for (const key in node.style) {
-          lastElement.style[key] = node.style[key];
-        }
-      }
-    } 
-    // diff object
-    else if (styleType === 'object') {
-      if (node.style !== null) {
-        for (const key in node.style) {
-          let updateStyle = false;
-          if (!lastNode.style) {
-            updateStyle = true;
-          } else if (node.style[key] != lastNode.style[key]) {
-            updateStyle = true;
-          }
-          if (updateStyle) {
-            lastElement.style[key] = node.style[key];
-          }
-        }
-      }
-      if (lastNode.style !== null) {
-        for (const key in lastNode.style) {
-          let clearStyle = false;
-          if (!node.style) {
-            clearStyle = true;
-          } else if (!(key in node.style)) {
-            clearStyle = true;
-          }
-          if (clearStyle) {
-            lastElement.style[key] = '';
-          }
-        }
-      }
-    } 
-    // string, compare
-    else if (styleType === 'string') {
-      if (node.style !== lastNode.style) {
-        lastElement.style = node.style;
-      }
-    }
-
-    // class
-    for (const key in node.classList) {
-      // should update
-      let updateClass = false;
-      if (!lastNode.classList) {
-        updateClass = true;
-      } else if (node.classList[key] != lastNode.classList[key]) {
-        updateClass = true;
-      }
-      if (updateClass) {
-        if (node.classList[key]) {
-          lastElement.classList.add(key);
-        } else {
-          lastElement.classList.remove(key);
-        }
-      }
-    }
-    for (const key in lastNode.classList) {
-      let deleteClass = false;
-      if (!node.classList) {
-        deleteClass = true;
-      } else if (!(key in node.classList)) {
-        deleteClass = true;
-      }
-      if (deleteClass) {
-        lastElement.classList.remove(key);
-      }
     }
 
     // attributes
@@ -568,63 +543,89 @@ export class App {
       }
     }
 
-    // children
-    let childElements = lastElement.childNodes;
-    const childLen = node.children ? node.children.length : 0;
-    for (let i = 0; i < childLen; i++) {
-      const child = node.children[i];
-      if (
-        child.key 
-        && lastNode.children 
-        && lastNode.children[i] 
-        && lastNode.children[i].key != child.key
-      ) { // keyed
-        // search for same key
-        let found = false;
-        for (let offset = 0; offset < 10; offset++) {
-          if (lastNode.children[i + offset] && lastNode.children[i + offset].key == child.key) {
-            found = true;
-            // found same key, delete some
-            for (let n = 0; n < offset; n++) {
-              const elem = lastElement.removeChild(childElements[i]);
-              this.cacheNode(elem, lastNode.children[i]);
-              lastNode.children.splice(i, 1);
-            }
-            childElements = lastElement.childNodes;
-            // patch
-            this.patch(
-              childElements[i],
-              child,
-              lastNode.children[i],
-            );
-            break
-          }
-        }
-        if (!found) {
-          // insert new
-          const elem = child.toElement(this);
-          lastElement.insertBefore(elem, childElements[i]);
-          childElements = lastElement.childNodes;
-          lastNode.children.splice(i, 0, null);
-        }
-      } else {
-        // not keyed
-        if (!childElements[i]) {
-          const elem = child.toElement(this);
-          lastElement.appendChild(elem);
+    // id
+    if (node.id != lastNode.id) {
+      lastElement.id = node.id;
+    }
+
+    // class
+    for (const key in node.classList) {
+      // should update
+      let updateClass = false;
+      if (!lastNode.classList) {
+        updateClass = true;
+      } else if (node.classList[key] != lastNode.classList[key]) {
+        updateClass = true;
+      }
+      if (updateClass) {
+        if (node.classList[key]) {
+          lastElement.classList.add(key);
         } else {
-          this.patch(
-            childElements[i], 
-            child,
-            lastNode.children[i],
-          );
+          lastElement.classList.remove(key);
         }
       }
     }
-    const lastChildLen = lastNode.children ? lastNode.children.length : 0;
-    for (let i = childLen; i < lastChildLen; i++) {
-      const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
-      this.cacheNode(elem, lastNode.children[i]);
+    for (const key in lastNode.classList) {
+      let deleteClass = false;
+      if (!node.classList) {
+        deleteClass = true;
+      } else if (!(key in node.classList)) {
+        deleteClass = true;
+      }
+      if (deleteClass) {
+        lastElement.classList.remove(key);
+      }
+    }
+
+    //TODO async
+    // styles
+    const styleType = typeof node.style;
+    const lastStyleType = typeof lastNode.style;
+    // different type, no diff
+    if (styleType !== lastStyleType) {
+      lastElement.style = undefined;
+      if (styleType === 'string') {
+        lastElement.style = node.style;
+      } else if (styleType === 'object' && node.style !== null) {
+        for (const key in node.style) {
+          lastElement.style[key] = node.style[key];
+        }
+      }
+    } 
+    // diff object
+    else if (styleType === 'object') {
+      if (node.style !== null) {
+        for (const key in node.style) {
+          let updateStyle = false;
+          if (!lastNode.style) {
+            updateStyle = true;
+          } else if (node.style[key] != lastNode.style[key]) {
+            updateStyle = true;
+          }
+          if (updateStyle) {
+            lastElement.style[key] = node.style[key];
+          }
+        }
+      }
+      if (lastNode.style !== null) {
+        for (const key in lastNode.style) {
+          let clearStyle = false;
+          if (!node.style) {
+            clearStyle = true;
+          } else if (!(key in node.style)) {
+            clearStyle = true;
+          }
+          if (clearStyle) {
+            lastElement.style[key] = '';
+          }
+        }
+      }
+    } 
+    // string, compare
+    else if (styleType === 'string') {
+      if (node.style !== lastNode.style) {
+        lastElement.style = node.style;
+      }
     }
 
     // hook
