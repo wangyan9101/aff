@@ -100,6 +100,36 @@ let arrayOps = {};
   })(...info);
 });
 
+// objects
+
+function $merge(spec) {
+  return {
+    __is_op: true,
+    op: 'merge',
+    args: [spec],
+    apply(obj) {
+      return _merge(obj, spec);
+    },
+  };
+}
+
+function _merge(obj, spec) {
+  if (typeof spec === 'object' && spec !== null) {
+    if (spec.__is_op) {
+      return spec.apply(obj);
+    }
+    if (typeof obj !== 'object' || obj === null) {
+      obj = {};
+    }
+    for (const key in spec) {
+      obj[key] = _merge(obj[key], spec[key]);
+    }
+  } else {
+    return spec;
+  }
+  return obj;
+}
+
 // predictions
 
 function $any(k) {
@@ -115,5 +145,6 @@ module.exports = {
   $inc,
   $dec,
   ...arrayOps,
+  $merge,
   $any,
 };

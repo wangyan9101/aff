@@ -2,6 +2,7 @@ import {
   $map, $inc, $dec, $any, $filter, $reduce, $delete, 
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
+  $merge,
   logUpdates,
 } from '../index'
 import { App } from '../app'
@@ -155,4 +156,41 @@ test('use key tick update', () => {
   app.update('foo', 'foo');
   app._state.argsChanged(app.state.bar, app.state.bar);
   app._state.argsChanged(app.state.bar, app.state.bar);
+});
+
+test('merge', () => {
+  const app = new App({
+    foo: {
+      bar: {
+        baz: 'BAZ',
+      },
+    },
+  });
+  app.update($merge({
+    foo: {
+      bar: {
+        baz: 'baz',
+      },
+    },
+  }));
+  console.log(app.state);
+  expect(app.state.foo.bar.baz).toBe('baz');
+
+  app.update($merge({
+    FOO: {
+      BAR: {
+        BAZ: 'baz',
+      },
+    },
+  }));
+  expect(app.state.FOO.BAR.BAZ).toBe('baz');
+
+  app.update($merge({
+    Foo: {
+      Bar: {
+        Baz: $inc,
+      },
+    },
+  }));
+  expect(app.state.Foo.Bar.Baz).toBe(1);
 });
