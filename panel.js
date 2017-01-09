@@ -341,6 +341,10 @@ function UpdateLogEntry(log) {
     ),
 
     log.args.map((arg, i) => span(
+      css`
+        float: left;
+      `,
+
       span(
         css`
           padding: 0 10px;
