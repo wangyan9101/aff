@@ -205,7 +205,7 @@ export class App {
       this._state.beforePatch();
       [this.element, this.node] = this.patch(
         this.element, 
-        this.nodeFunc(this.state), 
+        this.nodeFunc(this.state, this), 
         this.node,
       );
       while (this.updated) {
@@ -217,7 +217,7 @@ export class App {
         this._state.beforePatch();
         [this.element, this.node] = this.patch(
           this.element,
-          this.nodeFunc(this.state),
+          this.nodeFunc(this.state, this),
           this.node,
         );
       }
