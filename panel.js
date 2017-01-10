@@ -1,12 +1,37 @@
 import { 
-  App, css, on, t, $,
+  App, css, on, t, $, $func,
   div, p, none, table, tr, td, span,
+  logUpdates,
 } from './index'
 
 export function DebugPanel(debugState, app) {
-  // default states
-  if (debugState.selectedTab === undefined) {
-    debugState.$update('selectedTab', 'updates');
+  // init
+  if (!debugState) {
+    app.update('debug', {});
+    debugState = app.state.debug;
+  }
+  if (!debugState.initialized) {
+    // hotkey
+    document.addEventListener('keypress', (ev) => {
+      if (ev.keyCode != 17 || !ev.ctrlKey) {
+        return
+      }
+      debugState.$update('show', $func(v => !v));
+    });
+    debugState.$update('initialized', true);
+    // default states
+    if (debugState.selectedTab === undefined) {
+      debugState.$update('selectedTab', 'updates');
+    }
+    if (debugState.updates === undefined) {
+      debugState.$update('updates', []);
+    }
+    // logging
+    app.init(logUpdates(debugState.updates));
+  }
+
+  if (!debugState.show) {
+    return [];
   }
 
   // styles
@@ -110,6 +135,7 @@ export function DebugPanel(debugState, app) {
 
   return [
 
+    // ui
     div(
       css`
         position: fixed;
@@ -117,16 +143,16 @@ export function DebugPanel(debugState, app) {
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: rgba(255, 255, 255, 0.8);
         border: 1px solid #666;
+        background-color: white;
         margin: 1px;
         font-size: 12px;
+        z-index: 9999;
       `,
 
       LeftPanel,
       RightPanel,
       MainContent,
-
     ),
 
   ];

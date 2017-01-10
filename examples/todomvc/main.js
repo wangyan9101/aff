@@ -3,21 +3,24 @@ import {
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $splice, $filter,
-  consoleLogUpdates,
+  DebugPanel,
 } from '../../index'
 
-const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
+const init_state = {
   todos: [
     { completed: false, content: 'foo', },
   ],
   filter: 'All',
+  debug: {},
 };
 
 const app = new App(
-  consoleLogUpdates,
   document.getElementById('app'),
   on('afterUpdate: save to local storage', (state, ...args) => {
-    window.localStorage.setItem('todos', JSON.stringify(state));
+    window.localStorage.setItem('todomvc', JSON.stringify({
+      todos: state.todos,
+      filter: state.filter,
+    }));
   }),
   init_state,
 );
@@ -141,9 +144,18 @@ const Main = (state) => div(
     state.todos.length > 0 ? t(Footer, state.todos, state.filter) : none,
   ),
   Info,
+  DebugPanel(state.debug, app),
 );
 
 app.init(Main);
+
+const saved = JSON.parse(window.localStorage.getItem('todos'));
+if (saved) {
+  app.updateMulti(
+    ['todos', saved.todos],
+    ['filter', saved.filter],
+  );
+}
 
 window.onhashchange = () => {
   let hash = window.location.hash;
