@@ -64,7 +64,7 @@ export function DebugPanel(debugState, app) {
     t(PointingPath, debugState.pointingPath),
   );
 
-  const MainContent = t((debugState) => div(
+  const MainContent = t((debugState, appState) => div(
     css`
       position: absolute;
       top: 0;
@@ -78,14 +78,14 @@ export function DebugPanel(debugState, app) {
     div(debugState.selectedTab, css` text-align: center; `),
     () => {
       if (debugState.selectedTab === 'state') {
-        return t(AppState, app.state, debugState);
+        return t(AppState, appState, debugState);
       }
       return none;
     },
     div(css`
       height: 10vh;
     `),
-  ), debugState);
+  ), debugState, app.state);
 
   return [
 
@@ -157,12 +157,13 @@ function StateNode(appState, path = [], debugState) {
         ];
         ret.push(tr(
           css`
-            border: 1px solid #666;
+            border: 1px solid #AAA;
           `,
           bindPointingPath,
           td(key, css`
-            border: 1px solid #09C;
+            background-color: #EEFFEE;
             padding: 0 10px;
+            vertical-align: top;
           `, bindPointingPath),
           td(valueNode, css`
             padding: 1px;

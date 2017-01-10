@@ -2,17 +2,19 @@ import {
   App, t,
   table, tbody, tr, td, div, span ,
   $, readOnly,
+  DebugPanel,
 } from '../../index'
 
-function DBMon(databases) {
+function DBMon(state, app) {
   return div(
     table($`.table .table-striped .latest-data`,
       tbody(
-        databases.map(function(database) {
+        state.databases.map(function(database) {
           return t(DB, database);
         }),
       ),
     ),
+    //DebugPanel(state.debug, app),
   );
 }
 
@@ -39,11 +41,14 @@ function DB(database) {
 let app = new App(
   document.getElementById('app'),
   DBMon,
-  readOnly(ENV.generateData().toArray()),
+  {
+    databases: readOnly(ENV.generateData().toArray()),
+    debug: {},
+  },
 );
 
 function load() {
-  app.update(readOnly(ENV.generateData().toArray()));
+  app.update('databases', readOnly(ENV.generateData().toArray()));
   Monitoring.renderRate.ping();
   setTimeout(load, ENV.timeout);
 };
