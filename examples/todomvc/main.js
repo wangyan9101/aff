@@ -3,7 +3,7 @@ import {
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $splice, $filter,
-  logUpdates,
+  consoleLogUpdates,
 } from '../../index'
 
 const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
@@ -14,7 +14,7 @@ const init_state = JSON.parse(window.localStorage.getItem('todos')) || {
 };
 
 const app = new App(
-  logUpdates,
+  consoleLogUpdates,
   document.getElementById('app'),
   on('afterUpdate: save to local storage', (state, ...args) => {
     window.localStorage.setItem('todos', JSON.stringify(state));

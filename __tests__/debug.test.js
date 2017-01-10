@@ -1,9 +1,9 @@
-import { App, logUpdates, $inc } from '../index'
+import { App, consoleLogUpdates, $inc } from '../index'
 
 test('null operator args', () => {
   const app = new App(
     1,
-    logUpdates,
+    consoleLogUpdates,
   );
   app.update($inc);
 });

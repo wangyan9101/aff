@@ -1,7 +1,7 @@
 import { $any } from './operations'
 import { on } from './event'
 
-export const logUpdates = on('afterUpdate:__log_updates', (state, ...args) => {
+export const consoleLogUpdates = on('afterUpdate:__log_updates', (state, ...args) => {
   console.log('%cUPDATE', 'background: #555; color: white', 
     args.slice(0, -1).map(arg => formatUpdatePath(arg)).join(' . ') + ' => ',
     formatUpdateArg(args[args.length - 1]),

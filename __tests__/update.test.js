@@ -3,7 +3,7 @@ import {
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
   $merge,
-  logUpdates,
+  consoleLogUpdates,
 } from '../index'
 import { App } from '../app'
 import './__helpers'
@@ -73,7 +73,7 @@ test('ops', () => {
 test('func', () => {
   let app = new App(
     [1, 2, 3, 4, 5],
-    logUpdates,
+    consoleLogUpdates,
   );
   app.update($any, $func(x => x + 1));
   expect(app.state).toMatchObject([2, 3, 4, 5, 6]);
