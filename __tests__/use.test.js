@@ -223,3 +223,15 @@ test('tick in $use', () => {
   app.update('a', 'x', 'FOO');
   expect(root.querySelector('#p').textContent).toBe('FOO');
 });
+
+test('uses in array', () => {
+  const app = new App({
+    foo: 'FOO',
+    bar: [
+      {
+        $use: ['foo'],
+      },
+    ],
+  });
+  expect(app.state.bar[0].foo).toBe('FOO');
+});

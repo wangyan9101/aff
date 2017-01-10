@@ -44,13 +44,24 @@ export class App {
 
   setupUses(obj, path, scopes) {
     // skip non-object
-    if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+    if (typeof obj !== 'object' || obj === null) {
       return
     }
 
     // default arguments
     path = path || [];
     scopes = scopes || [];
+
+    // array
+    if (Array.isArray(obj)) {
+      // setup items
+      for (let i = 0; i < obj.length; i++) {
+        let p = path.slice(0);
+        p.push(i);
+        this.setupUses(obj[i], p, scopes);
+      }
+      return
+    }
 
     // parse $use
     let useInfos;
