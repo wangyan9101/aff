@@ -1,12 +1,12 @@
 import { 
-  App, css, on, t,
-  div, p, none, table, tr, td,
+  App, css, on, t, $,
+  div, p, none, table, tr, td, span,
 } from './index'
 
 export function DebugPanel(debugState, app) {
   // default states
   if (debugState.selectedTab === undefined) {
-    debugState.$update('selectedTab', 'state');
+    debugState.$update('selectedTab', 'updates');
   }
 
   // styles
@@ -65,6 +65,7 @@ export function DebugPanel(debugState, app) {
   );
 
   const MainContent = t((debugState, appState) => div(
+    $`#main`,
     css`
       position: absolute;
       top: 0;
@@ -75,16 +76,36 @@ export function DebugPanel(debugState, app) {
       border-right: 1px solid #CCC;
       overflow: auto;
     `,
-    div(debugState.selectedTab, css` text-align: center; `),
+
+    div(debugState.selectedTab, css` 
+      text-align: center; 
+      border-bottom: 1px solid #CCC;
+      font-weight: bold;
+      margin-bottom: 3px;
+    `),
+
     () => {
+      // scroll to top when switching tab
+      const lastTab = debugState.lastTab;
+      if (debugState.selectedTab != lastTab) {
+        const elem = document.getElementById('main');
+        if (elem) {
+          elem.scrollTop = 0;
+        }
+        debugState.$update('lastTab', debugState.selectedTab);
+      }
       if (debugState.selectedTab === 'state') {
         return t(AppState, appState, debugState);
+      } else if (debugState.selectedTab === 'updates') {
+        return t(Updates, debugState.updates, debugState.$path);
       }
       return none;
     },
+
     div(css`
       height: 10vh;
     `),
+
   ), debugState, app.state);
 
   return [
@@ -182,5 +203,47 @@ function PointingPath(path) {
   return div(
     'POINTING PATH',
     path.map(key => div(key)),
+  );
+}
+
+function Updates(updates, debugStatePath) {
+  if (!updates) {
+    return p('updates logging not enabled');
+  } else if (updates.length == 0) {
+    return p('no logs');
+  }
+  return div(
+    css`
+      padding: 0 10px;
+    `,
+    () => {
+      const ret = [];
+      for (let i = updates.length - 1; i >= 0; i--) {
+        const log = updates[i];
+        const ignore = debugStatePath.reduce((acc, cur, i) => acc && cur == log.args[i], true);
+        // ignore debug panel updates
+        if (ignore) {
+          continue
+        }
+        ret.push(div(
+          css`
+            border-bottom: 1px solid #EEE;
+            margin-bottom: 1px;
+          `,
+          span(
+            'tick: ', log.tick,
+            css`
+              padding: 0 10px;
+              background-color: #EFE;
+            `,
+          ),
+          log.args.map((path, i) => span(path, css`
+            padding: 0 10px;
+            background-color: ${i % 2 == 0 ? '#EEE' : 'transparent'};
+          `)),
+        ));
+      }
+      return ret;
+    },
   );
 }
