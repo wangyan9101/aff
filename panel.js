@@ -65,6 +65,7 @@ export function DebugPanel(app, initState) {
       { name: 'updates' },
     ].map(info => {
       return div(
+        $`.tab-item-${info.name}`,
         info.name,
         css`
           background-color: ${debugState.selectedTab === info.name ? '#DDD' : 'transparent'};
@@ -129,7 +130,7 @@ export function DebugPanel(app, initState) {
       // scroll to top when switching tab
       const lastTab = debugState.lastTab;
       if (debugState.selectedTab != lastTab) {
-        const elem = document.getElementById('main');
+        const elem = document.querySelector('#main');
         if (elem) {
           elem.scrollTop = 0;
         }
@@ -224,12 +225,14 @@ function StateNode(appState, path = [], debugState) {
             border: 1px solid #AAA;
           `,
           bindPointingPath,
+          // key
           td(key, css`
             background-color: #EEFFEE;
             padding: 0 10px;
             vertical-align: top;
           `, bindPointingPath),
-          td(valueNode, css`
+          // value
+          td($`.state-value`, valueNode, css`
             padding: 1px;
           `, bindPointingPath),
         ));
@@ -250,11 +253,6 @@ function PointingPath(path) {
 }
 
 function Updates(updates, debugStatePath) {
-  if (!updates) {
-    return p('updates logging not enabled');
-  } else if (updates.length == 0) {
-    return p('no logs');
-  }
   return div(
     css`
       padding: 0 10px;
