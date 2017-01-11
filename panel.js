@@ -1,6 +1,6 @@
 import { 
   App, css, on, t, $, $func, $push, $merge,
-  div, p, none, table, tr, td, span, pre, clear,
+  div, p, none, table, tr, td, span, pre, clear, button,
 } from './index'
 
 export function DebugPanel(app, initState) {
@@ -11,6 +11,7 @@ export function DebugPanel(app, initState) {
     app.update('__debug_panel', {});
     debugState = app.state.__debug_panel;
   }
+
   // init
   if (!debugState.initialized) {
     // hotkey
@@ -20,6 +21,7 @@ export function DebugPanel(app, initState) {
       }
       debugState.$update('show', $func(v => !v));
     });
+
     // updates logging
     let logState = debugState.updates;
     if (!logState) {
@@ -36,11 +38,13 @@ export function DebugPanel(app, initState) {
         }));
       }
     }));
+
     // init state
     if (initState) {
       debugState.$update($merge(initState));
     }
     debugState.$update('initialized', true);
+
   }
 
   if (!debugState.show) {
@@ -59,6 +63,7 @@ export function DebugPanel(app, initState) {
     css`
       list-style: none;
     `,
+
     [
       { name: 'index' },
       { name: 'state' },
@@ -76,6 +81,7 @@ export function DebugPanel(app, initState) {
         }),
       );
     }),
+
   ), debugState);
 
   // panels
@@ -89,6 +95,18 @@ export function DebugPanel(app, initState) {
     text-align: center;
   `;
 
+  const LowerLeft = div(
+    css`
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    `,
+
+    PanelPosition(debugState),
+    CloseButton(debugState),
+  );
+
   const LeftPanel = div(
     css`
       ${panelStyle}
@@ -96,6 +114,7 @@ export function DebugPanel(app, initState) {
     `,
     p('Debug Panel'),
     Tabs,
+    LowerLeft,
   );
 
   const RightPanel = div(
@@ -136,11 +155,13 @@ export function DebugPanel(app, initState) {
         }
         debugState.$update('lastTab', debugState.selectedTab);
       }
+
       if (debugState.selectedTab === 'state') {
         return t(AppState, appState, debugState);
       } else if (debugState.selectedTab === 'updates') {
         return t(Updates, debugState.updates, debugState.$path);
       }
+
       return none;
     },
 
@@ -156,10 +177,10 @@ export function DebugPanel(app, initState) {
     div(
       css`
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: ${debugState.top || 0};
+        left: ${debugState.left || 0};
+        right: ${debugState.right || 0};
+        bottom: ${debugState.bottom || 0};
         border: 1px solid #666;
         background-color: white;
         margin: 1px;
@@ -193,10 +214,12 @@ function StateNode(appState, path = [], debugState) {
       border-collapse: collapse;
       text-align: center;
     `,
+
     () => {
       const ret = [];
       const keys = Object.keys(appState);
       keys.sort();
+
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
         if (appState[key] === debugState) { // skip debug state
@@ -210,6 +233,7 @@ function StateNode(appState, path = [], debugState) {
         } else {
           valueNode = appState[key];
         }
+
         const bindPointingPath = [
           on('mouseenter', () => {
             let pointingPath = path.slice(0);
@@ -220,6 +244,7 @@ function StateNode(appState, path = [], debugState) {
             debugState.$update('pointingPath', false);
           }),
         ];
+
         ret.push(tr(
           css`
             border: 1px solid #AAA;
@@ -236,6 +261,7 @@ function StateNode(appState, path = [], debugState) {
             padding: 1px;
           `, bindPointingPath),
         ));
+
       }
       return ret;
     },
@@ -257,6 +283,7 @@ function Updates(updates, debugStatePath) {
     css`
       padding: 0 10px;
     `,
+
     () => {
       const ret = [];
       for (let i = updates.length - 1; i >= 0; i--) {
@@ -266,11 +293,13 @@ function Updates(updates, debugStatePath) {
         if (ignore) {
           continue
         }
+
         ret.push(div(
           css`
             border-bottom: 1px solid #EEE;
             margin-bottom: 1px;
           `,
+
           span(
             'tick: ', log.tick,
             css`
@@ -279,12 +308,14 @@ function Updates(updates, debugStatePath) {
               float: right;
             `,
           ),
+
           log.args.map((arg, i) => span(
             span(
               css`
                 padding: 0 10px;
                 color: #AAA;
               `,
+
               () => {
                 if (i > 0 && i != log.args.length - 1) {
                   return '.';
@@ -296,8 +327,10 @@ function Updates(updates, debugStatePath) {
             ),
             formatArg(arg), 
           )),
+
           clear,
         ));
+
       }
       return ret;
     },
@@ -324,6 +357,7 @@ function formatArg(arg) {
         },
       ] : [],
     ];
+
   } else if (Array.isArray(arg)) {
     const ret = [
       '[ ',
@@ -336,6 +370,7 @@ function formatArg(arg) {
     }
     ret.push(' ]');
     return ret;
+
   } else if (typeof arg === 'object') {
     const ret = [
       '{ ',
@@ -350,8 +385,65 @@ function formatArg(arg) {
     }
     ret.push(' }');
     return ret;
+
   } else if (typeof arg === 'function') {
     return arg.toString();
   }
+
   return arg;
+}
+
+// close panel
+function CloseButton(debugState) {
+  return button(
+    css`
+      margin: 10px 0;
+    `,
+    on('click', () => {
+      debugState.$update('show', false);
+    }),
+    'Close',
+  );
+}
+
+function PanelPosition(debugState) {
+  function makeButton(text, left, right, top, bottom) {
+    return button(
+      css`
+        font-size: 10px;
+        width: 3em;
+      `,
+      text,
+      on('click', () => {
+        debugState.$update($merge({
+          left: left,
+          right: right,
+          top: top,
+          bottom: bottom,
+        }));
+      }),
+    );
+  }
+  const width = debugState.panelWidthPercent || 45;
+  const height = debugState.panelHeightPercent || 45;
+  return div(
+    css`
+      margin: 10px 0;
+    `,
+    div(
+      makeButton('TL', 0, (100 - width) + '%', 0, (100 - height) + '%'),
+      makeButton('TP', 0, 0, 0, (100 - height) + '%'),
+      makeButton('TR', (100 - width) + '%', 0, 0, (100 - height) + '%'),
+    ),
+    div(
+      makeButton('LE', 0, (100 - width) + '%', 0, 0),
+      makeButton('MI', 0, 0, 0, 0),
+      makeButton('RI', (100 - width) + '%', 0, 0, 0),
+    ),
+    div(
+      makeButton('BL', 0, (100 - width) + '%', (100 - height) + '%', 0),
+      makeButton('BO', 0, 0, (100 - height) + '%', 0),
+      makeButton('BR', (100 - width) + '%', 0, (100 - height) + '%', 0),
+    ),
+  );
 }
