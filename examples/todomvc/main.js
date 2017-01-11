@@ -144,7 +144,7 @@ const Main = (state) => div(
     state.todos.length > 0 ? t(Footer, state.todos, state.filter) : none,
   ),
   Info,
-  DebugPanel(state.debug, app),
+  DebugPanel(app),
 );
 
 app.init(Main);

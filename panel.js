@@ -1,15 +1,17 @@
 import { 
-  App, css, on, t, $, $func,
+  App, css, on, t, $, $func, $push, $merge,
   div, p, none, table, tr, td, span,
-  logUpdates,
 } from './index'
 
-export function DebugPanel(debugState, app) {
-  // init
+export function DebugPanel(app, initState) {
+
+  // check state
+  let debugState = app.state.__debug_panel;
   if (!debugState) {
-    app.update('debug', {});
-    debugState = app.state.debug;
+    app.update('__debug_panel', {});
+    debugState = app.state.__debug_panel;
   }
+  // init
   if (!debugState.initialized) {
     // hotkey
     document.addEventListener('keypress', (ev) => {
@@ -18,16 +20,27 @@ export function DebugPanel(debugState, app) {
       }
       debugState.$update('show', $func(v => !v));
     });
-    debugState.$update('initialized', true);
-    // default states
-    if (debugState.selectedTab === undefined) {
-      debugState.$update('selectedTab', 'updates');
-    }
-    if (debugState.updates === undefined) {
+    // updates logging
+    let logState = debugState.updates;
+    if (!logState) {
       debugState.$update('updates', []);
+      logState = debugState.updates;
     }
-    // logging
-    app.init(logUpdates(debugState.updates));
+    app.init(on('afterUpdate: aff logging log updates', (state, ...args) => {
+      // to prevent recursive logging
+      const ignore = logState.$path.reduce((acc, cur, i) => acc && cur == args[i], true);
+      if (!ignore) {
+        logState.$update($push({
+          args: args,
+          tick: state.__aff_tick,
+        }));
+      }
+    }));
+    // init state
+    if (initState) {
+      debugState.$update($merge(initState));
+    }
+    debugState.$update('initialized', true);
   }
 
   if (!debugState.show) {
@@ -39,6 +52,9 @@ export function DebugPanel(debugState, app) {
   const panelWidth = '10vw';
 
   // tabs
+  if (debugState.selectedTab === undefined) {
+    debugState.$update('selectedTab', 'updates');
+  }
   const Tabs = t((debugState) => div(
     css`
       list-style: none;
