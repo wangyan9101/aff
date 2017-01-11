@@ -6,12 +6,11 @@ import {
   DebugPanel,
 } from '../../index'
 
+const saved = JSON.parse(window.localStorage.getItem('todomvc'));
+
 const init_state = {
-  todos: [
-    { completed: false, content: 'foo', },
-  ],
-  filter: 'All',
-  debug: {},
+  todos: saved.todos || [],
+  filter: saved.filter || 'All',
 };
 
 const app = new App(
@@ -148,14 +147,6 @@ const Main = (state) => div(
 );
 
 app.init(Main);
-
-const saved = JSON.parse(window.localStorage.getItem('todos'));
-if (saved) {
-  app.updateMulti(
-    ['todos', saved.todos],
-    ['filter', saved.filter],
-  );
-}
 
 window.onhashchange = () => {
   let hash = window.location.hash;
