@@ -1,6 +1,6 @@
 import { 
   App, css, on, t, $, $func, $push, $merge,
-  div, p, none, table, tr, td, span,
+  div, p, none, table, tr, td, span, pre, clear,
 } from './index'
 
 export function DebugPanel(app, initState) {
@@ -164,6 +164,7 @@ export function DebugPanel(app, initState) {
         margin: 1px;
         font-size: 12px;
         z-index: 9999;
+        color: #333;
       `,
 
       LeftPanel,
@@ -277,15 +278,82 @@ function Updates(updates, debugStatePath) {
             css`
               padding: 0 10px;
               background-color: #EFE;
+              float: right;
             `,
           ),
-          log.args.map((path, i) => span(path, css`
-            padding: 0 10px;
-            background-color: ${i % 2 == 0 ? '#EEE' : 'transparent'};
-          `)),
+          log.args.map((arg, i) => span(
+            span(
+              css`
+                padding: 0 10px;
+                color: #AAA;
+              `,
+              () => {
+                if (i > 0 && i != log.args.length - 1) {
+                  return '.';
+                } else if (i == log.args.length - 1) {
+                  return '=>';
+                } 
+                return '';
+              },
+            ),
+            formatArg(arg), 
+          )),
+          clear,
         ));
       }
       return ret;
     },
   );
+}
+
+function formatArg(arg) {
+  if (typeof arg === 'object' && arg.__is_op) {
+    return [
+      span(arg.op, css`
+        text-decoration: underline;
+      `),
+      arg.args ? [
+        ': ',
+        () => {
+          const ret = [];
+          for (let i = 0; i < arg.args.length; i++) {
+            if (i > 0) {
+              ret.push(', ');
+            }
+            ret.push(formatArg(arg.args[i]));
+          }
+          return ret;
+        },
+      ] : [],
+    ];
+  } else if (Array.isArray(arg)) {
+    const ret = [
+      '[ ',
+    ];
+    for (let i = 0; i < arg.length; i++) {
+      if (i > 0) {
+        ret.push(', ');
+      }
+      ret.push(formatArg(arg[i]));
+    }
+    ret.push(' ]');
+    return ret;
+  } else if (typeof arg === 'object') {
+    const ret = [
+      '{ ',
+    ];
+    let i = 0;
+    for (const key in arg) {
+      if (i > 0) {
+        ret.push(', ');
+      }
+      ret.push([key, ': ', formatArg(arg[key])]);
+      i++;
+    }
+    ret.push(' }');
+    return ret;
+  } else if (typeof arg === 'function') {
+    return arg.toString();
+  }
+  return arg;
 }
