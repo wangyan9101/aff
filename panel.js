@@ -76,6 +76,8 @@ export function DebugPanel(app, initState) {
         css`
           background-color: ${debugState.selectedTab === info.name ? '#DDD' : 'transparent'};
           padding: 5px;
+          user-select: none;
+          cursor: pointer;
         `,
         on('click', () => {
           debugState.$update('selectedTab', info.name);
@@ -97,7 +99,7 @@ export function DebugPanel(app, initState) {
       left: 0;
     `,
 
-    p('Debug Panel'),
+    p(css` font-weight: bold `, 'Debug Panel'),
     Tabs,
 
     // lower left
