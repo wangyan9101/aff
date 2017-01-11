@@ -53,7 +53,8 @@ export function DebugPanel(app, initState) {
 
   // styles
   const panelBackgroundColor = '#EEE';
-  const panelWidth = '10vw';
+  const leftPanelWidth = '10vw';
+  const bottomPanelHeight = '1em';
 
   // tabs
   if (debugState.selectedTab === undefined) {
@@ -84,43 +85,45 @@ export function DebugPanel(app, initState) {
 
   ), debugState);
 
-  // panels
-  const panelStyle = `
-    background-color: ${panelBackgroundColor};
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    min-width: ${panelWidth};
-    margin: 0;
-    text-align: center;
-  `;
-
-  const LowerLeft = div(
-    css`
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-    `,
-
-    PanelPosition(debugState),
-    CloseButton(debugState),
-  );
-
   const LeftPanel = div(
     css`
-      ${panelStyle}
+      background-color: ${panelBackgroundColor};
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      min-width: ${leftPanelWidth};
+      margin: 0;
+      text-align: center;
       left: 0;
     `,
+
     p('Debug Panel'),
     Tabs,
-    LowerLeft,
+
+    // lower left
+    div(
+      css`
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      `,
+
+      PanelPosition(debugState),
+      CloseButton(debugState),
+    ),
   );
 
-  const RightPanel = div(
+  const BottomPanel = div(
     css`
-      ${panelStyle}
+      background-color: ${panelBackgroundColor};
+      position: absolute;
+      left: ${leftPanelWidth};
       right: 0;
+      bottom: 0;
+      height: ${bottomPanelHeight};
+      font-size: 1em;
+      line-height: 1em;
     `,
     t(PointingPath, debugState.pointingPath),
   );
@@ -131,10 +134,12 @@ export function DebugPanel(app, initState) {
       position: absolute;
       top: 0;
       bottom: 0;
-      left: ${panelWidth};
-      right: ${panelWidth};
+      left: ${leftPanelWidth};
+      right: 0;
+      top: 0;
+      bottom: ${bottomPanelHeight};
       border-left: 1px solid #CCC;
-      border-right: 1px solid #CCC;
+      border-bottom: 1px solid #CCC;
       overflow: auto;
     `,
 
@@ -190,7 +195,7 @@ export function DebugPanel(app, initState) {
       `,
 
       LeftPanel,
-      RightPanel,
+      BottomPanel,
       MainContent,
     ),
 
@@ -273,8 +278,10 @@ function PointingPath(path) {
     return none;
   }
   return div(
-    'POINTING PATH',
-    path.map(key => div(key)),
+    'POINTING PATH: ',
+    path.map(key => span(key, css`
+      padding-left: 5px;
+    `)),
   );
 }
 
