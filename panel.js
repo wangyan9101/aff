@@ -1,7 +1,10 @@
+import { App, t } from './app'
+import { css, $ } from './tagged'
+import { on } from './event'
+import { $func, $push, $merge } from './operations'
 import { 
-  App, css, on, t, $, $func, $push, $merge,
   div, p, none, table, tr, td, span, pre, clear, button,
-} from './index'
+} from './tags'
 
 export function DebugPanel(app, initState) {
 
@@ -433,8 +436,10 @@ function PanelPosition(debugState) {
       }),
     );
   }
+
   const width = debugState.panelWidthPercent || 45;
   const height = debugState.panelHeightPercent || 45;
+
   return div(
     css`
       margin: 10px 0;
