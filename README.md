@@ -1229,7 +1229,7 @@ const app = new App(
     DebugPanel(app, {
       // 默认是不显示的，配置成显示
       show: true,
-      // 默认是占慢页面，配置成露出左边
+      // 默认是占满页面，配置成露出左边
       top: 0,
       left: '30%',
       right: 0,
@@ -1237,6 +1237,10 @@ const app = new App(
     }),
   ),
 );
+
+app.update('foo', $inc);
+app.update('bar', $map(v => v * 2));
+app.update('baz', 'b', 'baZ');
 ```
 
 ![debug-panel](images/debug-panel.png)
