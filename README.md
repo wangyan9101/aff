@@ -15,6 +15,7 @@
 	* [引用浏览器元素](#10)
 	* [组件状态的逐层传递](#state-passing)
 	* [状态对象的 $update 方法](#update)
+	* [调试用的信息面板](#debug-panel)
 * 进阶话题
 	* [默认及衍生状态](#9)
 	* [可复用的组件](#reusable)
@@ -1186,6 +1187,65 @@ childState.$update('qux', 'New QUX');
 另外，因为一个状态对象只会记录一个路径，所以一个对象的路径设定好之后，就不能变更了。
 如果将一个已经设定了路径的对象，更新到状态树的其他路径，框架将会报错。
 解决方法是避免在不同路径引用到同一个对象。或者在更新时使用 readOnly 函数标记该对象，这样就会跳过路径的检查。
+
+<h2 id="debug-panel">调试用的信息面板</h2>
+
+框架自带了一个简易的信息面板，可以显示当前状态树，以及状态树的变更历史。使用方法：
+
+```js
+import { App, css, div, span, DebugPanel } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  // 状态
+  {
+    foo: 0,
+    bar: [1, 2, 3],
+    baz: {
+      a: 'baz',
+      b: 'Baz',
+      c: 'BAZ',
+    },
+  },
+  // 根组件
+  (state, app) => div(
+
+    // 显示状态
+    div('foo: ', state.foo),
+    div('bar: ', state.bar.map(num => span(num, css`
+      padding: 0 10px;
+    `))),
+    () => {
+      const ret = [
+        div('baz: '),
+      ];
+      for (const key in state.baz) {
+        ret.push(div(key, ' = ', state.baz[key]));
+      }
+      return ret;
+    },
+
+    // 引入调试面板
+    DebugPanel(app, {
+      // 默认是不显示的，配置成显示
+      show: true,
+      // 默认是占慢页面，配置成露出左边
+      top: 0,
+      left: '30%',
+      right: 0,
+      bottom: 0,
+    }),
+  ),
+);
+```
+
+![debug-panel](images/debug-panel.png)
+
+![debug-panel](images/debug-panel2.png)
+
+按 ctrl + q 可以切换显示与隐藏状态。
+
+当前状态，在 state 标签页；更新记录，在 updates 标签页。左下角的按钮用于调整位置。
 
 <h2 id="9">默认及衍生状态</h2>
 
