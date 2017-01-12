@@ -408,6 +408,7 @@ function formatArg(arg) {
 // close panel
 function CloseButton(debugState) {
   return button(
+    $`#close-debug-panel`,
     css`
       margin: 10px 0;
     `,
@@ -421,6 +422,7 @@ function CloseButton(debugState) {
 function PanelPosition(debugState) {
   function makeButton(text, left, right, top, bottom) {
     return button(
+      $`#panel-position-${text}`,
       css`
         font-size: 10px;
         width: 3em;

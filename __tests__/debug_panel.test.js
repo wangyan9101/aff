@@ -43,4 +43,17 @@ test('debug panel', () => {
 
   app.update('__debug_panel', 'show', false);
   app.update('__debug_panel', 'show', true);
+
+  elem = root.querySelector('#close-debug-panel');
+  ev.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  elem.dispatchEvent(ev);
+  app.update('__debug_panel', 'show', true);
+
+  elem = root.querySelector('#panel-position-TL');
+  ev.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  elem.dispatchEvent(ev);
+
+  ev = document.createEvent('KeyboardEvent');
+  ev.initKeyboardEvent("keypress", true, true, window, true, false, false, false, 17, 0);
+  document.dispatchEvent(ev);
 });
