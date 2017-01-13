@@ -298,7 +298,7 @@ export class App {
     }
 
     // Thunk.getNode may return another Thunk, patch recursively
-    if (node instanceof Thunk || lastNode instanceof Thunk) {
+    if (node instanceof Thunk) {
       return this.patch(lastElement, node, lastNode);
     }
 
