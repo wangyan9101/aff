@@ -200,14 +200,17 @@ export class App {
   }
 
   updateMulti(...args) {
+    if (this._state === undefined) {
+      throw['state not set'];
+    }
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
       this.dispatchEvent('beforeUpdate', this.state, ...arg);
       this._state.update(...arg);
       this.dispatchEvent('afterUpdate', this.state, ...arg);
     }
-    if (!this.element) {
-      return this.state;
+    if (!this.element || !this.nodeFunc) {
+      return
     }
     if (!this.patching) {
       this.patching = true;
@@ -239,7 +242,7 @@ export class App {
       this.updated = true;
       this.updateCount++;
     }
-    return this.state;
+    return
   }
 
   html() {

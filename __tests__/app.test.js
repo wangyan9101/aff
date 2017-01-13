@@ -596,3 +596,21 @@ test('class change', () => {
   app.update(1);
   expect(root.querySelector('#foo').className).toBe('bar');
 });
+
+test('state not set', () => {
+  const app = new App();
+  expect(() => {
+    app.update();
+  }).toThrowError('state not set');
+});
+
+test('no root node func', () => {
+  let root = document.createElement('div');
+  let element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {},
+  );
+  app.update();
+});
