@@ -217,11 +217,13 @@ export class App {
       this.updated = false;
       this.updateCount = 0;
       this._state.beforePatch();
-      [this.element, this.node] = this.patch(
+      const result = this.patch(
         this.element, 
         this.nodeFunc(this.state, this), 
         this.node,
       );
+      this.element = result[0];
+      this.node = result[1];
       while (this.updated) {
         if (this.updateCount > 4096) { // infinite loop
           throw['infinite loop in updating', args];
@@ -229,11 +231,13 @@ export class App {
         // if state is updated when patching, patch again
         this.updated = false;
         this._state.beforePatch();
-        [this.element, this.node] = this.patch(
+        const result = this.patch(
           this.element,
           this.nodeFunc(this.state, this),
           this.node,
         );
+        this.element = result[0];
+        this.node = result[1];
       }
       this.patching = false;
       this.updateCount = 0;
@@ -454,11 +458,12 @@ export class App {
     const childLen = node.children ? node.children.length : 0;
     const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = 0; i < childLen; i++) {
-      const [elem, _] = this.patch(
+      const result = this.patch(
         childElements[i], 
         node.children[i], 
         lastNode && lastNode.children ? lastNode.children[i] : undefined,
       );
+      const elem = result[0];
       if (!childElements[i]) {
         lastElement.appendChild(elem);
       }
@@ -716,9 +721,13 @@ class Node {
     } else {
       // use cached element
       if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
-        let [element, lastNode] = app.elementCache[this.tag].pop();
+        let result = app.elementCache[this.tag].pop();
+        let element = result[0];
+        const lastNode = result[1];
         let node;
-        [element, node] = app.patchNode(element, this, lastNode);
+        result = app.patchNode(element, this, lastNode);
+        element = result[0];
+        node = result[1];
         this.element = element;
         if (this.hooks && this.hooks.created) {
           this.hooks.created.forEach(fn => fn(element));
