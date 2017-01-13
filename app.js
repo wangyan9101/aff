@@ -317,7 +317,7 @@ export class App {
       // different tag, no way to patch
       || (node.tag != lastNode.tag)
     ) {
-      const element = node.toElement(undefined, this);
+      const element = node.toElement(null, this);
       // insert new then remove old
       if (lastElement && lastElement.parentNode) {
         lastElement.parentNode.insertBefore(element, lastElement);
@@ -461,7 +461,7 @@ export class App {
       const result = this.patch(
         childElements[i], 
         node.children[i], 
-        lastNode && lastNode.children ? lastNode.children[i] : undefined,
+        lastNode && lastNode.children ? lastNode.children[i] : null,
       );
       const elem = result[0];
       if (!childElements[i]) {
@@ -763,7 +763,7 @@ class Node {
     if (this.children !== null) {
       const childFragment = document.createDocumentFragment();
       for (let i = 0, l = this.children.length; i < l; i++) {
-        childFragment.appendChild(this.children[i].toElement(undefined, app));
+        childFragment.appendChild(this.children[i].toElement(null, app));
       }
       element.appendChild(childFragment);
     }
