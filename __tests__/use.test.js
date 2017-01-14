@@ -235,3 +235,27 @@ test('uses in array', () => {
   });
   expect(app.state.bar[0].foo).toBe('FOO');
 });
+
+test('array update', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {
+      array: [1, 2, 3],
+      List: {
+        $use: ['array'],
+      },
+    },
+    (state) => {
+      return div(
+        t('List', (state) => {
+          return div(state.array.map(e => div(e)));
+        }, state.List),
+      );
+    },
+  );
+  app.update('array', [2, 3, 4]);
+  expect(root.textContent).toBe('234');
+});

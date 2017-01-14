@@ -36,6 +36,9 @@ export class MutableState extends State {
         forceSetup = true;
       }
       this.setupState(ret, basePath, forceSetup);
+      if (typeof ret === 'object' && ret !== null && !ret.hasOwnProperty('__aff_tick')) {
+        this.setupPatchTick(ret);
+      }
       return ret;
     } else {
       if (!obj) {
@@ -45,23 +48,27 @@ export class MutableState extends State {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setupPatchTick(obj);
         }
+        const updateKey = (key, ...args) => {
+          const path = basePath.slice(0);
+          path.push(key);
+          const value = this.updateState(path, ...args);
+          obj[key] = value;
+          if (typeof value !== 'object') {
+            obj.__aff_sub_tick[key] = this.patchTick + 1;
+          }
+        }
         const key = args[0];
         const keyType = typeof key;
         for (const k in obj) {
-          if ((keyType === 'number' || keyType === 'string') && k == key) {
-            let path = basePath.slice(0);
-            path.push(k);
-            obj[k] = this.updateState(path, obj[k], ...args.slice(1));
-          } else if (keyType === 'function' && key(k)) {
-            let path = basePath.slice(0);
-            path.push(k);
-            obj[k] = this.updateState(path, obj[k], ...args.slice(1));
-          }
+          if (
+            ((keyType === 'number' || keyType === 'string') && k == key)
+            || (keyType === 'function' && key(k))
+          ) {
+            updateKey(k, obj[k], ...args.slice(1));
+          } 
         }
         if ((keyType === 'string' || keyType === 'number') && !(key in obj)) {
-          let path = basePath.slice(0);
-          path.push(key);
-          obj[key] = this.updateState(path, undefined, ...args.slice(1));
+          updateKey(key, undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patchTick + 1;
         return obj;
@@ -85,6 +92,12 @@ export class MutableState extends State {
         writable: true,
         value: this.patchTick + 1,
       });
+      Object.defineProperty(obj, '__aff_sub_tick', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: {},
+      });
     }
   }
 
@@ -106,8 +119,19 @@ export class MutableState extends State {
     ) {
       for (const key in arg.__aff_use_keys) {
         const fromPath = arg.__aff_use_keys[key].slice(0);
-        fromPath.pop();
-        const tick = this.app.get(fromPath).__aff_tick;
+        const value = this.app.get(fromPath);
+        // get tick
+        let tick;
+        if (value.__aff_tick) {
+          tick = value.__aff_tick;
+        } else if (typeof value !== 'object') { 
+          // get from parent
+          const key = fromPath.pop();
+          const parentValue = this.app.get(fromPath);
+          if (parentValue.__aff_sub_tick) {
+            tick = parentValue.__aff_sub_tick[key];
+          }
+        }
         if (tick == this.patchTick) {
           Object.defineProperty(arg, '__aff_tick', {
             configurable: false,
@@ -115,6 +139,18 @@ export class MutableState extends State {
             writable: true,
             value: tick,
           });
+          if (typeof value !== 'object') {
+            // save tick in parent
+            if (!arg.hasOwnProperty('__aff_sub_tick')) {
+              Object.defineProperty(arg, '__aff_sub_tick', {
+                configurable: false,
+                enumerable: false,
+                writable: true,
+                value: {},
+              });
+            }
+            arg.__aff_sub_tick[key] = tick;
+          }
         }
       }
       Object.defineProperty(arg, '__aff_tick_update_at', {
@@ -212,8 +248,8 @@ export class MutableState extends State {
     }
 
     // recursively
-    for (let key in state) {
-      let subPath = basePath.slice(0);
+    for (const key in state) {
+      const subPath = basePath.slice(0);
       subPath.push(key);
       this.setupState(state[key], subPath, forceSetup);
     }
