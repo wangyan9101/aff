@@ -398,7 +398,9 @@ test('checked', () => {
   app.init(Main);
   expect(root.querySelector('#foo').checked).toBe(true);
   app.update('step', 1);
-  expect(root.querySelector('#foo').checked).toBe(false);
+  setTimeout(() => {
+    expect(root.querySelector('#foo').checked).toBe(false);
+  }, 50);
 });
 
 test('checked', () => {
@@ -431,11 +433,13 @@ test('checked', () => {
   app.init(Main);
   expect(root.querySelector('#foo').checked).toBe(false);
   app.update('step', 1);
-  expect(root.querySelector('#foo').checked).toBe(true);
-  app.update('step', 2);
-  expect(root.querySelector('#foo').checked).toBe(false);
-  app.update('step', 3);
-  expect(root.querySelector('#foo').checked).toBe(false);
+  setTimeout(() => {
+    expect(root.querySelector('#foo').checked).toBe(true);
+    app.update('step', 2);
+    expect(root.querySelector('#foo').checked).toBe(false);
+    app.update('step', 3);
+    expect(root.querySelector('#foo').checked).toBe(false);
+  }, 5);
 });
 
 test('style change', () => {

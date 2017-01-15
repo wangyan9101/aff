@@ -420,12 +420,19 @@ export class App {
           lastElement.setAttribute(key, value);
           lastElement[key] = value
         } else if (valueType == 'boolean') {
-          if (value) {
-            lastElement.setAttribute(key, true);
-            lastElement[key] = true;
+          const set = () => {
+            if (value) {
+              lastElement.setAttribute(key, true);
+              lastElement[key] = true;
+            } else {
+              lastElement.removeAttribute(key);
+              lastElement[key] = false;
+            }
+          };
+          if (lastElement.tagName === 'INPUT') {
+            setTimeout(set, 0);
           } else {
-            lastElement.removeAttribute(key);
-            lastElement[key] = false;
+            set();
           }
         }
       }
@@ -824,6 +831,9 @@ function elementSetEvent(element, type, fn) {
   if (!(type in events)) {
     events[type] = {};
     element.addEventListener(type.substr(2), function(ev) {
+      if (element.tagName == 'INPUT') {
+        ev.preventDefault();
+      }
       let ret;
       let lastEvType;
       let lastFn;
