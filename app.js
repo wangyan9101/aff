@@ -429,7 +429,7 @@ export class App {
               lastElement[key] = false;
             }
           };
-          if (lastElement.tagName === 'INPUT') {
+          if (lastElement.tagName === 'INPUT' && lastElement.type == 'checkbox') {
             setTimeout(set, 0);
           } else {
             set();
@@ -831,7 +831,7 @@ function elementSetEvent(element, type, fn) {
   if (!(type in events)) {
     events[type] = {};
     element.addEventListener(type.substr(2), function(ev) {
-      if (element.tagName == 'INPUT') {
+      if (element.tagName == 'INPUT' && element.type == 'checkbox' && type == 'onclick') {
         ev.preventDefault();
       }
       let ret;
