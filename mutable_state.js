@@ -26,6 +26,7 @@ export class MutableState extends State {
         ret = args[0].apply(obj, this);
         if (ret === obj) {
           this.setupPatchTick(ret);
+          ret.__aff_tick = this.patchTick + 1;
         }
       } else {
         ret = args[0];
@@ -38,6 +39,7 @@ export class MutableState extends State {
       this.setupState(ret, basePath, forceSetup);
       if (typeof ret === 'object' && ret !== null && !ret.hasOwnProperty('__aff_tick')) {
         this.setupPatchTick(ret);
+        ret.__aff_tick = this.patchTick + 1;
       }
       return ret;
     } else {
@@ -47,6 +49,7 @@ export class MutableState extends State {
       if (typeof obj === 'object' && obj !== null) {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setupPatchTick(obj);
+          obj.__aff_tick = this.patchTick + 1;
         }
         const updateKey = (key, ...args) => {
           const path = basePath.slice(0);
@@ -83,22 +86,18 @@ export class MutableState extends State {
   }
 
   setupPatchTick(obj) {
-    if (obj.hasOwnProperty('__aff_tick')) {
-      obj.__aff_tick = this.patchTick + 1;
-    } else {
-      Object.defineProperty(obj, '__aff_tick', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: this.patchTick + 1,
-      });
-      Object.defineProperty(obj, '__aff_sub_tick', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: {},
-      });
-    }
+    Object.defineProperty(obj, '__aff_tick', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: this.patchTick + 1,
+    });
+    Object.defineProperty(obj, '__aff_sub_tick', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: {},
+    });
   }
 
   argsChanged(arg, lastArg) {
@@ -133,22 +132,12 @@ export class MutableState extends State {
           }
         }
         if (tick == this.patchTick) {
-          Object.defineProperty(arg, '__aff_tick', {
-            configurable: false,
-            enumerable: false,
-            writable: true,
-            value: tick,
-          });
+          if (!arg.hasOwnProperty('__aff_tick')) {
+            this.setupPatchTick(arg);
+          }
+          arg.__aff_tick = tick;
           if (typeof value !== 'object') {
             // save tick in parent
-            if (!arg.hasOwnProperty('__aff_sub_tick')) {
-              Object.defineProperty(arg, '__aff_sub_tick', {
-                configurable: false,
-                enumerable: false,
-                writable: true,
-                value: {},
-              });
-            }
             arg.__aff_sub_tick[key] = tick;
           }
         }
