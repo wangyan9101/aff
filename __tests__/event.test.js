@@ -1,4 +1,4 @@
-import { App, div, on, button, $ } from '../index'
+import { App, div, on, button, $, checkbox } from '../index'
 
 test('event chain', () => {
   let root = document.createElement('div');
@@ -64,4 +64,22 @@ test('different return value', () => {
   // should throw exception, but jest cannot catch it.
   const e = root.querySelector('#btn').dispatchEvent(new MouseEvent('click'));
   expect(n).toBe(2);
+});
+
+test('checkbox click', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    {},
+    (state) => {
+      return div(
+        checkbox($`#box`, on('click', () => {
+        })),
+      );
+    },
+  );
+  root.querySelector('#box').dispatchEvent(new MouseEvent('click'));
+  expect(root.querySelector('#box').checked).toBe(true);
 });
