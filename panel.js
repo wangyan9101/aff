@@ -242,7 +242,7 @@ function StateNode(appState, path = [], debugState) {
           subpath.push(key);
           valueNode = t(StateNode, appState[key], subpath, debugState);
         } else {
-          valueNode = appState[key];
+          valueNode = appState[key].toString();
         }
 
         const bindPointingPath = [

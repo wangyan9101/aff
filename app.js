@@ -2,6 +2,7 @@ import { allTags } from './all_tags'
 import { Selector, Css } from './tagged'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
+import { Updater } from './state'
 
 export class App {
   constructor(...args) {
@@ -145,11 +146,11 @@ export class App {
           if (sameLen == stopPath.length || sameLen == path.length) {
             throw['loop in $ref', path, stopPath];
           }
+          // setup getter and setter
           stopPath.pop();
           const stopLen = stopPath.length;
           let setupPath = path.slice(0);
           while (setupPath.length > stopLen) {
-            //console.log('get', setupPath, key, 'from', bindings[name]);
             setGetter(this.get(setupPath), key, bindings[name]);
             setupPath.pop();
           }
@@ -170,13 +171,36 @@ export class App {
     scopes = scopes.slice(0); // copy
     scopes.push(bindings);
 
-    // recursively
     for (let key in obj) {
-      let p = path.slice(0);
-      p.push(key);
-      this.setupState(obj[key], p, scopes);
-    }
+      const subState = obj[key];
 
+      // setup updater
+      if (subState instanceof Updater) {
+        const name = subState.args[0];
+        const updateArgs = subState.args.slice(1);
+        // search update path
+        let found = false;
+        for (let i = 0; i < scopes.length; i++) {
+          const bindings = scopes[i];
+          if (name in bindings) { // found
+            found = true;
+            const updatePath = bindings[name].slice(0);
+            obj[key] = function(...args) {
+              app.update(...updatePath, ...updateArgs, ...args);
+            }
+          }
+        }
+        if (!found) {
+          throw[`no state named ${name}`];
+        }
+
+      // setup sub state
+      } else {
+        let p = path.slice(0);
+        p.push(key);
+        this.setupState(subState, p, scopes);
+      }
+    }
   }
 
   addEvent(ev) {
@@ -725,7 +749,7 @@ class Node {
       child.text = children.toString();
       this.children.push(child);
     } else {
-      throw['bad child', children];
+      throw['bad child', children, this];
     }
   }
 

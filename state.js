@@ -17,3 +17,11 @@ export function readOnly(obj) {
   });
   return obj;
 }
+
+export function Updater(args) {
+  this.args = args;
+}
+
+export function updater(...args) {
+  return new Updater(args);
+}
