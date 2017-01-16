@@ -355,7 +355,7 @@ export class App {
       }
       // cache lastElement
       if (lastNode && lastElement.tagName) {
-        this.elementCache[lastElement.tagName.toLowerCase()].push([lastElement, lastNode]);
+        this.cacheElement(lastElement, lastNode);
       }
 
       return [element, node];
@@ -506,6 +506,7 @@ export class App {
       }
     }
     for (let i = childLen; i < lastChildLen; i++) {
+      this.cacheElement(lastElement.childNodes[childLen], lastNode.children[i]);
       lastElement.removeChild(lastElement.childNodes[childLen]);
     }
 
@@ -515,6 +516,13 @@ export class App {
     }
 
     return [lastElement, node];
+  }
+
+  cacheElement(element, node) {
+    if (element instanceof Text) {
+      return
+    }
+    this.elementCache[element.tagName.toLowerCase()].push([element, node]);
   }
 }
 
