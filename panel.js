@@ -62,7 +62,7 @@ export function DebugPanel(app, initState) {
 
   // tabs
   if (debugState.selectedTab === undefined) {
-    debugState.$update('selectedTab', 'updates');
+    debugState.$update('selectedTab', 'state');
   }
   const Tabs = t((debugState) => div(
     css`
