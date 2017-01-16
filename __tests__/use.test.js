@@ -229,7 +229,7 @@ test('refs in array', () => {
     foo: 'FOO',
     bar: [
       {
-        $ref: ['foo'],
+        $use: ['foo'],
       },
     ],
   });
@@ -245,7 +245,7 @@ test('array update', () => {
     {
       array: [1, 2, 3],
       List: {
-        $ref: ['array'],
+        $use: ['array'],
       },
     },
     (state) => {

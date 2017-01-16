@@ -65,8 +65,13 @@ export class App {
 
     // parse $ref
     let refInfos;
+    let ref;
     if ('$ref' in obj) {
-      const ref = obj['$ref'];
+      ref = obj['$ref'];
+    } else if ('$use' in obj) {
+      ref = obj['$use'];
+    }
+    if (ref) {
       if (typeof ref === 'object' && ref !== null) {
         if (Array.isArray(ref)) {
           refInfos = {};
