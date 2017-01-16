@@ -1,5 +1,5 @@
 import { allTags } from './all_tags'
-import { Selector, Css } from './tagged'
+import { Selector, Css, Key } from './tagged'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
 import { Updater } from './state'
@@ -509,6 +509,7 @@ export class App {
       lastElement.removeChild(lastElement.childNodes[childLen]);
     }
 
+    // hook
     if (node.hooks && node.hooks.patched) {
       node.hooks.patched.forEach(fn => fn(lastElement));
     }
@@ -524,6 +525,7 @@ class Thunk {
     this.node = undefined;
     this.element = null;
     this.name = null;
+    this.key = null;
   }
 
   toElement(_name, app) {
@@ -567,12 +569,28 @@ export function t(...args) {
   case 'string': // named thunk
     thunk.name = args[0];
     thunk.func = args[1];
-    thunk.args = args.slice(2);
+    thunk.args = [];
+    for (let i = 2; i < args.length; i++) {
+      const arg = args[i];
+      if (arg instanceof Key) {
+        thunk.key = arg.str;
+      } else {
+        thunk.args.push(arg);
+      }
+    }
     break
   case 'function':
     thunk.func = args[0];
-    thunk.args = args.slice(1);
     thunk.name = thunk.func.name;
+    thunk.args = [];
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i];
+      if (arg instanceof Key) {
+        thunk.key = arg.str;
+      } else {
+        thunk.args.push(arg);
+      }
+    }
     break
   }
   if (!thunk.func) {
@@ -612,6 +630,8 @@ function _e(node, ...args) {
           ['on' + ev.type]: ev.fn,
         });
       }
+    } else if (arg instanceof Key) {
+      node.key = arg.str;
     } else if (arg === skip) {
       break
     } else if (typeof arg === 'object' && arg !== null) {
@@ -654,6 +674,7 @@ class Node {
     this.innerHTML = null;
     this.element = null;
     this.hooks = null;
+    this.key = null;
   }
 
   setSelector(selector) {

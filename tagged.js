@@ -6,6 +6,10 @@ export function Css(str) {
   this.str = str;
 }
 
+export function Key(str) {
+  this.str = str;
+}
+
 function makeTagger(constructor) {
   function tag(strings, ...values) {
     let str = '';
@@ -22,3 +26,4 @@ function makeTagger(constructor) {
 
 export const $ = makeTagger(Selector);
 export const css = makeTagger(Css);
+export const key = makeTagger(Key);
