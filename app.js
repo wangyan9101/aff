@@ -30,7 +30,7 @@ export class App {
         this.nodeFunc = arg;
       } else {
         this._state = new MutableState(arg, this);
-        this.setupUses(this._state.get());
+        this.setupState(this._state.get());
       }
     }
     if (
@@ -42,7 +42,7 @@ export class App {
     }
   }
 
-  setupUses(obj, path, scopes) {
+  setupState(obj, path, scopes) {
     // skip non-object
     if (typeof obj !== 'object' || obj === null) {
       return
@@ -58,36 +58,36 @@ export class App {
       for (let i = 0; i < obj.length; i++) {
         let p = path.slice(0);
         p.push(i);
-        this.setupUses(obj[i], p, scopes);
+        this.setupState(obj[i], p, scopes);
       }
       return
     }
 
-    // parse $use
-    let useInfos;
-    if ('$use' in obj) {
-      const use = obj['$use'];
-      if (typeof use === 'object' && use !== null) {
-        if (Array.isArray(use)) {
-          useInfos = {};
-          for (let i = 0; i < use.length; i++) {
-            const key = use[i];
+    // parse $ref
+    let refInfos;
+    if ('$ref' in obj) {
+      const ref = obj['$ref'];
+      if (typeof ref === 'object' && ref !== null) {
+        if (Array.isArray(ref)) {
+          refInfos = {};
+          for (let i = 0; i < ref.length; i++) {
+            const key = ref[i];
             if (key in obj) {
-              throw['use key conflict', key];
+              throw['ref key conflict', key];
             }
-            useInfos[key] = key;
+            refInfos[key] = key;
           }
         } else {
-          for (const key in use) {
+          for (const key in ref) {
             if (key in obj) {
-              throw['use key conflict', key];
+              throw['ref key conflict', key];
             }
           }
-          useInfos = use;
+          refInfos = ref;
         }
-        delete obj['$use'];
+        delete obj['$ref'];
       } else {
-        throw['bad use', use];
+        throw['bad ref', ref];
       }
     }
 
@@ -107,20 +107,20 @@ export class App {
           },
         });
       }
-      if (!obj.__aff_use_keys) {
-        Object.defineProperty(obj, '__aff_use_keys', {
+      if (!obj.__aff_ref_keys) {
+        Object.defineProperty(obj, '__aff_ref_keys', {
           configurable: false,
           writable: true,
           enumerable: false,
           value: {},
         });
       }
-      obj.__aff_use_keys[key] = from;
+      obj.__aff_ref_keys[key] = from;
     }
 
     // setup
-    for (const key in useInfos) {
-      const name = useInfos[key];
+    for (const key in refInfos) {
+      const name = refInfos[key];
       // search in scopes
       let found = false;
       for (let i = 0; i < scopes.length; i++) {
@@ -138,7 +138,7 @@ export class App {
             }
           }
           if (sameLen == stopPath.length || sameLen == path.length) {
-            throw['loop in $use', path, stopPath];
+            throw['loop in $ref', path, stopPath];
           }
           stopPath.pop();
           const stopLen = stopPath.length;
@@ -169,7 +169,7 @@ export class App {
     for (let key in obj) {
       let p = path.slice(0);
       p.push(key);
-      this.setupUses(obj[key], p, scopes);
+      this.setupState(obj[key], p, scopes);
     }
 
   }

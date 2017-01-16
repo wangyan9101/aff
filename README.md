@@ -1041,7 +1041,7 @@ const init_state = {
     Wrapper: {
       InnerWrapper: {
         Element: {
-          $use: ['foo'],
+          $ref: ['foo'],
         }
       }
     },
@@ -1080,10 +1080,10 @@ app.init(Main);
 组件树和状态树的结构相同，就可以有这个便利。
 或者可以将这些子状态视作 "view model"。
 
-另外，element 子状态里面有一个 $use 成员，这是框架提供的特殊机制。
+另外，element 子状态里面有一个 $ref 成员，这是框架提供的特殊机制。
 它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
 也就是说，OutterWrapper、Wrapper、InnerWrapper、Element 对应的这些状态对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
-$use 指定的状态，是逐层传递的。
+$ref 指定的状态，是逐层传递的。
 
 如果 Element 组件需要观察多一个状态，例如 bar，改动可以很少：
 
@@ -1095,7 +1095,7 @@ const init_state = {
     Wrapper: {
       InnerWrapper: {
         Element: {
-          $use: ['foo', 'bar'],
+          $ref: ['foo', 'bar'],
         }
       }
     },
@@ -1103,9 +1103,9 @@ const init_state = {
 };
 ```
 
-只需要改变 $use 的定义即可。删除同理，只需要改动一处，就可以完成逐层传递的目的。
+只需要改变 $ref 的定义即可。删除同理，只需要改动一处，就可以完成逐层传递的目的。
 
-$use 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
+$ref 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
 
 ```js
 const init_state = {
@@ -1115,7 +1115,7 @@ const init_state = {
     Wrapper: {
       InnerWrapper: {
         Element: {
-          $use: {
+          $ref: {
             FOO: 'foo',
             BAR: 'bar',
           },
@@ -1133,12 +1133,12 @@ const Element = (state) => div(state.FOO, state.BAR);
 
 这样 Element 组件里用到的就是 FOO 和 BAR，而不是 foo 和 bar 了。
 
-$use 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
+$ref 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
 查找是初始化 App 的时候做的，不是在读取状态的时候。
 所以从一开始就要在 init_state 里定义好相关的状态。
 
-$use 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
-因为解析 $use 标记开销比较大，如果更新一个大对象，就算不包含 $use 标记，也要进行解析的话，对性能影响比较大。
+$ref 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
+因为解析 $ref 标记开销比较大，如果更新一个大对象，就算不包含 $ref 标记，也要进行解析的话，对性能影响比较大。
 
 <h2 id="update">状态对象的 $update 方法</h2>
 

@@ -108,16 +108,16 @@ export class MutableState extends State {
       return true;
     }
 
-    // trigger update of used keys
+    // trigger update of ref keys
     if (
       arg === lastArg
       && typeof arg === 'object'
       && arg != null
-      && arg.__aff_use_keys
+      && arg.__aff_ref_keys
       && arg.__aff_tick_update_at != this.patchTick
     ) {
-      for (const key in arg.__aff_use_keys) {
-        const fromPath = arg.__aff_use_keys[key].slice(0);
+      for (const key in arg.__aff_ref_keys) {
+        const fromPath = arg.__aff_ref_keys[key].slice(0);
         const value = this.app.get(fromPath);
         // get tick
         let tick;

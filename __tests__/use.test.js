@@ -1,13 +1,13 @@
 import { App, div, $, t, p } from '../index'
 
-test('use', () => {
+test('ref', () => {
   let init_state = {
     foo: 'FOO',
     bar: 'BAR',
     baz: {
-      $use: ['foo', 'bar'],
+      $ref: ['foo', 'bar'],
       baz: {
-        $use: {
+        $ref: {
           FOO: 'foo',
           BAR: 'bar',
         },
@@ -16,7 +16,7 @@ test('use', () => {
   };
   let app = new App(init_state);
 
-  // init use
+  // init ref
   expect(app.state.baz.foo).toBe('FOO');
   expect(app.state.baz.bar).toBe('BAR');
   expect(app.state.baz.baz.FOO).toBe('FOO');
@@ -83,40 +83,40 @@ test('use', () => {
   expect(root.querySelector('#d').textContent).toBe('bar');
 });
 
-test('use conflict', () => {
+test('ref conflict', () => {
   expect(() => {
     new App({
       foo: 'foo',
       bar: {
-        $use: ['foo'],
+        $ref: ['foo'],
         foo: 42,
       },
     });
-  }).toThrowError('use key conflict,foo');
+  }).toThrowError('ref key conflict,foo');
   expect(() => {
     new App({
       foo: 'foo',
       bar: {
-        $use: {
+        $ref: {
           foo: 'foo',
         },
         foo: 42,
       },
     });
-  }).toThrowError('use key conflict,foo');
+  }).toThrowError('ref key conflict,foo');
 });
 
-test('bad use', () => {
+test('bad ref', () => {
   expect(() => {
     new App({
       foo: {
-        $use: 42,
+        $ref: 42,
       },
     });
-  }).toThrowError('bad use,42');
+  }).toThrowError('bad ref,42');
 });
 
-test('passthrough use', () => {
+test('passthrough ref', () => {
   let app = new App({
     foo: 'FOO',
     bar1: {
@@ -124,7 +124,7 @@ test('passthrough use', () => {
         foo2: 'foo',
         bar3: {
           bar4: {
-            $use: ['foo', 'foo2'],
+            $ref: ['foo', 'foo2'],
           },
         },
       },
@@ -141,47 +141,47 @@ test('passthrough use', () => {
 test('no state', () => {
   expect(() => {
     let app = new App({
-      $use: ['foo'],
+      $ref: ['foo'],
     });
   }).toThrowError('no state named foo');
   expect(() => {
     let app = new App({
       bar: {
-        $use: ['foo'],
+        $ref: ['foo'],
       },
     });
   }).toThrowError('no state named foo');
 });
 
-test('loop in $use', () => {
+test('loop in $ref', () => {
   expect(() => {
     let app = new App({
       foo: {
-        $use: ['foo'],
+        $ref: ['foo'],
       },
     })
-  }).toThrowError('loop in $use,foo,foo');
+  }).toThrowError('loop in $ref,foo,foo');
 });
 
-test('loop in $use', () => {
+test('loop in $ref', () => {
   expect(() => {
     let app = new App({
       foo: {
         foo: {
-          $use: ['foo'],
+          $ref: ['foo'],
         },
       },
     })
-  }).toThrowError('loop in $use,foo,foo,foo');
+  }).toThrowError('loop in $ref,foo,foo,foo');
 });
 
-test('update in $use', () => {
+test('update in $ref', () => {
   let app = new App({
     foo: 'FOO',
     c1: {
-      $use: ['foo'],
+      $ref: ['foo'],
       c2: {
-        $use: ['foo'],
+        $ref: ['foo'],
       },
     },
   });
@@ -193,7 +193,7 @@ test('update in $use', () => {
   expect(app.state.c1.c2.foo).toBe('foo');
 });
 
-test('tick in $use', () => {
+test('tick in $ref', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
@@ -207,7 +207,7 @@ test('tick in $use', () => {
           c: {
             z: 'baz',
             d: {
-              $use: ['x', 'y', 'z'],
+              $ref: ['x', 'y', 'z'],
             }
           },
         },
@@ -224,12 +224,12 @@ test('tick in $use', () => {
   expect(root.querySelector('#p').textContent).toBe('FOO');
 });
 
-test('uses in array', () => {
+test('refs in array', () => {
   const app = new App({
     foo: 'FOO',
     bar: [
       {
-        $use: ['foo'],
+        $ref: ['foo'],
       },
     ],
   });
@@ -245,7 +245,7 @@ test('array update', () => {
     {
       array: [1, 2, 3],
       List: {
-        $use: ['array'],
+        $ref: ['array'],
       },
     },
     (state) => {
