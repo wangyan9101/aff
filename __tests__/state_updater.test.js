@@ -1,4 +1,4 @@
-import { App, updater } from '../index'
+import { App, updater, $del } from '../index'
 
 test('updater', () => {
   const app = new App(
@@ -20,4 +20,22 @@ test('bad updater', () => {
       },
     );
   }).toThrowError('no state named bar');
+});
+
+test('state path change', () => {
+  const app = new App({
+    foo: {
+      foo: 'foo',
+      bar: 'bar',
+      baz: 'baz',
+    },
+    C1: {
+      $ref: ['foo'],
+      C2: {
+        updateFoo: updater('foo'),
+      },
+    },
+  });
+  app.state.C1.C2.updateFoo($del('foo'));
+  expect(app.state.foo.foo).toBe(undefined);
 });

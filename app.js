@@ -188,6 +188,7 @@ export class App {
             obj[key] = function(...args) {
               app.update(...updatePath, ...updateArgs, ...args);
             }
+            break
           }
         }
         if (!found) {
