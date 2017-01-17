@@ -491,20 +491,59 @@ export class App {
     }
 
     // children
-    const childElements = lastElement.childNodes;
+    let childElements = lastElement.childNodes;
     const childLen = node.children ? node.children.length : 0;
-    const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = 0; i < childLen; i++) {
-      const result = this.patch(
-        childElements[i], 
-        node.children[i], 
-        lastNode && lastNode.children ? lastNode.children[i] : null,
-      );
-      const elem = result[0];
-      if (!childElements[i]) {
-        lastElement.appendChild(elem);
+      const child = node.children[i];
+      if (
+        child.key 
+        && lastNode 
+        && lastNode.children 
+        && lastNode.children[i] 
+        && lastNode.children[i].key != child.key
+      ) { // keyed
+        // search for same key
+        let found = false;
+        for (let offset = 0; offset < 10; offset++) {
+          if (lastNode.children[i + offset] && lastNode.children[i + offset].key == child.key) {
+            found = true;
+            // found same key, delete some
+            for (let n = 0; n < offset; n++) {
+              //TODO recycle deleted
+              lastElement.removeChild(childElements[i]);
+              lastNode.children.splice(i, 1);
+            }
+            childElements = lastElement.childNodes;
+            // patch
+            const result = this.patch(
+              childElements[i],
+              child,
+              lastNode.children[i],
+            );
+            break
+          }
+        }
+        if (!found) {
+          // insert new
+          const elem = child.toElement();
+          lastElement.insertBefore(elem, childElements[i]);
+          childElements = lastElement.childNodes;
+          lastNode.children.splice(i, 0, null);
+        }
+      } else {
+        // not keyed
+        const result = this.patch(
+          childElements[i], 
+          child,
+          lastNode && lastNode.children ? lastNode.children[i] : null,
+        );
+        const elem = result[0];
+        if (!childElements[i]) {
+          lastElement.appendChild(elem);
+        }
       }
     }
+    const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = childLen; i < lastChildLen; i++) {
       this.cacheElement(lastElement.childNodes[childLen], lastNode.children[i]);
       lastElement.removeChild(lastElement.childNodes[childLen]);
