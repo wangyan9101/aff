@@ -1,11 +1,13 @@
 import { App, t } from './app'
-import { css, $ } from './tagged'
+import { css, $, key } from './tagged'
 import { on } from './event'
 import { $func, $push, $merge, $splice } from './operations'
 import { 
   div, p, none, table, tr, td, span, pre, clear, button,
 } from './tags'
 import { readOnly } from './state'
+
+let logSerial = 0;
 
 export function DebugPanel(app, initState) {
 
@@ -39,7 +41,9 @@ export function DebugPanel(app, initState) {
         logState.$update($push({
           args: readOnly(args),
           tick: state.__aff_tick,
+          key: logSerial,
         }));
+        logSerial++;
       }
     }));
 
@@ -307,46 +311,52 @@ function Updates(updates, debugStatePath) {
           continue
         }
 
-        ret.push(div(
-          css`
-            border-bottom: 1px solid #EEE;
-            margin-bottom: 1px;
-          `,
-
-          span(
-            'tick: ', log.tick,
-            css`
-              padding: 0 10px;
-              background-color: #EFE;
-              float: right;
-            `,
-          ),
-
-          log.args.map((arg, i) => span(
-            span(
-              css`
-                padding: 0 10px;
-                color: #AAA;
-              `,
-
-              () => {
-                if (i > 0 && i != log.args.length - 1) {
-                  return '.';
-                } else if (i == log.args.length - 1) {
-                  return '=>';
-                } 
-                return '';
-              },
-            ),
-            formatArg(arg), 
-          )),
-
-          clear,
-        ));
+        ret.push(t(UpdateLogEntry, key`${log.key}`, log));
 
       }
       return ret;
     },
+  );
+}
+
+function UpdateLogEntry(log) {
+  return div(
+    css`
+      border-bottom: 1px solid #EEE;
+      margin-bottom: 1px;
+    `,
+
+    key`${log.key}`,
+
+    span(
+      'tick: ', log.tick,
+      css`
+        padding: 0 10px;
+        background-color: #EFE;
+        float: right;
+      `,
+    ),
+
+    log.args.map((arg, i) => span(
+      span(
+        css`
+          padding: 0 10px;
+          color: #AAA;
+        `,
+
+        () => {
+          if (i > 0 && i != log.args.length - 1) {
+            return '.';
+          } else if (i == log.args.length - 1) {
+            return '=>';
+          } 
+          return '';
+        },
+      ),
+      formatArg(arg), 
+    )),
+
+    clear,
   );
 }
 
