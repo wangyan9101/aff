@@ -301,6 +301,10 @@ function Updates(updates, debugStatePath) {
       padding: 0 10px;
     `,
 
+    button('Clear', on('click', () => {
+      updates.$update([]);
+    })),
+
     () => {
       const ret = [];
       for (let i = updates.length - 1; i >= 0; i--) {
