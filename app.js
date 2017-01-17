@@ -546,8 +546,7 @@ export class App {
     const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = childLen; i < lastChildLen; i++) {
       const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
-      //FIXME
-      //this.cacheElement(elem, lastNode.children[i]);
+      this.cacheElement(elem, lastNode.children[i]);
     }
 
     // hook
@@ -561,6 +560,9 @@ export class App {
   cacheElement(element, node) {
     if (element instanceof Text) {
       return
+    }
+    while (node instanceof Thunk) {
+      node = node.getNode();
     }
     this.elementCache[element.tagName.toLowerCase()].push([element, node]);
   }
