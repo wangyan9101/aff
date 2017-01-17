@@ -545,8 +545,9 @@ export class App {
     }
     const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = childLen; i < lastChildLen; i++) {
-      this.cacheElement(lastElement.childNodes[childLen], lastNode.children[i]);
-      lastElement.removeChild(lastElement.childNodes[childLen]);
+      const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
+      //FIXME
+      //this.cacheElement(elem, lastNode.children[i]);
     }
 
     // hook
