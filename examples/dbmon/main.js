@@ -14,7 +14,7 @@ function DBMon(state, app) {
         }),
       ),
     ),
-    DebugPanel(app),
+    //DebugPanel(app),
   );
 }
 
