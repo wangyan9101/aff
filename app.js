@@ -509,8 +509,8 @@ export class App {
             found = true;
             // found same key, delete some
             for (let n = 0; n < offset; n++) {
-              //TODO recycle deleted
-              lastElement.removeChild(childElements[i]);
+              const elem = lastElement.removeChild(childElements[i]);
+              this.cacheElement(elem, lastNode.children[i]);
               lastNode.children.splice(i, 1);
             }
             childElements = lastElement.childNodes;
@@ -832,7 +832,7 @@ class Node {
     } else {
       // use cached element
       if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
-        let result = app.elementCache[this.tag].pop();
+        let result = app.elementCache[this.tag].shift();
         let element = result[0];
         const lastNode = result[1];
         let node;

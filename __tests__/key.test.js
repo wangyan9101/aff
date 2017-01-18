@@ -39,4 +39,6 @@ test('keyed update', () => {
   expect(root.textContent).toBe('340');
   app.update('list', [4, 0, 1, 2, 3]);
   expect(root.textContent).toBe('40123');
+  app.update('list', [3, 4, 0, 1, 2]);
+  expect(root.textContent).toBe('34012');
 });
