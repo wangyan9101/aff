@@ -344,10 +344,10 @@ export class App {
       (!lastNode)
       // no element
       || (!lastElement)
+      // different type
+      || (node.nodeType != lastNode.nodeType)
       // different tag, no way to patch
       || (node.tag != lastNode.tag)
-      // different comment
-      || (node.comment != lastNode.comment) //TODO check node type (element / text / comment)
     ) {
       const element = node.toElement(null, this);
       // insert new then remove old
@@ -373,14 +373,17 @@ export class App {
   }
 
   patchNode(lastElement, node, lastNode) {
+    // text and comment node
+    if (node.nodeType === 'text' || node.nodeType === 'comment') {
+      if (node.text != lastNode.text) {
+        lastElement.nodeValue = node.text;
+      }
+      return [lastElement, node];
+    }
+
     // innerHTML
     if (node.innerHTML != lastNode.innerHTML) {
       lastElement.innerHTML = node.innerHTML;
-    }
-
-    // text
-    if (node.text != lastNode.text) {
-      lastElement.nodeValue = node.text;
     }
 
     // id
@@ -600,8 +603,8 @@ class Thunk {
       this.node = this.func.apply(this, this.args);
       afterThunkCallFunc(this);
       if (this.node === null) {
-        this.node = new Node();
-        this.node.comment = ' none ';
+        this.node = new Node('comment');
+        this.node.text = ' none ';
       }
       if (!this.node) {
         throw['constructor of ' + (this.name || 'anonymous') + ' returned undefined value', this];
@@ -657,7 +660,7 @@ export function e(tag, ...args) {
   if (typeof tag !== 'string') {
     throw['bad tag name', tag];
   }
-  const node = new Node();
+  const node = new Node('element');
   node.tag = tag;
   _e(node, ...args);
   return node;
@@ -715,20 +718,20 @@ export const setAfterThunkCallFunc = (fn) => {
 }
 
 export class Node {
-  constructor() {
-    this.tag = null;
+  constructor(nodeType) {
+    this.nodeType = nodeType || 'element';
+    this.tag = null; // for element
+    this.text = null; // for text and comment
     this.id = null;
     this.style = null;
     this.classList = null;
     this.children = null;
     this.attributes = null;
     this.events = null;
-    this.text = null;
     this.innerHTML = null;
     this.element = null;
     this.hooks = null;
     this.key = null;
-    this.comment = null;
   }
 
   setSelector(selector) {
@@ -821,7 +824,7 @@ export class Node {
     if (type === 'object' && children !== null) {
       this.children.push(children);
     } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
-      const child = new Node();
+      const child = new Node('text');
       child.text = children.toString();
       this.children.push(child);
     } else {
@@ -830,29 +833,28 @@ export class Node {
   }
 
   toElement(name, app) {
-    let element;
-    if (this.text !== null) {
-      element = document.createTextNode(this.text);
-    } else if (this.comment !== null) {
-      element = document.createComment(this.comment);
-    } else {
-      // use cached element
-      if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
-        let result = app.elementCache[this.tag].shift();
-        let element = result[0];
-        const lastNode = result[1];
-        let node;
-        result = app.patchNode(element, this, lastNode);
-        element = result[0];
-        node = result[1];
-        this.element = element;
-        if (this.hooks && this.hooks.created) {
-          this.hooks.created.forEach(fn => fn(element));
-        }
-        return element;
-      }
-      element = document.createElement(this.tag);
+    if (this.nodeType === 'text') {
+      return document.createTextNode(this.text);
+    } else if (this.nodeType === 'comment') {
+      return document.createComment(this.text);
     }
+    let element;
+    // use cached element
+    if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
+      let result = app.elementCache[this.tag].shift();
+      let element = result[0];
+      const lastNode = result[1];
+      let node;
+      result = app.patchNode(element, this, lastNode);
+      element = result[0];
+      node = result[1];
+      this.element = element;
+      if (this.hooks && this.hooks.created) {
+        this.hooks.created.forEach(fn => fn(element));
+      }
+      return element;
+    }
+    element = document.createElement(this.tag);
     if (this.innerHTML !== null) {
       element.innerHTML = this.innerHTML;
     }

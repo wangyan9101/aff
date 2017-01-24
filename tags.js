@@ -15,8 +15,8 @@ const checkbox = (...args) => e('input', {
   type: 'checkbox',
 }, ...args);
 
-const none = new Node();
-none.comment = ' none ';
+const none = new Node('comment');
+none.text = ' none ';
 
 const clear = e('div', css`
   clear: both;

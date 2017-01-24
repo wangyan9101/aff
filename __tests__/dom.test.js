@@ -1,4 +1,4 @@
-import {t, e, setAfterThunkCallFunc, css, skip} from '../index'
+import {t, e, setAfterThunkCallFunc, css, skip, Node} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../operations'
@@ -377,10 +377,14 @@ test('style merge', () => {
   }).toThrowError('should not mix-use object-like style and string-like style,[object Object],margin-left: 5px');
 });
 
-test('patch none', () => {
+test('patch comment', () => {
   const root = document.createElement('div');
   const element = document.createElement('div');
   root.appendChild(element);
+  const comment1 = new Node('comment');
+  comment1.text = 'foo';
+  const comment2 = new Node('comment');
+  comment2.text = 'bar';
   const app = new App(
     element,
     0,
@@ -392,6 +396,10 @@ test('patch none', () => {
           return div('foo', none, none);
         } else if (state == 2) {
           return div();
+        } else if (state == 3) {
+          return div(comment1);
+        } else if (state == 4) {
+          return div(comment2);
         }
       },
     ),
@@ -401,4 +409,8 @@ test('patch none', () => {
   expect(root.innerHTML).toBe('<div><div>foo<!-- none --><!-- none --></div></div>');
   app.update(2);
   expect(root.innerHTML).toBe('<div><div></div></div>');
+  app.update(3);
+  expect(root.innerHTML).toBe('<div><div><!--foo--></div></div>');
+  app.update(4);
+  expect(root.innerHTML).toBe('<div><div><!--bar--></div></div>');
 });
