@@ -14,6 +14,8 @@ export class App {
     for (let i = 0; i < allTags.length; i++) {
       this.elementCache[allTags[i]] = [];
     }
+    this.textNodeCache = [];
+    this.commentNodeCache = [];
     this.events = {};
     this.init(...args);
   }
@@ -563,15 +565,18 @@ export class App {
   }
 
   cacheElement(element, node) {
-    //TODO cache this
-    if (element instanceof Text || element instanceof Comment) {
-      return
+    if (element instanceof Text) {
+      this.textNodeCache.push([element, node]);
+    } else if (element instanceof Comment) {
+      this.commentNodeCache.push([element, node]);
+    } else {
+      while (node instanceof Thunk) {
+        node = node.getNode();
+      }
+      this.elementCache[element.tagName.toLowerCase()].push([element, node]);
     }
-    while (node instanceof Thunk) {
-      node = node.getNode();
-    }
-    this.elementCache[element.tagName.toLowerCase()].push([element, node]);
   }
+
 }
 
 class Thunk {
@@ -834,8 +839,26 @@ export class Node {
 
   toElement(name, app) {
     if (this.nodeType === 'text') {
+      if (app && app.textNodeCache.length > 0) {
+        let result = app.textNodeCache.shift();
+        let element = result[0];
+        const lastNode = result[1];
+        result = app.patchNode(element, this, lastNode);
+        element = result[0];
+        this.element = element;
+        return element;
+      }
       return document.createTextNode(this.text);
     } else if (this.nodeType === 'comment') {
+      if (app && app.commentNodeCache.length > 0) {
+        let result = app.commentNodeCache.shift();
+        let element = result[0];
+        const lastNode = result[1];
+        result = app.patchNode(element, this, lastNode);
+        element = result[0];
+        this.element = element;
+        return element;
+      }
       return document.createComment(this.text);
     }
     let element;
@@ -844,10 +867,8 @@ export class Node {
       let result = app.elementCache[this.tag].shift();
       let element = result[0];
       const lastNode = result[1];
-      let node;
       result = app.patchNode(element, this, lastNode);
       element = result[0];
-      node = result[1];
       this.element = element;
       if (this.hooks && this.hooks.created) {
         this.hooks.created.forEach(fn => fn(element));
