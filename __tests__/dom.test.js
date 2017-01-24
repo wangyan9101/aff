@@ -376,3 +376,25 @@ test('style merge', () => {
     );
   }).toThrowError('should not mix-use object-like style and string-like style,[object Object],margin-left: 5px');
 });
+
+test('patch none', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    0,
+    (state) => div(
+      () => {
+        if (state == 0) {
+          return div(none, none, none);
+        } else if (state == 1) {
+          return div('foo', none, none);
+        }
+      },
+    ),
+  );
+  expect(root.innerHTML).toBe('<div><div><!-- none --><!-- none --><!-- none --></div></div>');
+  app.update(1);
+  expect(root.innerHTML).toBe('<div><div>foo<!-- none --><!-- none --></div></div>');
+});

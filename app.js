@@ -346,6 +346,8 @@ export class App {
       || (!lastElement)
       // different tag, no way to patch
       || (node.tag != lastNode.tag)
+      // different comment
+      || (node.comment != lastNode.comment) //TODO check node type (element / text / comment)
     ) {
       const element = node.toElement(null, this);
       // insert new then remove old
@@ -558,6 +560,7 @@ export class App {
   }
 
   cacheElement(element, node) {
+    //TODO cache this
     if (element instanceof Text) {
       return
     }
