@@ -358,7 +358,7 @@ export class App {
         lastElement.parentNode.removeChild(lastElement);
       }
       // cache lastElement
-      if (lastNode && lastElement.tagName) {
+      if (lastNode) {
         this.cacheElement(lastElement, lastNode);
       }
 
