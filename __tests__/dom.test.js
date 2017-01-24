@@ -273,7 +273,7 @@ test('null dom', () => {
       ]);
     },
   );
-  expect(root.innerHTML).toBe('<div><div style="display: none;"></div></div>');
+  expect(root.innerHTML).toBe('<div><!-- none --></div>');
 });
 
 test('func retuning array', () => {

@@ -596,9 +596,9 @@ class Thunk {
       beforeThunkCallFunc(this);
       this.node = this.func.apply(this, this.args);
       afterThunkCallFunc(this);
-      //TODO remove this
       if (this.node === null) {
-        this.node = e('div', { style: { display: 'none' }});
+        this.node = new Node();
+        this.node.comment = ' none ';
       }
       if (!this.node) {
         throw['constructor of ' + (this.name || 'anonymous') + ' returned undefined value', this];
@@ -711,7 +711,7 @@ export const setAfterThunkCallFunc = (fn) => {
   afterThunkCallFunc = fn;
 }
 
-class Node {
+export class Node {
   constructor() {
     this.tag = null;
     this.id = null;
@@ -725,6 +725,7 @@ class Node {
     this.element = null;
     this.hooks = null;
     this.key = null;
+    this.comment = null;
   }
 
   setSelector(selector) {
@@ -829,6 +830,8 @@ class Node {
     let element;
     if (this.text !== null) {
       element = document.createTextNode(this.text);
+    } else if (this.comment !== null) {
+      element = document.createComment(this.comment);
     } else {
       // use cached element
       if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {

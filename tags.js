@@ -1,5 +1,6 @@
-import {e} from './app'
+import { e, Node } from './app'
 import { allTags } from './all_tags'
+import { css } from './tagged'
 
 const helpers = allTags.reduce((helpers, tag) => {
   helpers[tag] = function(...args) {
@@ -14,20 +15,23 @@ const checkbox = (...args) => e('input', {
   type: 'checkbox',
 }, ...args);
 
+const none = new Node();
+none.comment = ' none ';
+
+const clear = e('div', css`
+  clear: both;
+`);
+
 module.exports = {
   ...helpers,
 
-  none: e('div', {
-    style: {
-      display: 'none',
-    },
-  }),
+  none: none,
+  None: none,
+  NONE: none,
 
-  clear: e('div', {
-    style: {
-      clear: 'both',
-    },
-  }),
+  clear: clear,
+  Clear: clear,
+  CLEAR: clear,
 
   checkbox: checkbox,
   Checkbox: checkbox,
