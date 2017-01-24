@@ -390,6 +390,8 @@ test('patch none', () => {
           return div(none, none, none);
         } else if (state == 1) {
           return div('foo', none, none);
+        } else if (state == 2) {
+          return div();
         }
       },
     ),
@@ -397,4 +399,6 @@ test('patch none', () => {
   expect(root.innerHTML).toBe('<div><div><!-- none --><!-- none --><!-- none --></div></div>');
   app.update(1);
   expect(root.innerHTML).toBe('<div><div>foo<!-- none --><!-- none --></div></div>');
+  app.update(2);
+  expect(root.innerHTML).toBe('<div><div></div></div>');
 });

@@ -561,7 +561,7 @@ export class App {
 
   cacheElement(element, node) {
     //TODO cache this
-    if (element instanceof Text) {
+    if (element instanceof Text || element instanceof Comment) {
       return
     }
     while (node instanceof Thunk) {
