@@ -19,6 +19,8 @@ export class App {
     this.commentNodeCache = [];
     this.counters = {
       thunkFuncCall: 0,
+      nativeNodeCreate: 0,
+      nodeCacheHit: 0,
     };
     this.events = {};
     this.init(...args);

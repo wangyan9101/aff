@@ -27,6 +27,9 @@ export class ElementNode extends Node {
     let element;
     // use cached element
     if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
+      if (app) {
+        app.counters.nodeCacheHit++;
+      }
       let result = app.elementCache[this.tag].shift();
       let element = result[0];
       const lastNode = result[1];
@@ -39,6 +42,9 @@ export class ElementNode extends Node {
       return element;
     }
     element = document.createElement(this.tag);
+    if (app) {
+      app.counters.nativeNodeCreate++;
+    }
     if (this.innerHTML !== null) {
       element.innerHTML = this.innerHTML;
     }
@@ -210,6 +216,9 @@ export class TextNode extends Node {
 
   toElement(app) {
     if (app && app.textNodeCache.length > 0) {
+      if (app) {
+        app.counters.nodeCacheHit++;
+      }
       let result = app.textNodeCache.shift();
       let element = result[0];
       const lastNode = result[1];
@@ -217,6 +226,9 @@ export class TextNode extends Node {
       element = result[0];
       this.element = element;
       return element;
+    }
+    if (app) {
+      app.counters.nativeNodeCreate++;
     }
     return document.createTextNode(this.text);
   }
@@ -230,6 +242,9 @@ export class CommentNode extends Node {
 
   toElement(app) {
     if (app && app.commentNodeCache.length > 0) {
+      if (app) {
+        app.counters.nodeCacheHit++;
+      }
       let result = app.commentNodeCache.shift();
       let element = result[0];
       const lastNode = result[1];
@@ -237,6 +252,9 @@ export class CommentNode extends Node {
       element = result[0];
       this.element = element;
       return element;
+    }
+    if (app) {
+      app.counters.nativeNodeCreate++;
     }
     return document.createComment(this.text);
   }
