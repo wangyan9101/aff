@@ -239,3 +239,53 @@ export class CommentNode extends Node {
     return document.createComment(this.text);
   }
 }
+
+export class Thunk extends Node {
+  constructor() {
+    super();
+    this.func = null;
+    this.args = null;
+    this.node = undefined;
+    this.name = null;
+    this.key = null;
+  }
+
+  toElement(name, app) {
+    if (!this.element) {
+      const node = this.getNode();
+      if (node instanceof Node) {
+        this.element = node.toElement(this.name, app);
+      } else {
+        throw['thunk function must return a Node', this, node];
+      }
+    }
+    return this.element;
+  }
+
+  getNode() {
+    if (!this.node) {
+      beforeThunkCallFunc(this);
+      this.node = this.func.apply(this, this.args);
+      afterThunkCallFunc(this);
+      if (this.node === null) {
+        this.node = new CommentNode();
+        this.node.text = ' none ';
+      }
+      if (!this.node) {
+        throw['constructor of ' + (this.name || 'anonymous') + ' returned undefined value', this];
+      }
+    }
+    return this.node;
+  }
+
+}
+
+let beforeThunkCallFunc = (thunk) => {};
+let afterThunkCallFunc = (thunk) => {};
+export const setBeforeThunkCallFunc = (fn) => {
+  beforeThunkCallFunc = fn;
+}
+export const setAfterThunkCallFunc = (fn) => {
+  afterThunkCallFunc = fn;
+}
+

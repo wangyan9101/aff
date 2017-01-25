@@ -47,8 +47,9 @@ test('render error', () => {
   let thunk = t(() => {
     return {};
   });
-  let elem = thunk.toElement();
-  expect(elem.textContent).toBe('RENDER ERROR: cannot render [object Object]');
+  expect(() => {
+    thunk.toElement();
+  }).toThrowError('thunk function must return a Node,[object Object],[object Object]');
 });
 
 test('attr change', () => {

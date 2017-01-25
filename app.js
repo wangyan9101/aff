@@ -3,7 +3,7 @@ import { Selector, Css, Key } from './tagged'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
 import { Updater } from './state'
-import { Node, ElementNode, CommentNode, TextNode } from './nodes'
+import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
 export class App {
@@ -581,47 +581,6 @@ export class App {
 
 }
 
-class Thunk {
-  constructor() {
-    this.func = null;
-    this.args = null;
-    this.node = undefined;
-    this.element = null;
-    this.name = null;
-    this.key = null;
-  }
-
-  toElement(_name, app) {
-    if (!this.element) {
-      const node = this.getNode();
-      if (!node || !node.toElement) {
-        this.element = warning(`RENDER ERROR: cannot render ${node}`).toElement();
-        console.warn('cannot render', node);
-      } else {
-        this.element = node.toElement(this.name, app);
-      }
-    }
-    return this.element;
-  }
-
-  getNode() {
-    if (!this.node) {
-      beforeThunkCallFunc(this);
-      this.node = this.func.apply(this, this.args);
-      afterThunkCallFunc(this);
-      if (this.node === null) {
-        this.node = new CommentNode();
-        this.node.text = ' none ';
-      }
-      if (!this.node) {
-        throw['constructor of ' + (this.name || 'anonymous') + ' returned undefined value', this];
-      }
-    }
-    return this.node;
-  }
-
-}
-
 // thunk helper
 export function t(...args) {
   if (args.length == 0) {
@@ -714,21 +673,4 @@ function _e(node, ...args) {
   }
   return node;
 }
-
-let beforeThunkCallFunc = (thunk) => {};
-let afterThunkCallFunc = (thunk) => {};
-export const setBeforeThunkCallFunc = (fn) => {
-  beforeThunkCallFunc = fn;
-}
-export const setAfterThunkCallFunc = (fn) => {
-  afterThunkCallFunc = fn;
-}
-
-const warning = (text) => e('div', {
-  style: {
-    backgroundColor: 'yellow',
-    color: 'red',
-    fontWeight: 'bold',
-  },
-}, text);
 
