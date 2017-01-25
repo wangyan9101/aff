@@ -3,6 +3,8 @@ import { Selector, Css, Key } from './tagged'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
 import { Updater } from './state'
+import { Node, ElementNode, CommentNode, TextNode } from './nodes'
+import { elementSetEvent } from './event'
 
 export class App {
   constructor(...args) {
@@ -347,9 +349,9 @@ export class App {
       // no element
       || (!lastElement)
       // different type
-      || (node.nodeType != lastNode.nodeType)
+      || (node.constructor != lastNode.constructor)
       // different tag, no way to patch
-      || (node.tag != lastNode.tag)
+      || (node instanceof Element && (node.tag != lastNode.tag))
     ) {
       const element = node.toElement(null, this);
       // insert new then remove old
@@ -359,7 +361,7 @@ export class App {
       }
       // cache lastElement
       if (lastNode) {
-        this.cacheElement(lastElement, lastNode);
+        this.cacheNode(lastElement, lastNode);
       }
 
       return [element, node];
@@ -376,7 +378,7 @@ export class App {
 
   patchNode(lastElement, node, lastNode) {
     // text and comment node
-    if (node.nodeType === 'text' || node.nodeType === 'comment') {
+    if (node instanceof TextNode || node instanceof CommentNode) {
       if (node.text != lastNode.text) {
         lastElement.nodeValue = node.text;
       }
@@ -517,7 +519,7 @@ export class App {
             // found same key, delete some
             for (let n = 0; n < offset; n++) {
               const elem = lastElement.removeChild(childElements[i]);
-              this.cacheElement(elem, lastNode.children[i]);
+              this.cacheNode(elem, lastNode.children[i]);
               lastNode.children.splice(i, 1);
             }
             childElements = lastElement.childNodes;
@@ -553,7 +555,7 @@ export class App {
     const lastChildLen = lastNode && lastNode.children ? lastNode.children.length : 0;
     for (let i = childLen; i < lastChildLen; i++) {
       const elem = lastElement.removeChild(lastElement.childNodes[childLen]);
-      this.cacheElement(elem, lastNode.children[i]);
+      this.cacheNode(elem, lastNode.children[i]);
     }
 
     // hook
@@ -564,12 +566,12 @@ export class App {
     return [lastElement, node];
   }
 
-  cacheElement(element, node) {
-    if (element instanceof Text) {
+  cacheNode(element, node) {
+    if (node instanceof TextNode) {
       this.textNodeCache.push([element, node]);
-    } else if (element instanceof Comment) {
+    } else if (node instanceof CommentNode) {
       this.commentNodeCache.push([element, node]);
-    } else {
+    } else if (node instanceof ElementNode || node instanceof Thunk) {
       while (node instanceof Thunk) {
         node = node.getNode();
       }
@@ -608,7 +610,7 @@ class Thunk {
       this.node = this.func.apply(this, this.args);
       afterThunkCallFunc(this);
       if (this.node === null) {
-        this.node = new Node('comment');
+        this.node = new CommentNode();
         this.node.text = ' none ';
       }
       if (!this.node) {
@@ -665,7 +667,7 @@ export function e(tag, ...args) {
   if (typeof tag !== 'string') {
     throw['bad tag name', tag];
   }
-  const node = new Node('element');
+  const node = new ElementNode();
   node.tag = tag;
   _e(node, ...args);
   return node;
@@ -722,225 +724,6 @@ export const setAfterThunkCallFunc = (fn) => {
   afterThunkCallFunc = fn;
 }
 
-export class Node {
-  constructor(nodeType) {
-    this.nodeType = nodeType || 'element';
-    this.tag = null; // for element
-    this.text = null; // for text and comment
-    this.id = null;
-    this.style = null;
-    this.classList = null;
-    this.children = null;
-    this.attributes = null;
-    this.events = null;
-    this.innerHTML = null;
-    this.element = null;
-    this.hooks = null;
-    this.key = null;
-  }
-
-  setSelector(selector) {
-    const parts = selector.match(/[.#][A-Za-z][A-Za-z0-9_:-]*/g);
-    if (parts) {
-      for (let i = 0, l = parts.length; i < l; i++) {
-        const part = parts[i];
-        if (part.charAt(0) == '#') {
-          this.id = part.substring(1);
-        } else if (part.charAt(0) == '.') {
-          this.classList = this.classList || {};
-          this.classList[part.substring(1)] = true;
-        }
-      }
-    }
-  }
-
-  setProperties(properties) {
-    for (const key in properties) {
-      if (key == 'id' || key == 'innerHTML') {
-        // id, innerHTML
-        this[key] = properties[key];
-      } else if (key == 'classList') {
-        this.classList = this.classList || {};
-        const property = properties.classList;
-        if (typeof property == 'string') {
-          const parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
-          if (parts) {
-            for (let i = 0, l = parts.length; i < l; i++) {
-              const part = parts[i];
-              this.classList[part] = true;
-            }
-          }
-        } else if (typeof property == 'object' && property !== null) {
-          if (Array.isArray(property)) {
-            for (let i = 0; i < property.length; i++) {
-              this.classList[property[i]] = true;
-            }
-          } else {
-            for (const k in property) {
-              this.classList[k] = property[k];
-            }
-          }
-        } else {
-          throw['bad class', property];
-        }
-      } else if (key == 'style') {
-        // styles
-        if (this.style === null) {
-          this.style = properties.style;
-        } else {
-          const style = properties.style;
-          const styleType = typeof style;
-          const currentType = typeof this.style;
-          if (styleType != currentType) {
-            throw['should not mix-use object-like style and string-like style', style, this.style];
-          }
-          if (styleType === 'string') {
-            this.style += style;
-          } else if (styleType === 'object') {
-            for (const key in style) {
-              this.style[key] = style[key];
-            }
-          }
-        }
-      } else if (/^on/.test(key) && typeof properties[key] === 'function') {
-        if (key == 'oncreated' || key == 'oncreate') {
-          this.hooks = this.hooks || {};
-          this.hooks.created = this.hooks.created || [];
-          this.hooks.created.push(properties[key]);
-        } else if (key == 'onpatch' || key == 'onpatched') {
-          this.hooks = this.hooks || {};
-          this.hooks.patched = this.hooks.patched || [];
-          this.hooks.patched.push(properties[key]);
-        } else {
-          // events
-          this.events = this.events || {};
-          this.events[key] = properties[key];
-        }
-      } else {
-        this.attributes = this.attributes || {};
-        this.attributes[key] = properties[key];
-      }
-    }
-  }
-
-  setChildren(children) {
-    this.children = this.children || [];
-    const type = typeof children;
-    if (type === 'object' && children !== null) {
-      this.children.push(children);
-    } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
-      const child = new Node('text');
-      child.text = children.toString();
-      this.children.push(child);
-    } else {
-      throw['bad child', children, this];
-    }
-  }
-
-  toElement(name, app) {
-    if (this.nodeType === 'text') {
-      if (app && app.textNodeCache.length > 0) {
-        let result = app.textNodeCache.shift();
-        let element = result[0];
-        const lastNode = result[1];
-        result = app.patchNode(element, this, lastNode);
-        element = result[0];
-        this.element = element;
-        return element;
-      }
-      return document.createTextNode(this.text);
-    } else if (this.nodeType === 'comment') {
-      if (app && app.commentNodeCache.length > 0) {
-        let result = app.commentNodeCache.shift();
-        let element = result[0];
-        const lastNode = result[1];
-        result = app.patchNode(element, this, lastNode);
-        element = result[0];
-        this.element = element;
-        return element;
-      }
-      return document.createComment(this.text);
-    }
-    let element;
-    // use cached element
-    if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
-      let result = app.elementCache[this.tag].shift();
-      let element = result[0];
-      const lastNode = result[1];
-      result = app.patchNode(element, this, lastNode);
-      element = result[0];
-      this.element = element;
-      if (this.hooks && this.hooks.created) {
-        this.hooks.created.forEach(fn => fn(element));
-      }
-      return element;
-    }
-    element = document.createElement(this.tag);
-    if (this.innerHTML !== null) {
-      element.innerHTML = this.innerHTML;
-    }
-    if (this.id !== null) {
-      element.id = this.id;
-    }
-    if (this.style !== null) {
-      if (typeof this.style == 'object' && this.style !== null) {
-        for (const key in this.style) {
-          element.style[key] = this.style[key];
-        }
-      } else {
-        element.style = this.style;
-      }
-    }
-    if (this.classList !== null) {
-      let className = '';
-      for (let k in this.classList) {
-        if (this.classList[k]) {
-          className = className + k + ' ';
-        }
-      }
-      element.className = className.trim();
-    }
-    if (this.children !== null) {
-      const childFragment = document.createDocumentFragment();
-      for (let i = 0, l = this.children.length; i < l; i++) {
-        childFragment.appendChild(this.children[i].toElement(null, app));
-      }
-      element.appendChild(childFragment);
-    }
-    if (this.attributes !== null) {
-      for (const key in this.attributes) {
-        const value = this.attributes[key];
-        const valueType = typeof value;
-        if (valueType == 'string' || valueType == 'number') {
-          element.setAttribute(key, value);
-          element[key] = value;
-        } else if (valueType == 'boolean') {
-          if (value) {
-            element.setAttribute(key, true);
-            element[key] = true;
-          } else {
-            element.removeAttribute(key);
-            element[key] = false;
-          }
-        }
-      }
-    }
-    if (this.events !== null) {
-      for (const key in this.events) {
-        // set event callback, bind current Node to callback
-        // constructor must not be arrow function to get proper 'this'
-        elementSetEvent(element, key, this.events[key].bind(this));
-      }
-    }
-    this.element = element;
-    if (this.hooks && this.hooks.created) {
-      this.hooks.created.forEach(fn => fn(element));
-    }
-    return element;
-  }
-
-}
-
 const warning = (text) => e('div', {
   style: {
     backgroundColor: 'yellow',
@@ -949,38 +732,3 @@ const warning = (text) => e('div', {
   },
 }, text);
 
-function elementSetEvent(element, type, fn) {
-  let events = element.__aff_events;
-  if (!events) {
-    events = {};
-    element.__aff_events = events;
-  }
-  const parts = type.split(/[$:]/);
-  type = parts[0];
-  const subtype = parts.slice(1).join(':') || '__default';
-  if (!(type in events)) {
-    events[type] = {};
-    element.addEventListener(type.substr(2), function(ev) {
-      if (element.tagName == 'INPUT' && element.type == 'checkbox' && type == 'onclick') {
-        ev.preventDefault();
-      }
-      let ret;
-      let lastEvType;
-      let lastFn;
-      for (const subtype in events[type]) {
-        const result = events[type][subtype](ev);
-        if (ret === undefined) {
-          ret = result;
-          lastEvType = type + ':' + subtype;
-          lastFn = events[type][subtype];
-        } else if (ret !== result) {
-          throw[`return value conflict between event handlers: ${type}:${subtype} and ${lastEvType}`,
-            events[type][subtype], lastFn];
-        }
-      }
-      return ret;
-    });
-  }
-  events[type][subtype] = fn;
-  return type + ':' + subtype;
-}

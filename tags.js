@@ -1,6 +1,7 @@
-import { e, Node } from './app'
+import { e } from './app'
 import { allTags } from './all_tags'
 import { css } from './tagged'
+import { CommentNode } from './nodes'
 
 const helpers = allTags.reduce((helpers, tag) => {
   helpers[tag] = function(...args) {
@@ -15,7 +16,7 @@ const checkbox = (...args) => e('input', {
   type: 'checkbox',
 }, ...args);
 
-const none = new Node('comment');
+const none = new CommentNode();
 none.text = ' none ';
 
 const clear = e('div', css`

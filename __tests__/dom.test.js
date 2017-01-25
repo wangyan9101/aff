@@ -1,4 +1,4 @@
-import {t, e, setAfterThunkCallFunc, css, skip, Node} from '../index'
+import {t, e, setAfterThunkCallFunc, css, skip, CommentNode} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../operations'
@@ -381,9 +381,9 @@ test('patch comment', () => {
   const root = document.createElement('div');
   const element = document.createElement('div');
   root.appendChild(element);
-  const comment1 = new Node('comment');
+  const comment1 = new CommentNode();
   comment1.text = 'foo';
-  const comment2 = new Node('comment');
+  const comment2 = new CommentNode();
   comment2.text = 'bar';
   const app = new App(
     element,
