@@ -142,3 +142,23 @@ test('element reuse', () => {
   }
   expect(n).toBe(256);
 });
+
+test('patch bug', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    0,
+    (state) => {
+      if (state == 0) {
+        return div('foo');
+      } else if (state == 1) {
+        return p('foo');
+      }
+    },
+  );
+  expect(root.innerHTML).toBe('<div>foo</div>');
+  app.update(1);
+  expect(root.innerHTML).toBe('<p>foo</p>');
+});

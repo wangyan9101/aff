@@ -355,7 +355,7 @@ export class App {
       // different type
       || (node.constructor != lastNode.constructor)
       // different tag, no way to patch
-      || (node instanceof Element && (node.tag != lastNode.tag))
+      || (node instanceof ElementNode && (node.tag != lastNode.tag))
     ) {
       const element = node.toElement(this);
       // insert new then remove old
