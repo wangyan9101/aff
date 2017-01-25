@@ -1,18 +1,10 @@
 import { App } from '../app'
 import { div, p, none } from '../tags'
 import { t, patch } from '../index'
-import {
-  setBeforeThunkCallFunc,
-} from '../index'
 import { $push } from '../operations'
 import { on } from '../index'
 
 test('thunk func call optimize', () => {
-  let n = 0;
-  setBeforeThunkCallFunc((thunk) => {
-    n++;
-  });
-
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
@@ -42,10 +34,10 @@ test('thunk func call optimize', () => {
   app.init(Main);
   // not related to Foo, should not call Foo 
   app.update('b', -1);
-  expect(n).toBe(1);
+  expect(app.counters.thunkFuncCall).toBe(1);
   // related to Foo
   app.update('a', 2);
-  expect(n).toBe(2);
+  expect(app.counters.thunkFuncCall).toBe(2);
 });
 
 test('update push', () => {

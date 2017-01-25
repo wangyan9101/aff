@@ -17,6 +17,9 @@ export class App {
     }
     this.textNodeCache = [];
     this.commentNodeCache = [];
+    this.counters = {
+      thunkFuncCall: 0,
+    };
     this.events = {};
     this.init(...args);
   }
@@ -327,7 +330,7 @@ export class App {
         // reuse element
         thunk.element = lastThunk.element;
       }
-      node = thunk.getNode();
+      node = thunk.getNode(this);
     }
 
     // Thunk.getNode may return another Thunk, patch recursively
@@ -352,7 +355,7 @@ export class App {
       // different tag, no way to patch
       || (node instanceof Element && (node.tag != lastNode.tag))
     ) {
-      const element = node.toElement(null, this);
+      const element = node.toElement(this);
       // insert new then remove old
       if (lastElement && lastElement.parentNode) {
         lastElement.parentNode.insertBefore(element, lastElement);
@@ -533,7 +536,7 @@ export class App {
         }
         if (!found) {
           // insert new
-          const elem = child.toElement();
+          const elem = child.toElement(this);
           lastElement.insertBefore(elem, childElements[i]);
           childElements = lastElement.childNodes;
           lastNode.children.splice(i, 0, null);
@@ -572,7 +575,7 @@ export class App {
       this.commentNodeCache.push([element, node]);
     } else if (node instanceof ElementNode || node instanceof Thunk) {
       while (node instanceof Thunk) {
-        node = node.getNode();
+        node = node.getNode(this);
       }
       this.elementCache[element.tagName.toLowerCase()].push([element, node]);
     }

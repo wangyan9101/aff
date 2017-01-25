@@ -227,10 +227,6 @@ test('children change', () => {
   expect(root.textContent).toBe('123');
 });
 
-test('cover setAfterThunkCallFunc', () => {
-  setAfterThunkCallFunc(() => {});
-});
-
 test('onpatch', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');

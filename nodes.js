@@ -23,7 +23,7 @@ export class ElementNode extends Node {
     this.key = null;
   }
 
-  toElement(name, app) {
+  toElement(app) {
     let element;
     // use cached element
     if (app && app.elementCache[this.tag] && app.elementCache[this.tag].length > 0) {
@@ -66,7 +66,7 @@ export class ElementNode extends Node {
     if (this.children !== null) {
       const childFragment = document.createDocumentFragment();
       for (let i = 0, l = this.children.length; i < l; i++) {
-        childFragment.appendChild(this.children[i].toElement(null, app));
+        childFragment.appendChild(this.children[i].toElement(app));
       }
       element.appendChild(childFragment);
     }
@@ -208,7 +208,7 @@ export class TextNode extends Node {
     this.text = null;
   }
 
-  toElement(name, app) {
+  toElement(app) {
     if (app && app.textNodeCache.length > 0) {
       let result = app.textNodeCache.shift();
       let element = result[0];
@@ -228,7 +228,7 @@ export class CommentNode extends Node {
     this.text = null;
   }
 
-  toElement(name, app) {
+  toElement(app) {
     if (app && app.commentNodeCache.length > 0) {
       let result = app.commentNodeCache.shift();
       let element = result[0];
@@ -252,11 +252,11 @@ export class Thunk extends Node {
     this.key = null;
   }
 
-  toElement(name, app) {
+  toElement(app) {
     if (!this.element) {
-      const node = this.getNode();
+      const node = this.getNode(app);
       if (node instanceof Node) {
-        this.element = node.toElement(this.name, app);
+        this.element = node.toElement(app);
       } else {
         throw['thunk function must return a Node', this, node];
       }
@@ -264,11 +264,12 @@ export class Thunk extends Node {
     return this.element;
   }
 
-  getNode() {
+  getNode(app) {
     if (!this.node) {
-      beforeThunkCallFunc(this);
       this.node = this.func.apply(this, this.args);
-      afterThunkCallFunc(this);
+      if (app) {
+        app.counters.thunkFuncCall++;
+      }
       if (this.node === null) {
         this.node = new CommentNode();
         this.node.text = ' none ';
@@ -280,15 +281,6 @@ export class Thunk extends Node {
     return this.node;
   }
 
-}
-
-let beforeThunkCallFunc = (thunk) => {};
-let afterThunkCallFunc = (thunk) => {};
-export const setBeforeThunkCallFunc = (fn) => {
-  beforeThunkCallFunc = fn;
-}
-export const setAfterThunkCallFunc = (fn) => {
-  afterThunkCallFunc = fn;
 }
 
 // thunk helper
