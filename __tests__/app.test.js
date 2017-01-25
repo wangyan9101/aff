@@ -1,6 +1,6 @@
 import {App} from '../app'
 import {div, none, input, style} from '../tags'
-import { t, consoleLogUpdates } from '../index'
+import { t, consoleLogUpdates, on } from '../index'
 import { $inc } from '../operations'
 import { $, css } from '../tagged'
 
@@ -617,4 +617,29 @@ test('no root node func', () => {
     {},
   );
   app.update();
+});
+
+test('null init state', () => {
+  const app = new App(
+    {
+      foo: null,
+    },
+  );
+});
+
+test('app event', () => {
+  let ok = false;
+  let n = 0;
+  const app = new App(
+    on('foo', () => {
+      ok = true;
+    }),
+    on('bar', (x) => {
+      n = x;
+    }),
+  );
+  app.dispatchEvent('foo');
+  expect(ok).toBe(true);
+  app.dispatchEvent('bar', 42);
+  expect(n).toBe(42);
 });

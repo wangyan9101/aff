@@ -175,6 +175,21 @@ test('loop in $ref', () => {
   }).toThrowError('loop in $ref,foo,foo,foo');
 });
 
+test('loop in ref', () => {
+  expect(() => {
+    const app = new App(
+      {
+        foo: {
+          $ref: ['bar'],
+        },
+        bar: {
+          $ref: ['foo'],
+        },
+      },
+    );
+  }).toThrowError('loop in $ref,foo,bar,foo');
+});
+
 test('update in $ref', () => {
   let app = new App({
     foo: 'FOO',
@@ -259,3 +274,4 @@ test('array update', () => {
   app.update('array', [2, 3, 4]);
   expect(root.textContent).toBe('234');
 });
+

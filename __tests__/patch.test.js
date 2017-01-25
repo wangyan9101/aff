@@ -162,3 +162,21 @@ test('patch bug', () => {
   app.update(1);
   expect(root.innerHTML).toBe('<p>foo</p>');
 });
+
+test('patch number attr', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+    element,
+    0,
+    (state) => {
+      return div({foo: state});
+    },
+  );
+  expect(root.innerHTML).toBe('<div foo="0"></div>');
+  app.update(1);
+  expect(root.innerHTML).toBe('<div foo="1"></div>');
+  app.update(42);
+  expect(root.innerHTML).toBe('<div foo="42"></div>');
+});

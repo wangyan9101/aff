@@ -51,15 +51,13 @@ export class App {
     }
   }
 
-  setupState(obj, path, scopes) {
+  setupState(obj, path = [], scopes = []) {
     // skip non-object
-    if (typeof obj !== 'object' || obj === null) {
+    if (typeof obj !== 'object') {
+      return
+    } else if (obj === null) {
       return
     }
-
-    // default arguments
-    path = path || [];
-    scopes = scopes || [];
 
     // array
     if (Array.isArray(obj)) {
@@ -151,9 +149,9 @@ export class App {
               break
             }
           }
-          if (sameLen == stopPath.length || sameLen == path.length) {
+          if (sameLen == stopPath.length) {
             throw['loop in $ref', path, stopPath];
-          }
+          } 
           // setup getter and setter
           stopPath.pop();
           const stopLen = stopPath.length;
@@ -215,7 +213,10 @@ export class App {
   addEvent(ev) {
     const parts = ev.type.split(/[$:]/);
     const type = parts[0];
-    const subtype = parts.slice(1).join(':') || '__default';
+    let subtype = parts.slice(1).join(':');
+    if (!subtype) {
+      subtype = '__default';
+    }
     if (!(type in this.events)) {
       this.events[type] = {};
     }
@@ -247,7 +248,9 @@ export class App {
       this._state.update(...arg);
       this.dispatchEvent('afterUpdate', this.state, ...arg);
     }
-    if (!this.element || !this.nodeFunc) {
+    if (!this.element) {
+      return
+    } else if (!this.nodeFunc) {
       return
     }
     if (!this.patching) {
@@ -346,17 +349,16 @@ export class App {
       return [lastElement, node];
     }
 
-    // not patchable, build a new element
-    if (
-      // not diffable
-      (!lastNode)
-      // no element
-      || (!lastElement)
-      // different type
-      || (node.constructor != lastNode.constructor)
-      // different tag, no way to patch
-      || (node instanceof ElementNode && (node.tag != lastNode.tag))
-    ) {
+    // check if patchable
+    let patchable = true;
+    if (!lastNode) {
+      patchable = false;
+    } else if (node.constructor != lastNode.constructor) {
+      patchable = false;
+    } else if (node instanceof ElementNode  && (node.tag != lastNode.tag)) {
+      patchable = false;
+    }
+    if (!patchable) {
       const element = node.toElement(this);
       // insert new then remove old
       if (lastElement && lastElement.parentNode) {
@@ -382,7 +384,13 @@ export class App {
 
   patchNode(lastElement, node, lastNode) {
     // text and comment node
-    if (node instanceof TextNode || node instanceof CommentNode) {
+    let isTextOrComment = false;
+    if (node instanceof TextNode) {
+      isTextOrComment = true;
+    } else if (node instanceof CommentNode) {
+      isTextOrComment = true;
+    }
+    if (isTextOrComment) {
       if (node.text != lastNode.text) {
         lastElement.nodeValue = node.text;
       }
@@ -417,14 +425,26 @@ export class App {
     else if (styleType === 'object') {
       if (node.style !== null) {
         for (const key in node.style) {
-          if (!lastNode.style || node.style[key] != lastNode.style[key]) {
+          let updateStyle = false;
+          if (!lastNode.style) {
+            updateStyle = true;
+          } else if (node.style[key] != lastNode.style[key]) {
+            updateStyle = true;
+          }
+          if (updateStyle) {
             lastElement.style[key] = node.style[key];
           }
         }
       }
       if (lastNode.style !== null) {
         for (const key in lastNode.style) {
-          if (!node.style || !(key in node.style)) {
+          let clearStyle = false;
+          if (!node.style) {
+            clearStyle = true;
+          } else if (!(key in node.style)) {
+            clearStyle = true;
+          }
+          if (clearStyle) {
             lastElement.style[key] = '';
           }
         }
@@ -440,7 +460,13 @@ export class App {
     // class
     for (const key in node.classList) {
       // should update
-      if (!lastNode.classList || node.classList[key] != lastNode.classList[key]) {
+      let updateClass = false;
+      if (!lastNode.classList) {
+        updateClass = true;
+      } else if (node.classList[key] != lastNode.classList[key]) {
+        updateClass = true;
+      }
+      if (updateClass) {
         if (node.classList[key]) {
           lastElement.classList.add(key);
         } else {
@@ -449,17 +475,35 @@ export class App {
       }
     }
     for (const key in lastNode.classList) {
-      if (!node.classList || !(key in node.classList)) {
+      let deleteClass = false;
+      if (!node.classList) {
+        deleteClass = true;
+      } else if (!(key in node.classList)) {
+        deleteClass = true;
+      }
+      if (deleteClass) {
         lastElement.classList.remove(key);
       }
     }
 
     // attributes
     for (const key in node.attributes) {
-      if (!lastNode.attributes || node.attributes[key] != lastNode.attributes[key]) {
+      let updateAttr = false;
+      if (!lastNode.attributes) {
+        updateAttr = true;
+      } else if (node.attributes[key] != lastNode.attributes[key]) {
+        updateAttr = true;
+      }
+      if (updateAttr) {
         const value = node.attributes[key];
         const valueType = typeof value;
-        if (valueType == 'string' || valueType == 'number') {
+        let isStringOrNumber = false;
+        if (valueType === 'string') {
+          isStringOrNumber = true;
+        } else if (valueType === 'number') {
+          isStringOrNumber = true;
+        }
+        if (isStringOrNumber) {
           lastElement.setAttribute(key, value);
           lastElement[key] = value
         } else if (valueType == 'boolean') {
@@ -481,7 +525,13 @@ export class App {
       }
     }
     for (const key in lastNode.attributes) {
-      if (!node.attributes || !(key in node.attributes)) {
+      let removeAttr = false;
+      if (!node.attributes) {
+        removeAttr = true;
+      } else if (!(key in node.attributes)) {
+        removeAttr = true;
+      }
+      if (removeAttr) {
         lastElement.removeAttribute(key);
         lastElement[key] = undefined;
       }
@@ -575,7 +625,9 @@ export class App {
       this.textNodeCache.push([element, node]);
     } else if (node instanceof CommentNode) {
       this.commentNodeCache.push([element, node]);
-    } else if (node instanceof ElementNode || node instanceof Thunk) {
+    } else if (node instanceof ElementNode) {
+      this.elementCache[element.tagName.toLowerCase()].push([element, node]);
+    } else if (node instanceof Thunk) {
       while (node instanceof Thunk) {
         node = node.getNode(this);
       }
