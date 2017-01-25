@@ -1,4 +1,5 @@
-import { App, t } from './app'
+import { App } from './app'
+import { t } from './nodes'
 import { css, $, key } from './tagged'
 import { on } from './event'
 import { $func, $push, $merge, $splice } from './operations'

@@ -1,4 +1,4 @@
-import { e } from './app'
+import { e } from './nodes'
 import { allTags } from './all_tags'
 import { css } from './tagged'
 import { CommentNode } from './nodes'

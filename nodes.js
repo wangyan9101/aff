@@ -1,4 +1,6 @@
 import { elementSetEvent } from './event'
+import { Selector, Css, Key } from './tagged'
+import { Events } from './event'
 
 export class Node {
   constructor() {
@@ -287,5 +289,98 @@ export const setBeforeThunkCallFunc = (fn) => {
 }
 export const setAfterThunkCallFunc = (fn) => {
   afterThunkCallFunc = fn;
+}
+
+// thunk helper
+export function t(...args) {
+  if (args.length == 0) {
+    throw['no arguments to t()'];
+  }
+  const thunk = new Thunk();
+  switch (typeof args[0]) {
+  case 'string': // named thunk
+    thunk.name = args[0];
+    thunk.func = args[1];
+    thunk.args = [];
+    for (let i = 2; i < args.length; i++) {
+      const arg = args[i];
+      if (arg instanceof Key) {
+        thunk.key = arg.str;
+      } else {
+        thunk.args.push(arg);
+      }
+    }
+    break
+  case 'function':
+    thunk.func = args[0];
+    thunk.name = thunk.func.name;
+    thunk.args = [];
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i];
+      if (arg instanceof Key) {
+        thunk.key = arg.str;
+      } else {
+        thunk.args.push(arg);
+      }
+    }
+    break
+  }
+  if (!thunk.func) {
+    throw['invalid thunk func', thunk.func];
+  }
+  return thunk
+}
+
+// element helper
+export function e(tag, ...args) {
+  if (typeof tag !== 'string') {
+    throw['bad tag name', tag];
+  }
+  const node = new ElementNode();
+  node.tag = tag;
+  _e(node, ...args);
+  return node;
+}
+
+export const skip = { skipFollowingArguments: true };
+
+function _e(node, ...args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg instanceof Node || arg instanceof Thunk) {
+      node.setChildren(arg);
+    } else if (arg instanceof Selector) {
+      node.setSelector(arg.str);
+    } else if (arg instanceof Css) {
+      node.setProperties({
+        style: arg.str,
+      });
+    } else if (arg instanceof Events) {
+      for (let idx = 0; idx < arg.events.length; idx++) {
+        const ev = arg.events[idx];
+        node.setProperties({
+          ['on' + ev.type]: ev.fn,
+        });
+      }
+    } else if (arg instanceof Key) {
+      node.key = arg.str;
+    } else if (arg === skip) {
+      break
+    } else if (typeof arg === 'object' && arg !== null) {
+      if (Array.isArray(arg)) {
+        // flatten
+        _e(node, ...arg);
+      } else {
+        node.setProperties(arg);
+      }
+    } else if (arg === null) {
+      // do nothing
+    } else if (typeof arg === 'function') {
+      _e(node, arg());
+    } else {
+      node.setChildren(arg);
+    }
+  }
+  return node;
 }
 
