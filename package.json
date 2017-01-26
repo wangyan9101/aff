@@ -10,10 +10,10 @@
   "keywords": [],
   "author": "reus",
   "devDependencies": {
-    "babel-core": "^6.18.2",
+    "babel-core": "^6.22.1",
     "babel-loader": "^6.2.8",
-    "babel-plugin-transform-object-rest-spread": "^6.19.0",
-    "babel-preset-latest": "^6.16.0",
+    "babel-plugin-transform-object-rest-spread": "^6.22.0",
+    "babel-preset-latest": "^6.22.0",
     "coveralls": "^2.11.15",
     "gulp": "^3.9.1",
     "gulp-webpack": "^1.5.0",
