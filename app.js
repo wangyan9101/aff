@@ -630,8 +630,8 @@ export class App {
     } else if (node instanceof Thunk) {
       while (node instanceof Thunk) {
         node = node.getNode(this);
+        this.cacheNode(element, node);
       }
-      this.elementCache[element.tagName.toLowerCase()].push([element, node]);
     }
   }
 
