@@ -80,7 +80,13 @@ export class ElementNode extends Node {
       for (const key in this.attributes) {
         const value = this.attributes[key];
         const valueType = typeof value;
-        if (valueType == 'string' || valueType == 'number') {
+        let isStringOrNumber = false;
+        if (valueType === 'string') {
+          isStringOrNumber = true;
+        } else if (valueType === 'number') {
+          isStringOrNumber = true;
+        }
+        if (isStringOrNumber) {
           element.setAttribute(key, value);
           element[key] = value;
         } else if (valueType == 'boolean') {
@@ -116,7 +122,9 @@ export class ElementNode extends Node {
         if (part.charAt(0) == '#') {
           this.id = part.substring(1);
         } else if (part.charAt(0) == '.') {
-          this.classList = this.classList || {};
+          if (!this.classList) {
+            this.classList = {};
+          }
           this.classList[part.substring(1)] = true;
         }
       }
@@ -125,11 +133,19 @@ export class ElementNode extends Node {
 
   setProperties(properties) {
     for (const key in properties) {
-      if (key == 'id' || key == 'innerHTML') {
+      let sameKey = false;
+      if (key === 'id') {
+        sameKey = true;
+      } else if (key === 'innerHTML') {
+        sameKey = true;
+      }
+      if (sameKey) {
         // id, innerHTML
         this[key] = properties[key];
       } else if (key == 'classList') {
-        this.classList = this.classList || {};
+        if (!this.classList) {
+          this.classList = {};
+        }
         const property = properties.classList;
         if (typeof property == 'string') {
           const parts = property.match(/[A-Za-z][A-Za-z0-9_:-]*/g);
@@ -172,32 +188,67 @@ export class ElementNode extends Node {
           }
         }
       } else if (/^on/.test(key) && typeof properties[key] === 'function') {
-        if (key == 'oncreated' || key == 'oncreate') {
-          this.hooks = this.hooks || {};
-          this.hooks.created = this.hooks.created || [];
+        let isCreatedHook = false;
+        let isPatchHook = false;
+        if (key === 'oncreated') {
+          isCreatedHook = true;
+        } else if (key === 'oncreate') {
+          isCreatedHook = true;
+        } else if (key === 'onpatch') {
+          isPatchHook = true;
+        } else if (key === 'onpatched') {
+          isPatchHook = true;
+        }
+        if (isCreatedHook) {
+          if (!this.hooks) {
+            this.hooks = {};
+          }
+          if (!this.hooks.created) {
+            this.hooks.created = [];
+          }
           this.hooks.created.push(properties[key]);
-        } else if (key == 'onpatch' || key == 'onpatched') {
-          this.hooks = this.hooks || {};
-          this.hooks.patched = this.hooks.patched || [];
+        } else if (isPatchHook) {
+          if (!this.hooks) {
+            this.hooks = {};
+          }
+          if (!this.hooks.patched) {
+            this.hooks.patched = [];
+          }
           this.hooks.patched.push(properties[key]);
         } else {
           // events
-          this.events = this.events || {};
+          if (!this.events) {
+            this.events = {};
+          }
           this.events[key] = properties[key];
         }
       } else {
-        this.attributes = this.attributes || {};
+        if (!this.attributes) {
+          this.attributes = {};
+        }
         this.attributes[key] = properties[key];
       }
     }
   }
 
   setChildren(children) {
-    this.children = this.children || [];
+    if (!this.children) {
+      this.children = [];
+    }
     const type = typeof children;
+    let isText = false;
+    if (type === 'boolean') {
+      isText = true;
+    } else if (type === 'number') {
+      isText = true;
+    } else if (type === 'string') {
+      isText = true;
+    } else if (type === 'symbol') {
+      isText = true;
+    }
     if (type === 'object' && children !== null) {
       this.children.push(children);
-    } else if (type === 'boolean' || type === 'number' || type === 'string' || type === 'symbol') {
+    } else if (isText) {
       const child = new TextNode();
       child.text = children.toString();
       this.children.push(child);
@@ -357,7 +408,7 @@ export const skip = { skipFollowingArguments: true };
 function _e(node, ...args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg instanceof Node || arg instanceof Thunk) {
+    if (arg instanceof Node) {
       node.setChildren(arg);
     } else if (arg instanceof Selector) {
       node.setSelector(arg.str);

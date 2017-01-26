@@ -63,14 +63,25 @@ export class MutableState extends State {
         const key = args[0];
         const keyType = typeof key;
         for (const k in obj) {
-          if (
-            ((keyType === 'number' || keyType === 'string') && k == key)
-            || (keyType === 'function' && key(k))
-          ) {
+          let match = false;
+          if (keyType === 'number' && k == key) {
+            match = true;
+          } else if (keyType === 'string' && k == key) {
+            match = true;
+          } else if (keyType === 'function' && key(k)) {
+            match = true;
+          }
+          if (match) {
             updateKey(k, obj[k], ...args.slice(1));
           } 
         }
-        if ((keyType === 'string' || keyType === 'number') && !(key in obj)) {
+        let match = false;
+        if (keyType === 'string' && !(key in obj)) {
+          match = true;
+        } else if (keyType === 'number' && !(key in obj)) {
+          match = true;
+        }
+        if (match) {
           updateKey(key, undefined, ...args.slice(1));
         }
         obj.__aff_tick = this.patchTick + 1;
@@ -203,14 +214,21 @@ export class MutableState extends State {
   }
 
   setupState(state, basePath ,forceSetup) {
-    if (typeof state != 'object' || state === null) {
+    if (typeof state != 'object') {
       return
-    }
-    if (state.__aff_read_only) {
+    } else if (state === null) {
+      return
+    } else if (state.__aff_read_only) {
       return
     }
 
-    if (!state.hasOwnProperty('$update') || forceSetup) {
+    let needSetup = false;
+    if (!state.hasOwnProperty('$update')) {
+      needSetup = true;
+    } else if (forceSetup) {
+      needSetup = true;
+    }
+    if (needSetup) {
       // set
       const app = this.app;
       Object.defineProperty(state, '$update', {

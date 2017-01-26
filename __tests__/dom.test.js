@@ -143,7 +143,7 @@ test('click', () => {
         onclick() {
           clicked = true;
         },
-        oncreated(elem) {
+        oncreate(elem) {
           let ev = new MouseEvent('click');
           elem.dispatchEvent(ev);
         },
@@ -410,4 +410,16 @@ test('patch comment', () => {
   expect(root.innerHTML).toBe('<div><div><!--foo--></div></div>');
   app.update(4);
   expect(root.innerHTML).toBe('<div><div><!--bar--></div></div>');
+});
+
+test('boolean child', () => {
+  const node = e('p', true);
+  const elem = node.toElement();
+  expect(elem.innerHTML).toBe('true');
+});
+
+test('symbol child', () => {
+  const node = e('p', Symbol('foo'));
+  const elem = node.toElement();
+  expect(elem.innerHTML).toBe('Symbol(foo)');
 });
