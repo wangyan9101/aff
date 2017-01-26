@@ -53,7 +53,14 @@ test('debug panel', () => {
   ev.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   elem.dispatchEvent(ev);
 
-  ev = document.createEvent('KeyboardEvent');
-  ev.initKeyboardEvent("keypress", true, true, window, true, false, false, false, 17, 0);
+  app.update('__debug_panel', 'selectedTab', 'updates');
+  elem = root.querySelector('#clear-updates');
+  ev.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  elem.dispatchEvent(ev);
+
+  ev = new KeyboardEvent("keypress", {keyCode: 17, ctrlKey: true});
   document.dispatchEvent(ev);
+  ev = new KeyboardEvent("keypress", {keyCode: 18, ctrlKey: true});
+  document.dispatchEvent(ev);
+
 });

@@ -165,10 +165,8 @@ export function DebugPanel(app, initState) {
       // scroll to top when switching tab
       const lastTab = debugState.lastTab;
       if (debugState.selectedTab != lastTab) {
-        const elem = document.querySelector('#main');
-        if (elem) {
-          elem.scrollTop = 0;
-        }
+        const elem = document.querySelector('#main') || window;
+        elem.scrollTop = 0;
         debugState.$update('lastTab', debugState.selectedTab);
       }
 
@@ -302,7 +300,7 @@ function Updates(updates, debugStatePath) {
       padding: 0 10px;
     `,
 
-    button('Clear', on('click', () => {
+    button($`#clear-updates`, 'Clear', on('click', () => {
       updates.$update([]);
     })),
 
