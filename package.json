@@ -22,5 +22,10 @@
     "webpack": "^1.13.3",
     "webpack-dev-server": "^1.16.2"
   },
-  "main": "lib/affjs.js"
+  "main": "lib/affjs.js",
+  "license": "Apache",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reusee/aff.git"
+  }
 }
