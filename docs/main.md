@@ -5,6 +5,7 @@
 ## 目录
 
 {{template "demo.md"}}
+{{template "installation.md"}}
 
 {{/* TODO
 
