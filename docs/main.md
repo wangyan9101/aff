@@ -4,12 +4,14 @@
 
 ## 目录
 
+* [代码示例](#demo)
+* [环境安装与配置](#installation)
+
 {{template "demo.md"}}
 {{template "installation.md"}}
 
 {{/* TODO
 
-环境安装配置
 app 类
 html 标签的表示
   结构
