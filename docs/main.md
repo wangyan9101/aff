@@ -7,22 +7,15 @@
 * [代码示例](#demo)
 * [环境安装与配置](#installation)
 * [App 类](#app)
+* [html 标签的表示](#tags)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
 {{template "app.md"}}
+{{template "tags.md"}}
 
 {{/* TODO
 
-html 标签的表示
-  结构
-  id 与 class
-  属性
-  样式
-  事件
-  嵌套标签
-  文本标签
-  数组参数
 组件与组件状态
 全局状态的表示
   基本状态
