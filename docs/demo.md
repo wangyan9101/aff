@@ -9,5 +9,5 @@
 代码只做简单的注释，各种机制将会在后续的章节里讲述。
 
 ```js
-{{template "todo_list.js"}}
+{{template "todo-list.js"}}
 ```
