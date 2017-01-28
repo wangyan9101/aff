@@ -433,4 +433,3 @@ router
     app.update('filter', params.filter);
   })
   .resolve();
-
