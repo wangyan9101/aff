@@ -6,13 +6,14 @@
 
 * [代码示例](#demo)
 * [环境安装与配置](#installation)
+* [App 类](#app)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
+{{template "app.md"}}
 
 {{/* TODO
 
-app 类
 html 标签的表示
   结构
   id 与 class

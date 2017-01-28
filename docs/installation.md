@@ -75,13 +75,7 @@ index.html 入口 html
 
 main.js 入口js
 ```js
-import { App, p } from 'affjs'
-
-new App(
-  document.getElementById('app'),
-  {},
-  () => p('Hello, world!'),
-);
+{{template "hello.js"}}
 ```
 
 启动 webpack 开发服务器

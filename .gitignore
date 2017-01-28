@@ -5,3 +5,4 @@ todo
 coverage
 .coveralls.yml
 dev/
+docs/gen
