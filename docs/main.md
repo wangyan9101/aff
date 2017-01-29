@@ -10,6 +10,8 @@
 * [html 标签的表示](#tags)
 * [组件与组件状态](#component)
 * [组件函数调用的优化](#thunk)
+* [全局状态](#state)
+* [状态的更新](#update)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -17,21 +19,28 @@
 {{template "tags.md"}}
 {{template "component.md"}}
 {{template "thunk.md"}}
+{{template "state.md"}}
+{{template "update.md"}}
 
 {{/* TODO
 
-全局状态的表示
-  基本状态
-  组件状态
-  状态的引用
-  状态更新器
+全局状态的定义与更新
+
 组件状态的传递
-状态的更新
+
+简化深层状态的传递
+  在全局状态定义组件状态
+  状态的引用
+
 默认状态
 衍生状态
+
+组件的可复用性
+  状态更新器
+组件之外的代码复用
+
 引用浏览器元素
 调试面板
-代码复用
 路由
 动画
 异步问题
