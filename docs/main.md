@@ -8,15 +8,18 @@
 * [环境安装与配置](#installation)
 * [App 类](#app)
 * [html 标签的表示](#tags)
+* [组件与组件状态](#component)
+* [组件函数调用的优化](#thunk)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
 {{template "app.md"}}
 {{template "tags.md"}}
+{{template "component.md"}}
+{{template "thunk.md"}}
 
 {{/* TODO
 
-组件与组件状态
 全局状态的表示
   基本状态
   组件状态
