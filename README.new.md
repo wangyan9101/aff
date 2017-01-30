@@ -12,6 +12,8 @@
 * [组件函数调用的优化](#thunk)
 * [全局状态](#state)
 * [状态的更新](#update)
+* [状态对象的 $update 方法](#state-object-update)
+* [组件状态的传递](#state-passing)
 
 <h2 id="demo">代码示例</h2>
 
@@ -125,19 +127,6 @@ function Main(state, app) {
 
     // 调试面板，DebugPanel 返回的不是组件，而是参数列表
     DebugPanel(app, state.DebugPanel),
-
-    // 性能计数
-    skip,
-    div(
-      () => {
-        const counters = app.counters;
-        const ret = [];
-        for (const key in counters) {
-          ret.push(p(key, ' => ', counters[key]));
-        }
-        return ret;
-      },
-    ),
 
   );
 }
@@ -1320,6 +1309,202 @@ app.updateMulti(
 
 所以在使用 $merge 时需要注意，对象都是看作表达路径的。
 如果更新操作是替换成另一个对象，需要用 `$func(_ => newObject)` 包装起来，避免将对象解构成路径。
+
+
+<h2 id="state-object-update">状态对象的 $update 方法</h2>
+
+前一节介绍了 App 类的 update 方法。实际上初始状态对象的每个子对象，都设置了一个 $update 方法，用于更新这个子对象。
+
+$update 方法的参数和 App.update 方法类似。不同之处是，路径是以该对象的路径为根路径。
+
+示例：
+
+```js
+import { App } from 'affjs'
+
+const app = new App({
+  foo: {
+    bar: {
+      baz: {
+        qux: 'QUX',
+      },
+    },
+  },
+});
+
+// App 的 update 方法
+app.update('foo', 'bar', 'baz', 'qux', 'new QUX');
+
+// 子状态对象的 update 方法
+const childState = app.state.foo.bar.baz;
+childState.$update('qux', 'New QUX');
+```
+
+$update 方法的一个好处是，使组件代码里不出现 app 的引用，避免与具体的 app 实例耦合，从而保证组件的可复用性。
+
+$update 方法在调用时，最终也是调用 App.update 方法，影响的是全局的状态。所以是结合了组件本地状态和全局状态两种风格的优点。
+
+框架会将所有进入状态树的对象都加上 $update 方法。
+这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 readOnly 函数标记一下。
+将对象作为参数传入即可，返回的对象会带上只读标记，框架不会为对象加上这两个方法。
+
+另外，因为一个状态对象只会记录一个路径，所以一个对象的路径设定好之后，就不能变更了。
+如果将一个已经设定了路径的对象，更新到状态树的其他路径，框架将会报错。
+解决方法是避免在不同路径引用到同一个对象。或者在更新时使用 readOnly 函数标记该对象，这样就会跳过路径的检查。
+
+
+<h2 id="state-passing">组件状态的传递</h2>
+
+与“状态树”这个概念类似，组件嵌套子组件，可以形成一颗“组件树”。
+
+各个组件的状态，是从根组件开始，逐层传递到的。
+所有子组件的状态，都需要从父组件接受的状态里得到。
+
+必须这样做的原因是，子组件的渲染和更新过程，是父组件渲染和更新过程的一部分。
+如果子组件使用了某个状态，但是没有传递给父组件，那这个状态改变时，不会引起父组件的更新，也就不会引起子组件的更新。
+
+将状态传递给多层嵌套的组件时，需要将状态传入路径上所有的组件，示例：
+
+```js
+import { App, div, t } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  {
+    foo: 'FOO',
+  },
+  Main,
+);
+
+function Main(state) {
+  return t(OutterWrapper, {
+    foo: state.foo,
+  });
+};
+
+function OutterWrapper(state) {
+  return t(Wrapper, {
+    foo: state.foo,
+  });
+};
+
+function Wrapper(state) {
+  return t(InnerWrapper, {
+    foo: state.foo,
+  });
+};
+
+function InnerWrapper(state) {
+  return t(Element, {
+    foo: state.foo,
+  });
+};
+
+function Element(state) {
+  return div(state.foo);
+}
+
+
+```
+
+Element 需要 foo 状态，所以要从 Main -> OutterWrapper -> Wrapper -> InnerWrapper -> Element 这样逐层传递。
+
+Element 如果需要多一个状态，那就要改动多处代码，逐层增加。减少一个状态也是一样，需要改动多处。相当不便。
+
+框架对这种情况，提供了一个解决办法。先看最终的代码：
+
+```js
+import { App, div, t } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  {
+    foo: 'FOO',
+    OutterWrapper: {
+      Wrapper: {
+        InnerWrapper: {
+          Element: {
+            $ref: ['foo'],
+          },
+        },
+      },
+    },
+  },
+  Main,
+);
+
+function Main(state) {
+  return t(OutterWrapper, state.OutterWrapper);
+};
+
+function OutterWrapper(state) {
+  return t(Wrapper, state.Wrapper);
+};
+
+function Wrapper(state) {
+  return t(InnerWrapper, state.InnerWrapper);
+};
+
+function InnerWrapper(state) {
+  return t(Element, state.Element);
+};
+
+function Element(state) {
+  return div(state.foo);
+}
+
+
+```
+
+可以看出，传递给各个子组件的状态，定义在了初始状态里。
+而且这些子状态的属性名，都与组件名相同，表明这是一个将传递给相应组件的状态。
+在传递的时候，直接传递相应的子状态就可以了。
+组件树和状态树的结构相同，就可以有这个便利。
+
+另外，Element 子状态里面有一个 $ref 成员，这是框架提供的特殊机制。
+它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
+也就是说，OutterWrapper、Wrapper、InnerWrapper、Element 对应的这些状态对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
+$ref 指定的状态，是逐层传递的。
+这就避免了手工逐层传递。
+
+如果 Element 需要多一个状态，只需要在 $ref 里增加相应的属性名即可。
+中间所有的组件的代码都不需要改动。
+删除一个状态同理。
+
+$ref 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
+
+```js
+const init_state = {
+  foo: 'FOO',
+  OutterWrapper: {
+    bar: 'BAR', 
+    Wrapper: {
+      InnerWrapper: {
+        Element: {
+          $ref: {
+            FOO: 'foo',
+            BAR: 'bar',
+          },
+        }
+      }
+    },
+  }
+};
+
+// ...
+
+const Element = (state) => div(state.FOO, state.BAR);
+
+```
+
+这样 Element 组件里用到的就是 FOO 和 BAR，而不是 foo 和 bar 了。
+
+$ref 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
+查找是初始化 App 的时候做的，不是在读取状态的时候。
+所以从一开始就要在初始状态里定义好相关的状态。
+
+$ref 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
+因为解析 $ref 标记开销比较大，如果更新一个大对象，就算不包含 $ref 标记，也要进行解析的话，对性能影响比较大。
 
 
 

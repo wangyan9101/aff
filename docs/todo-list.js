@@ -100,19 +100,6 @@ function Main(state, app) {
     // 调试面板，DebugPanel 返回的不是组件，而是参数列表
     DebugPanel(app, state.DebugPanel),
 
-    // 性能计数
-    skip,
-    div(
-      () => {
-        const counters = app.counters;
-        const ret = [];
-        for (const key in counters) {
-          ret.push(p(key, ' => ', counters[key]));
-        }
-        return ret;
-      },
-    ),
-
   );
 }
 

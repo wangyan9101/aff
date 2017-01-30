@@ -12,6 +12,8 @@
 * [组件函数调用的优化](#thunk)
 * [全局状态](#state)
 * [状态的更新](#update)
+* [状态对象的 $update 方法](#state-object-update)
+* [组件状态的传递](#state-passing)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -21,22 +23,16 @@
 {{template "thunk.md"}}
 {{template "state.md"}}
 {{template "update.md"}}
+{{template "state-object-update.md"}}
+{{template "state-passing.md"}}
 
 {{/* TODO
 
-全局状态的定义与更新
-
-组件状态的传递
-
-简化深层状态的传递
-  在全局状态定义组件状态
-  状态的引用
-
 默认状态
 衍生状态
+状态更新器
 
 组件的可复用性
-  状态更新器
 组件之外的代码复用
 
 引用浏览器元素
