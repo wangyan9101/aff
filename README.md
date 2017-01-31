@@ -4,59 +4,486 @@
 
 ## 目录
 
-* [框架理念](#0)
-* 上手指南
-	* [环境安装配置](#1)
-	* [基本用例：霓虹 Hello, world](#2)
-	* [html 标签的表示法](#3)
-	* [组件](#4)
-	* [App类](#5)
-	* [状态更新操作](#6)
-	* [引用浏览器元素](#10)
-	* [组件状态的逐层传递](#state-passing)
-	* [状态对象的 $update 方法](#update)
-	* [调试用的信息面板](#debug-panel)
-* 进阶话题
-	* [默认及衍生状态](#9)
-	* [可复用的组件](#reusable)
-	* [组件之外的代码复用](#reusable-more)
-	* [内联 css 样式技巧](#16)
-	* [路由](#11)
-	* [异步竞态问题](#12)
-* 其他
-	* [例子：todomvc 和 dbmon](#15)
-	* [技巧集锦](#14)
+* [代码示例](#demo)
+* [环境安装与配置](#installation)
+* [App 类](#app)
+* [html 标签的表示](#tags)
+* [组件与组件状态](#component)
+* [组件函数调用的优化](#thunk)
+* [全局状态](#state)
+* [状态的更新](#update)
+* [状态对象的 $update 方法](#state-object-update)
+* [组件状态的传递](#state-passing)
+* [默认状态及衍生状态](#default-and-derived-state)
+* [状态树中的更新函数](#updater)
+* [代码复用](#reusable)
+* [路由](#routing)
+* [调试面板](#debug-panel)
+* [异步竞态问题](#async-race)
+* [其他代码示例](#examples)
 
-<h2 id="0">框架理念</h2>
+<h2 id="demo">代码示例</h2>
 
-* 只以普通函数为组件
-* 内置状态管理，使用全局单一状态树
-* 利用 js 自有的表达能力，无 html 模板或 jsx
-* 利用虚拟 DOM、观察者模式充分优化渲染过程
-* 实现最小可用而正交的机制，方便融入现有的库、程序设计技巧及工程理念
+介绍一个框架，用实际的实例代码，应该是最直观的。
 
-bug、建议、提问等内容请在 issues 处发表，任何相关内容都可以。
+这个示例要实现的是，一个任务列表。
+可以增加、展示、编辑、删除任务，以及标记为完成或未完成、按照完成状态过滤列表等等。
 
-<h2 id="1">环境安装配置</h2>
+这个框架提供的绝大部分特性，都会使用到，以达到示例的目的。
+代码只做简单的注释，各种机制将会在后续的章节里讲述。
+
+```js
+import 'normalize.css'
+import 'animate.css'
+import Navigo from 'navigo'
+
+import {
+  App, css, t, on, updater, key, $, skip,
+  div, p, input, button, span, a, none, checkbox,
+  $merge, $func, $del,
+  DebugPanel,
+} from '../index'
+
+// 读保存在 local storage 里的状态
+const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
+// 初始状态树
+const initState = {
+  // 任务信息
+  todos: saved.todos || {},
+  // 过滤器
+  filter: saved.filter || 'all',
+  // 过滤后的任务ID列表
+  filtered: [],
+
+  // 下面都是传递给组件的状态，属性名和组件名一样
+
+  NewTodo: {
+    // 更新 todos 状态的函数
+    updateTodos: updater('todos'),
+  },
+
+  MaintainFiltered: {
+    // 引用 todos 和 filter 状态
+    $ref: ['todos', 'filter'],
+    updateFiltered: updater('filtered'),
+  },
+
+  Filter: {
+    $ref: ['filter', 'todos'],
+  },
+
+  List: {
+    $ref: {
+      todos: 'todos',
+      ids: 'filtered',
+    },
+    hovering: '',
+
+    // 嵌套的组件，对应有一个嵌套的状态
+    Item: {
+      updateHovering: updater('hovering'),
+      updateTodos: updater('todos'),
+
+      ItemControl: {
+        updateTodos: updater('todos'),
+      },
+    },
+  },
+
+  DebugPanel: {
+    show: true,
+    left: '50%',
+  },
+
+};
+
+// 根组件，传入的 state 就是上面定义的对象
+function Main(state, app) {
+  // div 标签，用 div 函数表示，标签的各种属性和子标签，用函数参数表示
+  return div(
+    // 表示样式，使用 es6 的模板字符串，加上 css 这个模板标签函数来表示
+    css`
+      width: 40vw;
+      margin: 8px;
+      padding: 8px;
+      border: 1px solid #EEE;
+      border-radius: 4px;
+      color: #777;
+      text-align: center;
+    `,
+
+    // 一个子标签
+    p('TodoList', css`
+      font-size: 16px;
+      line-height: 16px;
+      font-weight: bold;
+      margin: 8px;
+    `),
+
+    // 下面是嵌套的子组件，t 函数表示一个 thunk，thunk 是渲染优化的基本单位
+
+    t(NewTodo, state.NewTodo),
+
+    t(MaintainFiltered, state.MaintainFiltered),
+
+    // 因为组件本身就是一个函数，所以可以直接调用，而不需要 t 函数包装
+    // 但是就会失去渲染优化，每次渲染根组件，都会重新渲染 Filter 组件
+    Filter(state.Filter),
+
+    t(List, state.List),
+
+    // 调试面板，DebugPanel 返回的不是组件，而是参数列表
+    DebugPanel(app, state.DebugPanel),
+
+  );
+}
+
+// 新建任务组件
+function NewTodo(state) {
+
+  // 新建任务，因为有两个地方要用到，所以写成函数
+  function addTodo() {
+    if (!state.userInput) {
+      return
+    }
+    const id = Math.random().toString().substr(2);
+    const content = state.userInput;
+    // 更新组件状态，使用状态的 $update 函数，合并一个对象
+    state.$update($merge({
+      updating: true, // 过渡状态
+    }));
+    // 模拟异步新建操作
+    setTimeout(() => {
+      // updateTodos 是在状态树定义的更新函数
+      state.updateTodos(id, {
+        id: id,
+        time: new Date().getTime(),
+        content: content,
+        done: false,
+      });
+      state.$update($merge({
+        updating: false,
+        userInput: '', // 清空输入
+      }));
+    }, 300);
+  }
+
+  return div(
+
+    input(
+      // 标签的属性，用一个 object 表示
+      {
+        value: state.userInput || '',
+        disabled: state.updating,
+      }, 
+      // 注册 keyup 事件，同步用户输入到 userInput 这个状态
+      on('keyup: update input', function() {
+        state.$update('userInput', this.element.value);
+      }), 
+      // 注册 keydown 事件，按下回车时，新建任务
+      on('keydown: add todo', (ev) => {
+        if (ev.keyCode == 13) {
+          addTodo();
+        }
+      }),
+      css`
+        width: 64%;
+        border-radius: 4px 0 0 4px;
+        border: 1px solid #CCC;
+        padding: 4px 8px;
+      `,
+    ),
+
+    // 一个按钮，点击时新建任务
+    button(
+      state.updating ? '...' : 'Add',
+      on('click', addTodo),
+      css`
+        width: 64px;
+        border: 1px solid #CCC;
+        border-radius: 0 4px 4px 0;
+        padding: 4px 8px;
+      `,
+    ),
+
+    css`
+      margin: 8px;
+    `,
+  );
+}
+
+// 维护过滤后的任务ID
+function MaintainFiltered(state) {
+  // 生成 ID 列表
+  const filtered = [];
+  for (const id in state.todos) {
+    if (state.filter == 'all') {
+      filtered.push(id);
+    } else if (state.filter == 'done') {
+      if (state.todos[id].done) {
+        filtered.push(id);
+      }
+    } else if (state.filter == 'todo') {
+      if (!state.todos[id].done) {
+        filtered.push(id);
+      }
+    }
+  }
+
+  // 排序
+  filtered.sort((a, b) => {
+    return state.todos[b].time - state.todos[a].time;
+  })
+  // 更新状态
+  state.updateFiltered(filtered);
+  // 这个是功能性组件，没有视觉元素，所以返回 null
+  return null;
+}
+
+// 任务列表
+function List(state) {
+  return div(
+    css`
+      margin: 8px;
+    `,
+    // 遍历 ID 列表，生成各个任务组件
+    state.ids.map(id => t(Item, 
+      key`item-${id}`,
+      state.Item,
+      state.todos[id], 
+      // hovering
+      id == state.hovering,
+    )),
+  );
+}
+
+// 任务组件
+function Item(state, info, hovering) { 
+  // 更新任务内容的函数
+  const saveContent = () => {
+    // 模拟异步保存操作
+    info.$update('status', 'saving');
+    setTimeout(() => {
+      info.$update('status', '');
+    }, 1000);
+  }
+
+  return div(
+    $`.animated .slideInRight`,
+    css`
+      text-align: left;
+      background-color: ${hovering ? '#EEE' : 'transparent'};
+      border-radius: 4px;
+      padding: 8px;
+    `,
+    on('mouseenter', () => {
+      state.updateHovering(info.id);
+    }),
+    on('mouseleave', () => {
+      state.updateHovering('');
+    }),
+
+    // 一般状态下，显示一个 checkbox 和任务内容
+    !info.status || info.status == 'finish-removing' ? [
+      checkbox({
+        checked: info.done,
+      }, on('click', () => {
+        info.$update('done', $func(v => !v));
+      })),
+      span(info.content, css`
+        margin-left: 8px;
+        color: ${info.done ? '#AAA' : 'inherit'};
+        text-decoration: ${info.done ? 'line-through' : 'none'};
+      `),
+    ] : null,
+
+    // 编辑时，显示输入框
+    info.status == 'editing' ? [
+      input({
+        value: info.content,
+      }, on('keyup: update content', function() {
+        info.$update('content', this.element.value);
+      }), on('keydown: update content and done editing', function(ev) {
+        if (ev.keyCode == 13) {
+          saveContent();
+        }
+      }), css`
+        border: 0;
+        width: 80%;
+        background-color: #EFE;
+        border-radius: 5px;
+        padding: 0 8px;
+      `),
+    ] : null,
+
+    // 保存或删除过程中，显示提示状态
+    info.status == 'saving' || info.status == 'removing' ? div(info.status, css`
+      width: 100%;
+      color: #88F;
+      text-align: center;
+    `) : null,
+
+    // 删除动画
+    info.status == 'finish-removing' ? [
+      {
+        classList: ['animated', 'slideOutRight'],
+      },
+      // 动画完成后，删除条目
+      on('animationend', () => {
+        state.updateTodos($del(info.id));
+      }),
+    ] : null,
+
+    // 鼠标指向任务时，显示控制按钮
+    hovering ? ItemControl(state.ItemControl, info, saveContent) : null,
+
+  );
+}
+
+// 任务条目控制按钮
+function ItemControl(state, info, saveContent) {
+  // 按钮的共用样式
+  const buttonStyle = css`
+    display: inline-block;
+    margin-left: 8px;
+    border: 0;
+    background-color: transparent;
+    user-select: none;
+    cursor: pointer;
+    padding: 0 8px;
+    border-radius: 4px;
+    color: #666;
+  `;
+
+  return span(
+    css`
+      float: right;
+    `,
+
+    // 一般情况下，显示删除和编辑按钮
+    !info.status ? [
+      button(buttonStyle, 'Remove', on('click', () => {
+        // 模拟异步操作
+        info.$update('status', 'removing');
+        setTimeout(() => {
+          // 进入删除动画，动画完成后，才删除条目
+          info.$update('status', 'finish-removing');
+        }, 1000);
+      })),
+      button(buttonStyle, 'Edit', on('click', () => {
+        info.$update('status', 'editing');
+      })),
+    ] : null,
+
+    // 编辑状态时，显示保存按钮
+    info.status == 'editing' ? [
+      button(buttonStyle, 'Done', on('click', () => {
+        saveContent();
+      })),
+    ] : null,
+
+  );
+}
+
+// 过滤条件选择组件
+function Filter(state) {
+  return div(
+    css`
+      margin: 8px;
+    `,
+
+    'Filter: ',
+
+    // 每个条件生成一个按钮
+    [
+      { name: 'all', filter: _ => true, },
+      { name: 'todo', filter: i => !i.done },
+      { name: 'done', filter: i => i.done },
+    ].map(info => div(
+      info.name, 
+      // 显示符合该过滤条件的条目数量
+      () => {
+        const count = Object.keys(state.todos).reduce((acc, cur) => 
+          acc + (info.filter(state.todos[cur]) ? 1 : 0), 0);
+        if (count > 0) {
+          return ` (${count}) `;
+        }
+        return null;
+      },
+      css`
+        display: inline-block;
+        border: 1px solid #CCC;
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-left: 8px;
+        background-color: ${info.name == state.filter ? '#EEE' : 'transparent'};
+        user-select: none;
+        cursor: pointer;
+      `, 
+      // 点击时，设定过滤条件
+      on('click', () => {
+        router.navigate(`/filter/${info.name}`);
+      }),
+    )),
+
+  );
+}
+
+// 启动一个 app
+const app = new App(
+  // 初始渲染的元素
+  document.getElementById('app'),
+  // 初始状态
+  initState,
+  // 根组件
+  Main,
+
+  // 状态更新后，保存一些状态到 local storage
+  on('afterUpdate', (state) => {
+    window.localStorage.setItem('todos-data', JSON.stringify({
+      todos: state.todos,
+      filter: state.filter,
+    }));
+  }),
+);
+
+// 路由
+const router = new Navigo('/');
+router
+  .on('/filter/:filter', (params) => {
+    // 选择过滤器
+    app.update('filter', params.filter);
+  })
+  .resolve();
+
+```
+
+<h2 id="installation">环境安装与配置</h2>
 
 推荐使用的开发环境是 babel + webpack，下面将简单介绍安装及配置方法。
 如果已经熟悉，可以跳过这部分。
 
-如果不喜欢转译器或者构建工具，也可以直接用`<script>`标签引入，源码 lib 目录下是 UMD 格式的库文件。
+如果不喜欢转译器或者构建工具，也可以直接用`<script>`标签引入，lib 目录下是 UMD 格式的库文件。
 
 ```bash
 # 创建目录
-mkdir guide
-cd guide
+mkdir project
+cd project
 
 # npm 初始化
 npm init -y
 
-# 安装模块
-npm install --save-dev babel-core babel-loader babel-plugin-transform-object-rest-spread babel-preset-latest webpack webpack-dev-server affjs
+# 安装 babel
+npm install --save-dev babel-core babel-loader babel-plugin-transform-object-rest-spread babel-preset-latest 
+# 安装 webpack
+npm install --save-dev webpack webpack-dev-server 
+# 安装 affjs，也就是这个框架
+npm install --save-dev affjs
+# 示例里用到了 normalize.css 和 animate.css，一并装上
+npm install --save-dev css-loader style-loader normalize.css animate.css
 ```
 
-webpack.config.js 配置文件
+创建 webpack.config.js 配置文件
 ```js
 module.exports = {
   entry: './main.js',
@@ -75,18 +502,21 @@ module.exports = {
         exclude: /node_modules(?!\/affjs)/,
         loader: 'babel-loader',
       },
+      { test: /\.css$/, loader: "style-loader!css-loader" },
     ],
   },
 }
 ```
 
-.babelrc 配置文件
+创建 .babelrc 配置文件
 ```json
 {
  "presets": ["latest"], 
  "plugins": ["transform-object-rest-spread"],
 }
 ```
+
+基本的环境就安装配置完成了，下面试一试 hello world。
 
 index.html 入口 html
 ```html
@@ -112,6 +542,8 @@ new App(
   {},
   () => p('Hello, world!'),
 );
+
+
 ```
 
 启动 webpack 开发服务器
@@ -119,71 +551,58 @@ new App(
 ./node_modules/.bin/webpack-dev-server  --inline --hot --watch
 ```
 
-如果编译无误，打开 http://localhost:5000/ 可看到 Hello, world!
+如果编译无误，打开 http://localhost:5000/ 可看到 "Hello, world!" 字样，即说明环境正常。
 
-<h2 id="2">基本用例：霓虹helloworld</h2>
+<h2 id="app">App 类</h2>
+
+在环境安装一节，用了一个 hello world 程序来测试环境是否正常：
 
 ```js
-import {
-  App, css,
-  div, span,
-  $inc,
-} from 'affjs'
+import { App, p } from 'affjs'
 
-const colors = [
-  '#f26522', '#7fb80e', '#33a3dc', '#8552a1',
-  '#ffe600', '#426ab3', '#d71345', '#00ae9d',
-];
-
-// 初始状态，一个app使用唯一的对象保存所有状态
-const init_state = {
-  animation_tick: 0,
-};
-
-// 根组件，所有组件都表示为函数
-const Main = (state) => div(
-
-  // 样式定义，使用 es6 的 tagged literal
-  css` font-size: 32px; `,
-
-  // 字符串分解成单个字符，并构造span
-  'Hello, world!'.split('').map((c, i) => {
-    const color_index = state.animation_tick - i;
-    const color = color_index < 0 ? 
-      'transparent' : colors[color_index % colors.length];
-    // 返回的span作为div的子元素
-    return span(c, css`
-      color: ${color};
-      text-shadow: 0 0 10px ${color}; 
-    `);
-  }),
-
-);
-
-// 生成app
-const app = new App(
-  // 初始渲染的元素
+new App(
   document.getElementById('app'),
-  // 根组件
-  Main,
-  // 初始状态
-  init_state,
+  {},
+  () => p('Hello, world!'),
 );
-
-setInterval(() => {
-  // 更新状态，触发app重新渲染
-  app.update('animation_tick', $inc);
-}, 100);
 
 
 ```
 
-![colorful helloworld](images/colorful-helloworld.gif)
+App 类的构造函数有三种参数：
 
-<h2 id="3">html 标签的表示法</h2>
+* `document.getElementById('app')` 表示将 id 为 app 的元素作为初次渲染的元素
+* `{}` 表示初始状态，这里是一个空对象
+* `() => p('Hello, world!')` 表示根组件，p 函数表示一个 p 标签，后面会有专门章节讲到
 
-这个框架没有使用 html 模板或者 jsx 来表示页面结构，而是使用 js 来表示。
-下面举例说明表示 html 标签及其属性的各种方法。
+这三种参数可以是任意顺序，构造函数会根据参数类型来判断意义。
+HTMLElement 类型的是初始渲染元素，typeof 运算结果为 'function' 的参数是根组件，还有事件定义等等，后面会讲到。
+其他类型的参数，如对象、数值、数组、字符串等都看作全局状态。当然实际开发中，全局状态一般是一个对象。
+
+参数个数也可以少于三。后续可以用 App.init 方法继续指定初始化参数：
+
+```js
+const app = new App('Hello, world'); // 只指定全局状态
+app.init(
+  document.getElementById('app'), // 继续指定参数
+  (state) => p(state), // 根组件定义，相当于 `<p>Hello, world</p>`
+);
+```
+
+三种类型的参数都有了之后，才开始渲染。
+
+这个框架里的 App 类，和其他一些框架里的有状态组件类似。
+但因为这个框架里的组件指一个函数，比这个要轻量很多，所以将这个有状态和关联浏览器元素的称作 App。
+
+一个 html 页面可以有多个 App，根据功能和规模来适当划分即可。
+如果两个功能组件之间不需要共享状态，就可以各用一个 App。
+
+<h2 id="tags">html 标签的表示</h2>
+
+这个框架没有用 html 模板或者 JSX，而是用函数，以及函数的参数来表示 html 的结构和样式等等。
+因为是纯 js 代码，所以不需要预处理器。而且和 hyperscript 这样的表达方式也不一样。
+
+在 hello world 示例中用到了 p 函数来表示一个 p 标签，下面将展开讲述相关的机制。
 
 <h3>基本表示</h3>
 
@@ -402,6 +821,23 @@ p(css`
 模板字符串内的 ${} 表示一个 js 表达式。表达式可以是变量、运算、函数调用等等。
 这是相当有用的，对 less、sass 等 css 预处理器的需求也会因此降低。
 
+内联样式是没办法表达伪类的。可以在旁边用一个 style 标签写：
+
+```js
+import { div, style } from 'affjs'
+
+div('.foo')
+style(`
+  .foo:hover {
+    /* ... */
+  }
+`)
+```
+
+渲染出来，就是一个`<style></style>`，里面是css定义。
+注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
+如果不想使用 !important，可以将内联样式去掉，都写在 script 标签内。
+
 <h3>事件</h3>
 
 标签的事件，可以用 on 函数来表示：
@@ -505,6 +941,43 @@ new App(
 );
 ```
 
+在事件回调函数中，可以使用 this.element 获得浏览器元素的引用：
+
+```js
+import { App, div, button, $inc, } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  {
+    count: 0,
+  },
+  Main,
+);
+
+function Main(state) {
+  return div(
+    button({
+      // 点击回调
+      onclick() {
+        console.log('onclick', this.element);
+        state.$update('count', $inc);
+      },
+      // 元素创建回调
+      oncreated(elem) {
+        console.log('oncreated', elem);
+      },
+    }, `CLICK ME ${state.count}`),
+  );
+}
+```
+
+注意 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
+这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
+
+如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
+
+还要注意的是，需要用到 this 的时候，回调函数不能用箭头函数 (即 () => {} 这样的)，因为箭头函数的 this 不能绑定，this.element 无效。
+
 <h3>attribute 和 property</h3>
 
 标签的 attributes 和 properties 是同时设置的，方法是将一个对象作为参数传入标签函数。
@@ -579,170 +1052,146 @@ div(
 
 skip 标志的主要用途是定位 bug。
 
-<h2 id="4">组件</h2>
 
-这个框架里的“组件”实际只是一个函数。这个函数返回的是，渲染视图所需要的信息。
-根据不同的参数，组件函数可以返回不同的信息。
-参数的变化就是状态的变化，组件函数将这些变化反映在视图里，达到状态与视图一致的目的。
+<h2 id="component">组件与组件状态</h2>
 
-一个组件函数，和它的实际参数，可以合称为一个thunk ([wikipedia: Thunk](https://en.wikipedia.org/wiki/Thunk))。
-一个thunk是它的参数的“观察者”，它会观察各个参数，和前一个thunk的参数是否一样。
-如果不一样，有某个参数发生了变化，它会调用组件函数，并传入参数，产生新的视图信息。
-如果一样，它会假定视图信息没有发生变化，也就不需要调用组件函数。
+在这个框架里，组件与组件状态，就是函数与函数参数。
 
-所以thunk就是渲染优化的基本单位。框架除了会使用虚拟DOM的 diff / patch 算法减少浏览器DOM的创建，也会使用上述的手段，减少组件函数的调用。
+组件函数的返回值，是上一节所讲的 html 标签，或者另一个组件，或者 null。
 
-前面的例子里，组件函数返回的都是html标签。实际上组件函数也可以返回一个thunk，thunk也可以作为html标签的子元素。thunk就像是一种自定义标签。
+组件状态的变化，就是组件函数的实参的变化。
+组件函数的返回值，根据参数的不同而不同，就能反映出组件状态的变化。
 
-thunk 用 t 函数构造。第一个参数是组件函数，其余参数是将会传入组件函数的参数，示例：
+组件函数的返回值为 null，表明这个组件的作用不在于表达视觉元素，而是产生一些副作用。
+例如在某些状态变化时，也就是组件参数变化时，根据这些状态计算出另外一些状态并更新全局状态树。
+所以组件函数并不必须是纯函数。
+
+下面是一个简单的组件示例，这个组件是两个按钮和一个标签，它可以显示一个计数器的值，并通过按钮来改变这个计数值：
 
 ```js
-import {
-  App, t, css, on,
-  button, div, img,
-  $inc, $dec,
-} from 'affjs'
+import { App, label, button, div, on } from 'affjs'
 
-// 一个按钮组件，文字和点击事件都作为参数，从外部传入
-const Button = (text, onclick) => button(
-  text,
-  on('click', onclick),
-  css`
-    border: 3px solid #666;
-    border-radius: 10px;
-    background-color: white;
-    width: 50px;
-    height: 50px;
-    user-select: none;
-  `,
-);
-
-// 一个布局组件，在圆周上均匀分布所有子元素
-const Layout = (radius, base_degree, elems) => {
-  return div(
-    css`
-      width: ${radius * 2}px;
-      height: ${radius * 2}px;
-      border: 1px dotted #09C;
-      border-radius: 50%;
-      margin: ${radius / 2}px auto;
-      position: relative;
-    `,
-    elems.map((elem, i) => {
-      const degree = (i / elems.length * 360 + base_degree) % 360;
-      const theta = 2 * 3.14 * (degree / 360);
-      const x = radius * Math.cos(theta) + radius;
-      const y = radius * Math.sin(theta) + radius;
-      return div(elem, css`
-        position: absolute;
-        left: ${x}px;
-        top: ${y}px;
-        transform: translate(-50%, -50%) rotate(${degree}deg);
-      `);
-    }),
-  );
-};
-
-// 初始化app
 const app = new App(
-  // 在这个元素处渲染
   document.getElementById('app'),
-  // 初始状态
   {
-    counter: 0,
-    animation_tick: 0,
+    n1: 0,
+    n2: 0,
   },
+  (state) => div(
+    Counter(
+      state.n1,
+      (x) => state.$update('n1', x),
+    ),
+    Counter(
+      state.n2,
+      (x) => state.$update('n2', x),
+    ),
+  ),
 );
 
-// Main也是一个组件
-// state参数是app当前的状态
-const Main = (state) => {
-  // 计数加一
-  const inc = () => {
-    app.update('counter', $inc);
-  };
-  // 计数减一
-  const dec = () => {
-    app.update('counter', $dec);
-  };
-  // 构造根组件
-  return Layout(100, state.animation_tick % 360, [
+function Counter(n, update) {
+  return div(
+    button('+', on('click', () => {
+      update(n + 1);
+    })),
+    button('-', on('click', () => {
+      if (n > 0) {
+        update(n - 1);
+      }
+    })),
+    label(n),
+  );
+}
 
-    // 一个 Button 的 thunk
-    t(Button, '＋', inc),
-    // 另一个 thunk
-    t(Button, '－', dec),
-
-    // 不用thunk，直接调用Button也可以，但每次构造Main，都会直接调用
-    // 而用thunk就只是生成一个对象，选择性地调用Button，可以优化渲染效率
-    Button('＋＋', inc),
-    Button('－－', dec),
-
-    // 显示计数状态
-    div(state.counter, css`
-      border: 3px solid #666;
-      display: inline-block;
-      border-radius: 50%;
-      width: 25px;
-      height: 25px;
-      text-align: center;
-      background-color: white;
-    `),
-
-    // 凑够6个元素
-    img({src: 'http://img.t.sinajs.cn/t4/appstyle/expression/ext/normal/b6/doge_thumb.gif'}),
-
-  ]);
-};
-
-// 继续初始化app，初始元素、初始状态、组件函数都设定好之后，app就开始渲染了
-app.init(Main);
-
-// 更新animation_tick，驱动动画
-setInterval(() => {
-  app.update('animation_tick', $inc);
-}, 50);
 ```
 
-![counter](images/counter.gif)
+上面的示例中，Counter 函数就定义了一个组件。
+根组件使用了两个 Counter 组件的实例，分别关联到 n1 和 n2 两个状态。
+点击其中一个组件的加减按钮，只会影响到它关联的状态，其他同类组件的状态不受影响。
 
-<h2 id="5">App类</h2>
+Counter 组件函数的参数，一个是计数值，另一个是改变这个计数值的匿名函数。
+匿名函数里使用到了状态对象的 $update 方法，这个在后面的章节里会详述。
 
-App类的构造函数会根据参数类型的不同，初始化不同的成员
+<h2 id="thunk">组件函数调用的优化</h2>
 
-* 如果类型为 HTMLElement，也就是浏览器DOM元素，会作为首次渲染所使用的元素
-* 如果类型为函数，会作为根组件函数，每次重新渲染都会调用
-* 其他类型都作为初始状态，一般为object类型
+在上面的示例中，根组件使用了两个 Counter 组件。
+而 Counter 是一个函数，Counter 组件用一个函数调用来表示。
+所以每次根组件重新渲染的时候，这两个组件函数都会被调用。
 
-如果构造函数的参数没有提供所有这三种参数，则推迟首次渲染。
-可以使用 init 方法继续初始化过程，对参数的处理和构造函数一样。
-三种参数集齐后，App将开始渲染。
+n1 状态改变时，n1 和 n2 关联的 Counter 组件函数都会调用。
+n2 状态改变时也一样，两个 Counter 组件函数都会调用。
+这里可以优化一下。让 n1 状态改变时，只调用 n1 关联的 Counter 组件函数，只更新相关的页面元素。
+因为 n2 状态没有改变，执行 n2 关联的 Counter 组件函数是没有必要的。
 
-App类常用的方法及属性如下：
+这就要引入 thunk 这个概念。
+一个 thunk 代表一个函数调用。
+它不是立即执行的，而是通过对比另一个 thunk 的参数，如果两个 thunk 的参数一样，就不调用，而是直接使用相同参数的 thunk 的执行结果。
+如果 thunk 的参数不一样，就执行函数调用，并将函数的返回值保存好，用于下一次比较。
 
-* update(...path, operation)，用于更新状态树
-* html()，返回根组件的innerHTML
-* state，当前状态
+框架提供了一个 `t` 函数，用于将普通函数调用转化为一个 thunk。
+前面的示例中的根组件，可以改用 thunk：
 
-这个类虽然名为 "App"，实际是很轻量的，和其他框架里的有状态组件差不多。
-但因为“组件”在这个框架里已经别有所指，只好命名为更重的东西。
+```js
+const app = new App(
+  document.getElementById('app'),
+  {
+    n1: 0,
+    n2: 0,
+  },
+  (state) => div(
+    t(Counter,
+      state.n1,
+      (x) => state.$update('n1', x),
+    ),
+    t(Counter,
+      state.n2,
+      (x) => state.$update('n2', x),
+    ),
+  ),
+);
+```
 
-所以一个页面其实可以有多个app。一个大系统可以按照功能拆分为多个app，各自管理状态。
-在需要状态共享的场合，可以用观察者模式（后面衍生状态一节会讲到）推送状态到一个全局管理者，然后再分发给各个子app。
+就是将组件函数调用，改成 t 函数调用，并将组件函数作为第一个参数，其他组件参数不变。
+t 函数返回一个 Thunk 类型的对象。
 
-也可以在现有的页面里用这个框架实现一个或者几个部件。一个app只侵入一个浏览器元素，和页面其他部分不会有任何交集。
+在首次渲染根组件时，因为没有可以比较的 thunk，所以两个 Counter 组件函数都会被调用。
 
-将App实例的 element 元素赋值为非真值，可以使它停止渲染：`app.element = undefined`。
-后续仍然可以用 app.init 渲染到某一元素上。
+然后点击 n1 关联的某个按钮，引起 n1 状态的变化，触发根组件的重新渲染。
+这次会生成另外两个 thunk，然后各自和上一次渲染时生成的 thunk 比较。
 
-<h2 id="6">状态更新操作</h2>
+n1 关联的 thunk，因为 state.n1 这个参数发生了变化，所以会重新调用 Counter 组件函数，并在页面上反映出 n1 变化的结果。
 
-更新 App 实例所关联的状态，需要用 update 方法。
-不能直接用赋值操作来更新，因为状态更新之后，框架需要重新检测各个组件依赖的状态，决定是否更新元素。
-以及执行其他一些钩子函数等等。
-直接用赋值操作，是不会触发这些动作的。
+n2 关联的 thunk，因为 state.n2 没有变化，传入的匿名函数也没有变化
+（函数类型的参数，只比较它们的名字，匿名函数名字都一样），所以不会调用 Counter 函数。
 
-update 方法的参数，先是指定一个更新的路径，最后是要执行的操作。示例：
+通过引入 thunk，实现了一个状态的改变，只会触发这个状态关联的组件的更新，不多也不少。
+
+<h2 id="state">全局状态</h2>
+
+在前面的几个示例里，已经用到了全局的状态，作为参数传递给 App 的构造函数。
+
+虽然全局状态可以是其他的类型，但一般全局状态的类型都是对象。
+对象嵌套对象，形成树状的结构，所以又可以称作全局状态树。
+
+程序的状态统一保存在一个对象里，有几个好处：
+* 方便将状态持久化及反持久化；
+* 方便审查当前整个程序的状态；
+* 方便记录并查看状态的变化过程；
+* 方便 mock 状态，有利于排错及测试。
+
+将源自全局状态树的值，作为组件函数的参数，就能让组件实例关联到状态树中的一个或者多个状态。
+
+<h2 id="update">状态的更新</h2>
+
+程序状态必然需要更新，而且状态更新前后，框架需要做一些额外的工作。
+所以想要更新状态，不能直接对状态树进行赋值操作，而是调用 App 实例的 update 函数。
+
+update 方法的参数，先是指定一个更新的路径，最后是要执行的操作。
+更新的路径，就是从根状态对象开始，到达某个子状态所经过的属性名或者数组下标。
+
+例如 `state.a.b.c[1][2]` 所指向的状态，它的更新路径是 `'a', 'b', 'c', 1, 2`。
+
+示例：
 
 ```js
 import { App, div } from 'affjs'
@@ -922,108 +1371,101 @@ app.updateMulti(
 所以在使用 $merge 时需要注意，对象都是看作表达路径的。
 如果更新操作是替换成另一个对象，需要用 `$func(_ => newObject)` 包装起来，避免将对象解构成路径。
 
-<h2 id="10">引用浏览器元素</h2>
 
-在元素事件回调中，可以用 this.element 引用渲染出来的浏览器元素。
-在事件回调外、组件函数内，是拿不到元素的引用的，因为这个时候还没有创建元素。
-可以添加 oncreated 事件回调，会在元素创建后调用。
+<h2 id="state-object-update">状态对象的 $update 方法</h2>
+
+前一节介绍了 App 类的 update 方法。实际上初始状态对象的每个子对象，都设置了一个 $update 方法，用于更新这个子对象。
+
+$update 方法的参数和 App.update 方法类似。不同之处是，路径是以该对象的路径为根路径。
+
+示例：
 
 ```js
-import {
-  App,
-  div, button,
-  $inc,
-} from 'affjs'
+import { App } from 'affjs'
 
-const app = new App(
-  document.getElementById('app'),
-  {
-    count: 0,
+const app = new App({
+  foo: {
+    bar: {
+      baz: {
+        qux: 'QUX',
+      },
+    },
   },
-);
+});
 
-const Main = (state) => {
-  return div([
-    button({
-      // 点击回调
-      onclick() {
-        console.log('onclick', this.element);
-        app.update('count', $inc);
-      },
-      // 元素创建回调
-      oncreated(elem) {
-        console.log('oncreated', elem);
-      },
-    }, `CLICK ME ${state.count}`),
-  ]);
-};
+// App 的 update 方法
+app.update('foo', 'bar', 'baz', 'qux', 'new QUX');
 
-app.init(Main);
+// 子状态对象的 update 方法
+const childState = app.state.foo.bar.baz;
+childState.$update('qux', 'New QUX');
 ```
 
-![element](images/element.png)
+$update 方法的一个好处是，使组件代码里不出现 app 的引用，避免与具体的 app 实例耦合，从而保证组件的可复用性。
 
-注意 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
-这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
+$update 方法在调用时，最终也是调用 App.update 方法，影响的是全局的状态。所以是结合了组件本地状态和全局状态两种风格的优点。
 
-如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
+框架会将所有进入状态树的对象都加上 $update 方法。
+这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 readOnly 函数标记一下。
+将对象作为参数传入即可，返回的对象会带上只读标记，框架不会为对象加上这两个方法。
 
-还要注意的是，需要用到 this 的时候，回调函数不能用箭头函数 (即 () => {} 这样的)，因为箭头函数的 this 不能绑定，this.element 无效。
+另外，因为一个状态对象只会记录一个路径，所以一个对象的路径设定好之后，就不能变更了。
+如果将一个已经设定了路径的对象，更新到状态树的其他路径，框架将会报错。
+解决方法是避免在不同路径引用到同一个对象。或者在更新时使用 readOnly 函数标记该对象，这样就会跳过路径的检查。
 
-<h2 id="state-passing">组件状态的逐层传递</h2>
 
-一个组件嵌套另一个组件，外层的组件可以称为父组件，内层的组件可以称为子组件。
+<h2 id="state-passing">组件状态的传递</h2>
 
-子组件观察的状态，必须是父组件所观察的状态，或者它的子状态。
-因为子组件的更新过程，从属于父组件的更新过程。父组件的更新，会因为它所观察的状态出现变化，而触发。
-所以，如果子组件观察的状态，不属于父组件观察的状态的一部分，那就算子组件观察的状态发生了变化，子组件也不会触发更新。
-因为父组件观察的状态，和子组件的没有关联，父组件没有触发更新，子组件自然不会更新。
+与“状态树”这个概念类似，组件嵌套子组件，可以形成一颗“组件树”。
 
-也可以这样理解，父组件不需要更新的时候，子组件也不会更新。
-在状态发生变化，需要检测哪些组件需要更新的时候，这样的策略对提高检测效率是很有益处的。
+各个组件的状态，是从根组件开始，逐层传递到的。
+所有子组件的状态，都需要从父组件接受的状态里得到。
 
-当然，这会给开发者带来一些麻烦。
-在组件多重嵌套的场景下，叶子组件需要的状态，要逐层传递给它。例如：
+必须这样做的原因是，子组件的渲染和更新过程，是父组件渲染和更新过程的一部分。
+如果子组件使用了某个状态，但是没有传递给父组件，那这个状态改变时，不会引起父组件的更新，也就不会引起子组件的更新。
+
+将状态传递给多层嵌套的组件时，需要将状态传入路径上所有的组件，示例：
 
 ```js
 import { App, div, t } from 'affjs'
 
-const init_state = {
-  foo: 'FOO',
-};
-
 const app = new App(
   document.getElementById('app'),
-  init_state,
+  {
+    foo: 'FOO',
+  },
+  Main,
 );
 
-const Element = (state) => div(state.foo);
-
-const InnerWrapper = (state) => {
-  return t(Element, {
-    foo: state.foo,
-  });
-};
-
-const Wrapper = (state) => {
-  return t(InnerWrapper, {
-    foo: state.foo,
-  });
-};
-
-const OutterWrapper = (state) => {
-  return t(Wrapper, {
-    foo: state.foo,
-  });
-};
-
-const Main = (state) => {
+function Main(state) {
   return t(OutterWrapper, {
     foo: state.foo,
   });
 };
 
-app.init(Main);
+function OutterWrapper(state) {
+  return t(Wrapper, {
+    foo: state.foo,
+  });
+};
+
+function Wrapper(state) {
+  return t(InnerWrapper, {
+    foo: state.foo,
+  });
+};
+
+function InnerWrapper(state) {
+  return t(Element, {
+    foo: state.foo,
+  });
+};
+
+function Element(state) {
+  return div(state.foo);
+}
+
+
 ```
 
 Element 需要 foo 状态，所以要从 Main -> OutterWrapper -> Wrapper -> InnerWrapper -> Element 这样逐层传递。
@@ -1035,75 +1477,60 @@ Element 如果需要多一个状态，那就要改动多处代码，逐层增加
 ```js
 import { App, div, t } from 'affjs'
 
-const init_state = {
-  foo: 'FOO',
-  OutterWrapper: {
-    Wrapper: {
-      InnerWrapper: {
-        Element: {
-          $ref: ['foo'],
-        }
-      }
-    },
-  }
-};
-
 const app = new App(
   document.getElementById('app'),
-  init_state,
+  {
+    foo: 'FOO',
+    OutterWrapper: {
+      Wrapper: {
+        InnerWrapper: {
+          Element: {
+            $ref: ['foo'],
+          },
+        },
+      },
+    },
+  },
+  Main,
 );
 
-const Element = (state) => div(state.foo);
-
-const InnerWrapper = (state) => {
-  return t(Element, state.Element);
-};
-
-const Wrapper = (state) => {
-  return t(InnerWrapper, state.InnerWrapper);
-};
-
-const OutterWrapper = (state) => {
-  return t(Wrapper, state.Wrapper);
-};
-
-const Main = (state) => {
+function Main(state) {
   return t(OutterWrapper, state.OutterWrapper);
 };
 
-app.init(Main);
+function OutterWrapper(state) {
+  return t(Wrapper, state.Wrapper);
+};
+
+function Wrapper(state) {
+  return t(InnerWrapper, state.InnerWrapper);
+};
+
+function InnerWrapper(state) {
+  return t(Element, state.Element);
+};
+
+function Element(state) {
+  return div(state.foo);
+}
+
+
 ```
 
-可以看出，传递给各个子组件的状态，定义在了 init_state 里。
+可以看出，传递给各个子组件的状态，定义在了初始状态里。
 而且这些子状态的属性名，都与组件名相同，表明这是一个将传递给相应组件的状态。
 在传递的时候，直接传递相应的子状态就可以了。
 组件树和状态树的结构相同，就可以有这个便利。
-或者可以将这些子状态视作 "view model"。
 
-另外，element 子状态里面有一个 $ref 成员，这是框架提供的特殊机制。
+另外，Element 子状态里面有一个 $ref 成员，这是框架提供的特殊机制。
 它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
 也就是说，OutterWrapper、Wrapper、InnerWrapper、Element 对应的这些状态对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
 $ref 指定的状态，是逐层传递的。
+这就避免了手工逐层传递。
 
-如果 Element 组件需要观察多一个状态，例如 bar，改动可以很少：
-
-```js
-const init_state = {
-  foo: 'FOO',
-  OutterWrapper: {
-    bar: 'BAR', // 假设 bar 定义在这里
-    Wrapper: {
-      InnerWrapper: {
-        Element: {
-          $ref: ['foo', 'bar'],
-        }
-      }
-    },
-  }
-};
-```
-
-只需要改变 $ref 的定义即可。删除同理，只需要改动一处，就可以完成逐层传递的目的。
+如果 Element 需要多一个状态，只需要在 $ref 里增加相应的属性名即可。
+中间所有的组件的代码都不需要改动。
+删除一个状态同理。
 
 $ref 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
 
@@ -1135,125 +1562,15 @@ const Element = (state) => div(state.FOO, state.BAR);
 
 $ref 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
 查找是初始化 App 的时候做的，不是在读取状态的时候。
-所以从一开始就要在 init_state 里定义好相关的状态。
+所以从一开始就要在初始状态里定义好相关的状态。
 
 $ref 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
 因为解析 $ref 标记开销比较大，如果更新一个大对象，就算不包含 $ref 标记，也要进行解析的话，对性能影响比较大。
 
-<h2 id="update">状态对象的 $update 方法</h2>
 
-前面介绍了 App 类的 update 方法，这个方法的路径参数，是从根结点开始的绝对路径。
-实际上状态树里每一个 object 类型的子状态，都会被加上 $update 方法。
-$update 方法的作用和 App 类的 update 方法是一样的。
-不同的是路径参数，子状态对象的这两个方法的路径参数，是以子对象在全局状态树中的路径，为根路径。
+<h2 id="default-and-derived-state">默认状态及衍生状态</h2>
 
-通过示例代码可能更容易理解：
-
-```js
-import { App } from 'affjs'
-
-const app = new App({
-  foo: {
-    bar: {
-      baz: {
-        qux: 'QUX',
-      },
-    },
-  },
-});
-
-// App 的 update 方法
-app.update('foo', 'bar', 'baz', 'qux', 'new QUX');
-
-// 子状态对象的 update 方法
-const childState = app.state.foo.bar.baz;
-childState.$update('qux', 'New QUX');
-```
-
-这个机制的作用是，让深层传递的状态，在更新的时候，可以不用管它在全局状态树中处于什么位置。
-例如上面的代码里，更新 qux 的时候，不需要知道它前面的路径是 ['foo', 'bar', 'baz']。
-因为 childState 这个对象，已经保存了这个路径的信息，直接调用 $update 方法，就会使用它保存的路径，放在前面作为完整的路径。
-
-这个设计也使组件有了更好的可复用性。不论传入组件的子状态处于全局状态树的什么路径，更新的代码都是一样的。
-传入不同路径的状态，不需要对组件代码进行改动。
-也使得对全局状态的更新，就如更新本地状态一样方便了。
-
-当然，如果组件需要更新的状态，不是传入组件函数的参数，那还是得用 App.update 方法去更新。
-
-框架会将所有进入状态树的对象都加上 $update 方法。
-这会带来一些开销。如果这些对象不需要更新，不需要这两个方法，可以用 readOnly 函数标记一下。
-将对象作为参数传入即可，返回的对象会带上只读标记，框架不会为对象加上这两个方法。
-
-另外，因为一个状态对象只会记录一个路径，所以一个对象的路径设定好之后，就不能变更了。
-如果将一个已经设定了路径的对象，更新到状态树的其他路径，框架将会报错。
-解决方法是避免在不同路径引用到同一个对象。或者在更新时使用 readOnly 函数标记该对象，这样就会跳过路径的检查。
-
-<h2 id="debug-panel">调试用的信息面板</h2>
-
-框架自带了一个简易的信息面板，可以显示当前状态树，以及状态树的变更历史。使用方法：
-
-```js
-import { App, css, div, span, DebugPanel } from 'affjs'
-
-const app = new App(
-  document.getElementById('app'),
-  // 状态
-  {
-    foo: 0,
-    bar: [1, 2, 3],
-    baz: {
-      a: 'baz',
-      b: 'Baz',
-      c: 'BAZ',
-    },
-  },
-  // 根组件
-  (state, app) => div(
-
-    // 显示状态
-    div('foo: ', state.foo),
-    div('bar: ', state.bar.map(num => span(num, css`
-      padding: 0 10px;
-    `))),
-    () => {
-      const ret = [
-        div('baz: '),
-      ];
-      for (const key in state.baz) {
-        ret.push(div(key, ' = ', state.baz[key]));
-      }
-      return ret;
-    },
-
-    // 引入调试面板
-    DebugPanel(app, {
-      // 默认是不显示的，配置成显示
-      show: true,
-      // 默认是占满页面，配置成露出左边
-      top: 0,
-      left: '30%',
-      right: 0,
-      bottom: 0,
-    }),
-  ),
-);
-
-app.update('foo', $inc);
-app.update('bar', $map(v => v * 2));
-app.update('baz', 'b', 'baZ');
-```
-
-![debug-panel](images/debug-panel.png)
-
-![debug-panel](images/debug-panel2.png)
-
-按 ctrl + q 可以切换显示与隐藏状态。
-
-当前状态，在 state 标签页；更新记录，在 updates 标签页。左下角的按钮用于调整位置。
-
-<h2 id="9">默认及衍生状态</h2>
-
-设置默认状态，最简单的方法是写在 init_state 里：
+设置默认状态，最简单的方法是写在初始状态里：
 
 ```js
 const init_state = {
@@ -1266,14 +1583,13 @@ const init_state = {
 ```js
 const List = (state) => {
   if (!state.sort_by) {
-    // 注意要将update方法的返回值赋值给state变量，不然state还是指向旧状态
-    state = app.update('sort_by', 'timestamp');
+    state.$update('sort_by', 'timestamp');
   }
   return div();
 };
 ```
 
-衍生状态，指将某些状态通过一定运算得出的状态，可以在init_state里用getter实现：
+衍生状态，指将某些状态通过一定运算得出的状态，可以在初始状态里用getter实现：
 
 ```js
 const init_state = {
@@ -1290,212 +1606,114 @@ const init_state = {
 但上面的方法只适合计算量少的，如果计算量很大，应该用下面的方法：
 
 ```js
+import { App, div, t } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+
+  {
+    r: 0,
+    g: 0,
+    b: 0,
+    rgb: '',
+
+    MaintainRGB: {
+      $ref: ['r', 'g', 'b'],
+    },
+  },
+
+  Main,
+);
+
 function Main(state) {
-  return div([
+  return div(
+    t(MaintainRGB, state.MaintainRGB, (newVal) => {
+      state.$update('rgb', newVal);
+    }),
 
-		// 一个命名 thunk，它的组件函数的参数是 r, g, b
-		// 实参为 state.r, state.g, state.b
-		// 所以如果这三个值发生了变化，这个组件会重新渲染，然后更新 state.rgb
-		// 如果三个值没有变化，框架会认为这个组件不需要重新渲染，也就避免了重复计算
-		// 这个thunk就相当于 state.r, state.g, state.b 的 observer
-		// 注意thunk必须命名，否则框架没法判断是否相同，只能保守地认为不同，就每次都会触发计算了
-		// thunk的命名可以通过第一个字符串参数，或者命名函数实现
-		// 因为不需要渲染元素，所以这个 thunk 的函数返回一个 null，表明不需要渲染的意思
-		// 必须返回 null，不返回（即返回 undefined），会报错
-
-    t('computed rgb', (r, g, b) => {
-      app.update('rgb', `rgb(${r}, ${g}, ${b})`);
-      return null;
-    }, state.r, state.g, state.b),
-
-    // ...
-  ]);
+    div(state.rgb),
+  );
 }
+
+function MaintainRGB(state, update) {
+  update(`rgb(${state.r}, ${state.g}, ${state.b})`);
+  return null;
+}
+
 ```
 
-上面实现的就是种观察者模式，组件并不作为视觉元素，而是观察状态树中的状态，并在它的值改变时触发一些动作。
-这些动作中最常用的是，根据当前的状态，构建界面的视觉元素，所以组件函数的返回值被定义为新的元素。不需要改变视觉元素时，返回 null 即可。
+上面的示例，在第一次渲染时，会更新 rgb 这个状态。
+以后只在 r、g、b 这三个状态更新的时候，才更新 rgb。
+
+MaintainRGB 这个组件并没有视觉上的作用，而是用于观察 r、g、b 这三个状态。
+当被观察的状态改变时，执行一些动作，这里是更新另一个状态，使其保持一致。
 
 用这种模式可以实现很复杂的关联计算，衍生的状态本身也可以被其他衍生状态观察，而这些都是定义好，就不需要操心的了，框架会自动计算好。
 
-patch的过程中，如果触发了状态更新，那patch完成后，会再次发起patch，直到状态达到稳定，不再变更为止。
-因为不这样做的话，有些组件可能拿到的是update前的值，会造成界面显示和内部状态的不一致。
 
-这也是这个框架不仅仅做视图层，而是加入状态管理的原因。
-或者说，这个本来就是个状态管理的框架，界面组件只不过是状态的观察者，对状态的改变作出适当的反应。
+<h2 id="updater">状态树中的更新函数</h2>
 
-<h2 id="reusable">可复用的组件</h2>
+在上一节里，MaintainRGB 组件的第二个参数是一个更新函数。
+这个函数用于更新 rgb 状态。
+因为 MaintainRGB 的 state 参数只包含 r, g, b，不包含 rgb，所以需要传递额外的函数用于更新。
 
-前面讲述基础用法的章节，已经提到了各种有益于组件的可复用性的机制。
-下面将用具体的例子说明组件如何复用。
+MaintainRGB 的 state 参数不可以包含 rgb 参数，因为这个组件本身会改变 rgb，改变 rgb 又会触发它的重新计算，导致死循环，框架会抛出异常。
 
-<h3>同一组件用于不同的状态子树</h3>
+对于这种常用的场景，框架提供了一个方便的机制，用于定义更新函数。
 
-```js
-import {
-  App, on, t, css, $any,
-  div, ul, li, checkbox, span, button,
-} from 'affjs'
-
-const app = new App(document.getElementById('app'));
-
-// 状态树
-app.init({
-  // 列表1
-  list1: [
-    { desc: 'task foo', done: false },
-    { desc: 'task bar', done: true },
-    { desc: 'task baz', done: false },
-  ],
-
-  // 列表2
-  list2: [
-    { desc: 'task FOO', done: true },
-    { desc: 'task BAR', done: false },
-    { desc: 'task BAZ', done: true },
-  ],
-});
-
-// 组件
-const TodoList = (list) => ul(
-  // 列表
-  list.map(item => li(
-    // 是否完成
-    checkbox(
-      on('click', function() {
-        item.$update('done', this.element.checked);
-      }),
-      {
-        checked: item.done,
-      },
-    ),
-    // 描述
-    span(
-      css`
-        text-decoration: ${item.done ? 'line-through' : 'none'};
-      `,
-      item.desc,
-    ),
-  )),
-  // 全部切换按钮
-  button(on('click', () => {
-    const allDone = list.reduce((acc, cur) => acc && cur.done, true);
-    list.$update($any, 'done', !allDone);
-  }), 'Toggle All'),
-);
-
-// 根组件
-const Main = (state) => {
-  return div(
-    t(TodoList, state.list1),
-    t(TodoList, state.list2),
-  );
-};
-
-app.init(Main);
-```
-
-![reusable](images/reusable.gif)
-
-上面的 TodoList 就具备良好的可复用性。只需要将状态树中的任务列表传递给它，就可以正常工作。
-
-而且状态更新，也只依赖传入的子状态，使用 $update 方法进行。不依赖任何全局对象。
-
-<h3>同一组件用于不同 App 中</h3>
-
-TodoList 组件因为不依赖任何外部对象，所以用于不同 App，传入不同状态树的子状态，都没有问题：
+示例：
 
 ```js
-import {
-  App, on, t, css, $any, $,
-  div, ul, li, checkbox, span, button,
-} from 'affjs'
+import { App, div, t, updater } from 'affjs'
 
-// 组件
-const TodoList = (list) => ul(
-  list.map(item => li(
-    checkbox(
-      on('click', function() {
-        item.$update('done', this.element.checked);
-      }),
-      {
-        checked: item.done,
-      },
-    ),
-    span(
-      css`
-        text-decoration: ${item.done ? 'line-through' : 'none'};
-      `,
-      item.desc,
-    ),
-  )),
-  button(on('click', () => {
-    const allDone = list.reduce((acc, cur) => acc && cur.done, true);
-    list.$update($any, 'done', !allDone);
-  }), 'Toggle All'),
-);
-
-// 容器 app
-const container = new App(
+const app = new App(
   document.getElementById('app'),
-  {},
-  () => div(
-    div($`#app1`),
-    div($`#app2`),
-  ),
+
+  {
+    r: 0,
+    g: 0,
+    b: 0,
+    rgb: '',
+
+    MaintainRGB: {
+      $ref: ['r', 'g', 'b'],
+      update: updater('rgb'),
+    },
+  },
+
+  Main,
 );
 
-// App 1
-const app1 = new App(
-  container.element.querySelector('#app1'),
-  // 列表1
-  {
-    todos: [
-      { desc: 'task foo', done: false },
-      { desc: 'task bar', done: true },
-      { desc: 'task baz', done: false },
-    ],
-  },
-  // 根组件
-  (state) => div(
-    t(TodoList, state.todos),
-  ),
-);
+function Main(state) {
+  return div(
+    t(MaintainRGB, state.MaintainRGB),
 
-// App 2
-const app2 = new App(
-  container.element.querySelector('#app2'),
-  // 列表2
-  {
-    todos: [
-      { desc: 'task FOO', done: true },
-      { desc: 'task BAR', done: false },
-      { desc: 'task BAZ', done: true },
-    ],
-  },
-  // 根组件
-  (state) => div(
-    t(TodoList, state.todos),
-  ),
-);
+    div(state.rgb),
+  );
+}
+
+function MaintainRGB(state) {
+  state.update(`rgb(${state.r}, ${state.g}, ${state.b})`);
+  return null;
+}
+
 ```
 
-这段程序实现的交互，和上一节的是一样的。不同之处是 TodoList 组件被两个 App 使用。
+MaintainRGB 的状态增加了一个 update 属性，它的属性值是 `updater('rgb')`，表示调用 update 即可更新名为 rgb 的状态。
 
-由此可见，如果想让组件可以跨 App 复用，就不能依赖任何与特定 App 相关的对象。
+updater 函数的第一个参数是要更新的状态的名字，查找的规则和 $ref 标志类似。updater 的其他函数，将直接传递给最终的 App.update 函数。
 
-有的框架，只使用组件的内部状态，也可以实现复用。但是牺牲掉的是全局状态树带来的便利。
-TodoList 关联的状态处于全局唯一的状态树内，其他组件需要使用这些状态，直接使用就可以了。
-不需要 TodoList 组件暴露出获取状态的接口。
+在初始的 MaintainRGB 状态里增加 update 函数之后，MaintainRGB 组件的第二个参数就可以去掉了。
+在 MaintainRGB 组件里需要更新 rgb 的时候，调用 state.update 即可。
 
-<h2 id="reusable-more">组件之外的代码复用</h2>
+<h2 id="reusable">代码复用</h2>
 
-在这个框架里，可以复用的代码单元不仅仅是组件，还有其他方式的。下面逐一介绍。
+在这个框架里，可以复用的代码单元不仅仅是组件，还有其他方式的。
 
 <h3>复用标签函数的参数</h3>
 
 标签函数的参数，可以是嵌套的子标签、标签属性（包括 id、class 等）、事件回调、样式定义等等。
-这些参数都是用 js 的表达式表示，所以可以很自然地复用：
+这些参数都是用 js 的表达式表示，所以可以很自然地复用。示例：
 
 ```js
 import { App, div, span, on, button, $inc, css } from 'affjs'
@@ -1640,217 +1858,82 @@ const app = new App(
 注意对象式和字符串式定义不能在同一个标签函数内混用。
 因为没法简单地合并。
 
-代码复用的手段，肯定不止上面这些。
 因为这个框架讲求用纯 js 代码来表达，所以，任何 js 可以用的代码复用方式，都可以应用上。
-这种灵活性是使用了各种 DSL 或者模板的框架，很难做到的。
-这个框架的一些设计，例如标签函数的参数按类型来解析，数组参数做 flatten 等等，都是为了使代码具备更好的可复用性，可组合性。
 
-<h2 id="16">内联 css 样式技巧</h2>
 
-<h3>响应式css / 适配分辨率</h3>
+<h2 id="routing">路由</h2>
 
-如果用css文件实现这个，要用到 media query，繁琐且散布在各处，修改不易。
+这个框架没有实现路由功能，因为使用的是纯 js，所以集成使用第三方路由库是轻而易举的事情。
+也不需要什么封装，选一个喜欢的三方库使用即可。
 
-```js
-const screen_width = window.screen.width;
+最开始的 任务列表 示例里，使用了 navigo 这个路由库，可以作为参考。
 
-// 根据屏幕宽度，分成不同的类型
-let screen;
-if (screen_width <= 320) {
-  screen = 'i5';
-} else if (screen_width <= 375) {
-  screen = 'i6';
-} else if (screen_width <= 414) {
-  screen = 'i6s';
-}
+要点是，在路由关联的回调里，改变状态树的某些值，然后根据这些值，渲染出不同的组件。
+可以将路由信息理解为，持久化了的一些子状态。
 
-const style = `
-	// 根据屏幕类型取对象属性，如果类型不存在，就取默认值50
-  margin-left: ${{
-    i5: 20,
-    i6: 30,
-    i6s: 40,
-  }[screen] || 50}px;
-`;
-```
+<h2 id="debug-panel">调试面板</h2>
 
-或者使用rem单位实现适配。
-
-<h3>css 样式 mixin</h3>
-
-因为内联css样式可以是字符串或者对象，所以可以直接插入字符串到模板，或者合并对象的属性的方式，实现样式的混入。
-
-这个看似和css的class相似，实际大有不同。因为可以混入函数调用的返回值，所以混入的样式，是可以参数化的。
-这是js的表达能力优于原生css的例证。
-
-例如一个可点击的区域，一般会定义cursor和user-select属性。可以把它做成一个可以复用的变量：
+框架自带了一个简易的信息面板，可以显示当前状态树，以及状态树的变更历史。使用方法：
 
 ```js
-import { div, css } from 'affjs'
-
-// 字符串式
-const clickable = `
-	cursor: pointer;
-	user-select: none;
-`;
-
-div(css`
-	// 直接插入模板字符串内
-  ${clickable}
-  /* ... 其他样式 ... */
-`);
-
-// 对象式
-clickable = {
-	cursor: 'pointer',
-	userSelect: 'none',
-};
-div({
-	// 用 object spread 语法，合并入style对象
-	style: {
-		...clickable, 
-		// 其他样式 ...
-	},
-});
-```
-
-另一个例子，绝对定位的样式，要写position、top、left等等，做成可复用的样式函数：
-
-```js
-const abs = (top, right, bottom, left) => {
-  return `
-    position: absolute;
-    ${top === 0 || top ? 'top: ' + top + ';' : ''}
-    ${right === 0 || right ? 'right: ' + right + ';' : ''}
-    ${bottom === 0 || bottom ? 'bottom: ' + bottom + ';' : ''}
-    ${left === 0 || left ? 'left: ' + left + ';' : ''}
-  `;
-};
-```
-
-然后在标签的style属性里就可以像下面这样用了，简洁了一些：
-
-```js
-div(css`
-	${abs('30px', false, 0, false)}
-`);
-```
-
-上面的是字符串的例子，对象的例子原理一样，就不赘述了。
-将常用或者共同的样式写成可混入的字符串或者函数，可以极大地使样式代码变得简洁。
-
-<h3>css 伪类</h3>
-
-标签的style属性是没办法表达伪类的。可以在旁边用一个style标签写：
-
-```js
-import { div, style } from 'affjs'
-
-div('.foo')
-style(`
-  .foo:hover {
-    /* ... */
-  }
-`)
-```
-
-渲染出来，就是一个`<style></style>`，里面是css定义。
-注意这样定义的样式的优先级比较低，所以如果标签里也有相同的定义，需要用!important才能使伪类的定义生效。
-如果不想使用 !important，可以将内联样式去掉，都写在 script 标签内。
-
-同理，上面的样式代码里也可以使用 ${} 插入任意的字符串。
-
-<h2 id="11">路由</h2>
-
-这个框架并没有实现路由机制，因为和现有的路由库结合使用已经足够简单，不需要再做什么了。
-
-以 riot-router 为例：
-
-```js
-import {
-  App, css, on,
-  div, a,
-} from 'affjs'
-import route from 'riot-route';
-
-// 子组件
-const Index = () => div(`INDEX`);
-const Foo = (a1, a2) => div(`FOO route args: ${a1} ${a2}`);
-const Bar = (a1) => div(`BAR route args: ${a1}`);
-const Baz = (a1, a2) => div(`BAZ route args: ${a1} ${a2}`);
-
-// 根组件
-const Main = (state) => {
-  return div([
-    // 几个路由切换链接
-    [
-      '/',
-      '/foo/1/FOO',
-      '/bar/x',
-    ].map(url => a(
-      url,
-      on('click', () => route(url)),
-      css`
-        background-color: #09C;
-        color: white;
-        cursor: pointer;
-        margin: 0 5px;
-        padding: 0 20px;
-      `,
-    )),
-
-    // 根据当前路由key，返回不同的内容
-    // 还可以直接将 Foo, Bar, Baz 等放入路由定义，可以少一处重复，但有时未必是一个key对应一个组件，牺牲一点DRY增加一点灵活性
-    {
-      index: Index,
-      foo: Foo,
-      bar: Bar,
-      baz: Baz,
-    }[state.route_key](...state.route_args),
-  ]);
-};
+import { App, css, div, span, DebugPanel } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
-  Main,
+  // 状态
   {
-    // 当前路由
-    route_key: 'index',
-    // 当前路由参数
-    route_args: [],
+    foo: 0,
+    bar: [1, 2, 3],
+    baz: {
+      a: 'baz',
+      b: 'Baz',
+      c: 'BAZ',
+    },
   },
+  // 根组件
+  (state, app) => div(
+
+    // 显示状态
+    div('foo: ', state.foo),
+    div('bar: ', state.bar.map(num => span(num, css`
+      padding: 0 10px;
+    `))),
+    () => {
+      const ret = [
+        div('baz: '),
+      ];
+      for (const key in state.baz) {
+        ret.push(div(key, ' = ', state.baz[key]));
+      }
+      return ret;
+    },
+
+    // 引入调试面板
+    DebugPanel(app, {
+      // 默认是不显示的，配置成显示
+      show: true,
+      // 默认是占满页面，配置成露出左边
+      left: '30%',
+    }),
+  ),
 );
 
-// 路由定义
-const routes = {
-  index: '/',
-  foo: '/foo/*/*',
-  bar: '/bar/*',
-  baz: '/baz-*-*',
-};
-for (const key in routes) {
-  route(routes[key], (...args) => {
-    // 将key和参数放入状态树
-		app.updateMulti(
-			['route_key', key],
-			['route_args', args],
-		);
-  });
-}
-// 首次访问时，执行一下路由
-route.exec();
-window.onhashchange = route.exec;
+app.update('foo', $inc);
+app.update('bar', $map(v => v * 2));
+app.update('baz', 'b', 'baZ');
+
 ```
 
-![route](images/route.gif)
+![debug-panel](images/debug-panel.png)
 
-上面实现的是，一个路由对应到一个组件的方式。实际上并不是一定要这么死板。
-URL 的改变引起状态树某些状态的改变，界面因而根据状态的改变而发生改变。
-有时是整个界面全变，有时只是变一部分。其实没有必要模拟出传统的 web 系统的架构。
-甚至“路由”这个概念都不是必要的。把 URL 所带的信息，看成是状态的一部分，URL 变了就是状态变了。
-以状态管理的角度来看 URL 的改变，其实并没有什么需要框架特别处理的。
+![debug-panel](images/debug-panel2.png)
 
-<h2 id="12">异步竞态问题</h2>
+按 ctrl + q 可以切换显示与隐藏状态。
+
+当前状态，在 state 标签页；更新记录，在 updates 标签页。左下角的按钮用于调整位置。
+
+
+<h2 id="async-race">异步竞态问题</h2>
 
 竞态发生在异步更新状态的时候，如果当前的一些状态和异步操作发起时不同，更新的结果就可能不是开发者预期中的了。
 
@@ -1867,7 +1950,8 @@ URL 的改变引起状态树某些状态的改变，界面因而根据状态的�
 
 三是避免使用列表下标作为更新路径，用元素的唯一标识。这样一个列表就需要一个 {} 和 []，各自保存元素状态和元素顺序。
 
-<h2 id="15">例子：todomvc 和 dbmon</h2>
+
+<h2 id="examples">其他代码示例</h2>
 
 [todomvc](http://todomvc.com/) 和 [dbmon](http://mathieuancelin.github.io/js-repaint-perfs/) 是各类前端框架实现得比较多的例子。
 在 examples 目录下也有用本框架实现它们的示例代码：
@@ -1878,73 +1962,4 @@ todomvc: https://github.com/reusee/aff/blob/master/examples/todomvc/main.js
 dbmon: https://github.com/reusee/aff/blob/master/examples/dbmon/main.js
 * <a href="http://reusee.github.io/dbmon/index.html" target="_blank">dbmon 的在线 demo</a>
 
-<h2 id="14">技巧集锦</h2>
 
-<h3>开发环境和线上环境使用不同init_state</h3>
-
-```js
-const dev_state = {
-  __env: 'dev',
-};
-
-const production_state = {
-  __env: 'production',
-};
-
-const init_state = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? dev_state : production_state;
-```
-
-<h3>用 local storage 保存状态</h3>
-
-```js
-const init_state = JSON.parse(window.localStorage.getItem('state')) || {
-  // ...
-};
-
-function saveState() {
-  window.localStorage.setItem('state', JSON.stringify(app.state));
-  return false;
-}
-
-setInterval(saveState, 60000);
-window.onbeforeunload = saveState;
-// 或者其他适当的时机
-```
-
-注意，在代码里更改了 init_state，上面的代码仍然会载入local storage里的状态。
-所以更改代码里定义的init_state后，需要手工清除local storage里的内容。
-各浏览器的开发者工具都可以方便地做这个操作，或者在页面增加一个操作按钮。
-
-<h3>在浏览器直接使用</h3>
-
-lib 目录下的 affjs.js 是编译出来的 UMD 格式的库文件，可以直接用`<script>`标签引入并使用。例子：
-
-```html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <script src="affjs.js"></script>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script>
-
-var affjs = window.affjs;
-var App = affjs.App;
-var div = affjs.div;
-
-var app = new App(
-  document.getElementById('app'),
-  {},
-  function(state) {
-    return div('Hello, world!');
-  }
-);
-
-    </script>
-  </body>
-</html>
-```
-
-当然有些方便的语法特性，浏览器的 js 环境可能不支持。还是推荐使用转译器来写。
