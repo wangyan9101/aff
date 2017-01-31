@@ -19,6 +19,8 @@
 * [代码复用](#reusable)
 * [路由](#routing)
 * [调试面板](#debug-panel)
+* [异步竞态问题](#async-race)
+* [其他代码示例](#examples)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -35,12 +37,5 @@
 {{template "reusable.md"}}
 {{template "routing.md"}}
 {{template "debug-panel.md"}}
-
-{{/* TODO
-
-异步问题
-
-其他示例
-与其他框架的对比
-
-*/}}
+{{template "async-race.md"}}
+{{template "examples.md"}}
