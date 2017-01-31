@@ -18,6 +18,7 @@
 * [状态树中的更新函数](#updater)
 * [代码复用](#reusable)
 * [路由](#routing)
+* [调试面板](#debug-panel)
 
 <h2 id="demo">代码示例</h2>
 
@@ -1867,6 +1868,68 @@ const app = new App(
 
 要点是，在路由关联的回调里，改变状态树的某些值，然后根据这些值，渲染出不同的组件。
 可以将路由信息理解为，持久化了的一些子状态。
+
+<h2 id="debug-panel">调试面板</h2>
+
+框架自带了一个简易的信息面板，可以显示当前状态树，以及状态树的变更历史。使用方法：
+
+```js
+import { App, css, div, span, DebugPanel } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  // 状态
+  {
+    foo: 0,
+    bar: [1, 2, 3],
+    baz: {
+      a: 'baz',
+      b: 'Baz',
+      c: 'BAZ',
+    },
+  },
+  // 根组件
+  (state, app) => div(
+
+    // 显示状态
+    div('foo: ', state.foo),
+    div('bar: ', state.bar.map(num => span(num, css`
+      padding: 0 10px;
+    `))),
+    () => {
+      const ret = [
+        div('baz: '),
+      ];
+      for (const key in state.baz) {
+        ret.push(div(key, ' = ', state.baz[key]));
+      }
+      return ret;
+    },
+
+    // 引入调试面板
+    DebugPanel(app, {
+      // 默认是不显示的，配置成显示
+      show: true,
+      // 默认是占满页面，配置成露出左边
+      left: '30%',
+    }),
+  ),
+);
+
+app.update('foo', $inc);
+app.update('bar', $map(v => v * 2));
+app.update('baz', 'b', 'baZ');
+
+```
+
+![debug-panel](images/debug-panel.png)
+
+![debug-panel](images/debug-panel2.png)
+
+按 ctrl + q 可以切换显示与隐藏状态。
+
+当前状态，在 state 标签页；更新记录，在 updates 标签页。左下角的按钮用于调整位置。
+
 
 
 

@@ -18,6 +18,7 @@
 * [状态树中的更新函数](#updater)
 * [代码复用](#reusable)
 * [路由](#routing)
+* [调试面板](#debug-panel)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -33,11 +34,10 @@
 {{template "updater.md"}}
 {{template "reusable.md"}}
 {{template "routing.md"}}
+{{template "debug-panel.md"}}
 
 {{/* TODO
 
-动画
-调试面板
 异步问题
 
 其他示例
