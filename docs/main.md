@@ -17,6 +17,7 @@
 * [默认状态及衍生状态](#default-and-derived-state)
 * [状态树中的更新函数](#updater)
 * [代码复用](#reusable)
+* [路由](#routing)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -31,10 +32,10 @@
 {{template "default-and-derived-state.md"}}
 {{template "updater.md"}}
 {{template "reusable.md"}}
+{{template "routing.md"}}
 
 {{/* TODO
 
-路由
 动画
 调试面板
 异步问题
