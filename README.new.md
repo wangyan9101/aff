@@ -937,6 +937,43 @@ new App(
 );
 ```
 
+在事件回调函数中，可以使用 this.element 获得浏览器元素的引用：
+
+```js
+import { App, div, button, $inc, } from 'affjs'
+
+const app = new App(
+  document.getElementById('app'),
+  {
+    count: 0,
+  },
+  Main,
+);
+
+function Main(state) {
+  return div(
+    button({
+      // 点击回调
+      onclick() {
+        console.log('onclick', this.element);
+        state.$update('count', $inc);
+      },
+      // 元素创建回调
+      oncreated(elem) {
+        console.log('oncreated', elem);
+      },
+    }, `CLICK ME ${state.count}`),
+  );
+}
+```
+
+注意 oncreated 回调只在元素创建时触发一次，后面框架对元素进行patch操作，改变文本的值，不会创建新元素，就不会再触发oncreated事件。
+这个主要用在和第三方库集成时，需要传递一个浏览器DOM做初始化的场景。
+
+如果需要在每次元素被patch的时候执行回调，可使用 onpatch / onpatched 事件。
+
+还要注意的是，需要用到 this 的时候，回调函数不能用箭头函数 (即 () => {} 这样的)，因为箭头函数的 this 不能绑定，this.element 无效。
+
 <h3>attribute 和 property</h3>
 
 标签的 attributes 和 properties 是同时设置的，方法是将一个对象作为参数传入标签函数。
