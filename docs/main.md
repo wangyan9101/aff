@@ -16,6 +16,7 @@
 * [组件状态的传递](#state-passing)
 * [默认状态及衍生状态](#default-and-derived-state)
 * [状态树中的更新函数](#updater)
+* [代码复用](#reusable)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -29,11 +30,9 @@
 {{template "state-passing.md"}}
 {{template "default-and-derived-state.md"}}
 {{template "updater.md"}}
+{{template "reusable.md"}}
 
 {{/* TODO
-
-组件的可复用性
-组件之外的代码复用
 
 引用浏览器元素
 调试面板
