@@ -319,9 +319,12 @@ export class App {
 
   // patch lastElement to represent node attributes, with diffing lastNode
   patch(lastElement, node, lastNode) {
-    //if (!lastElement || !lastNode) {
-    //  throw['bad element'];
-    //}
+    if (!lastElement) {
+      throw['bad last element'];
+    }
+    if (!lastNode) {
+      throw['bad last node'];
+    }
 
     // thunk
     let lastThunk;

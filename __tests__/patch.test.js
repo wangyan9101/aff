@@ -180,3 +180,17 @@ test('patch number attr', () => {
   app.update(42);
   expect(root.innerHTML).toBe('<div foo="42"></div>');
 });
+
+test('bad last element', () => {
+  const app = new App();
+  expect(() => {
+    app.patch(undefined, div(), undefined);
+  }).toThrowError('bad last element');
+});
+
+test('bad last node', () => {
+  const app = new App();
+  expect(() => {
+    app.patch(document.createElement('div'), div(), undefined);
+  }).toThrowError('bad last node');
+});
