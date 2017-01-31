@@ -17,7 +17,8 @@ export class MutableState extends State {
     this.state = this.updateState([], this.state, ...arg);
   }
 
-  updateState(basePath, obj, ...args) {
+  updateState(basePath, object, ...args) {
+    let obj = object;
     if (args.length === 0) {
       return obj;
     } else if (args.length === 1) {
