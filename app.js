@@ -258,13 +258,24 @@ export class App {
       this.updated = false;
       this.updateCount = 0;
       this._state.beforePatch();
-      const result = this.patch(
-        this.element, 
-        this.nodeFunc(this.state, this), 
-        this.node,
-      );
-      this.element = result[0];
-      this.node = result[1];
+      if (!this.node) {
+        // first render
+        this.node = this.nodeFunc(this.state, this);
+        const elem = this.node.toElement(this);
+        if (this.element.parentNode) {
+          this.element.parentNode.insertBefore(elem, this.element);
+          this.element.parentNode.removeChild(this.element);
+        }
+        this.element = elem;
+      } else {
+        const result = this.patch(
+          this.element, 
+          this.nodeFunc(this.state, this), 
+          this.node,
+        );
+        this.element = result[0];
+        this.node = result[1];
+      }
       while (this.updated) {
         if (this.updateCount > 4096) { // infinite loop
           throw['infinite loop in updating', args];
@@ -308,12 +319,13 @@ export class App {
 
   // patch lastElement to represent node attributes, with diffing lastNode
   patch(lastElement, node, lastNode) {
-    //if (!lastElement) {
+    //if (!lastElement || !lastNode) {
     //  throw['bad element'];
     //}
+
     // thunk
     let lastThunk;
-    if (lastNode && lastNode instanceof Thunk) {
+    if (lastNode instanceof Thunk) {
       lastThunk = lastNode;
       lastNode = lastThunk.node;
     }
@@ -354,9 +366,7 @@ export class App {
 
     // check if patchable
     let patchable = true;
-    if (!lastNode) {
-      patchable = false;
-    } else if (node.constructor != lastNode.constructor) {
+    if (node.constructor != lastNode.constructor) {
       patchable = false;
     } else if (node instanceof ElementNode  && (node.tag != lastNode.tag)) {
       patchable = false;
@@ -364,14 +374,12 @@ export class App {
     if (!patchable) {
       const element = node.toElement(this);
       // insert new then remove old
-      if (lastElement && lastElement.parentNode) {
+      if (lastElement.parentNode) {
         lastElement.parentNode.insertBefore(element, lastElement);
         lastElement.parentNode.removeChild(lastElement);
       }
       // cache lastElement
-      if (lastNode) {
-        this.cacheNode(lastElement, lastNode);
-      }
+      this.cacheNode(lastElement, lastNode);
 
       return [element, node];
     }
