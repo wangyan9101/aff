@@ -308,6 +308,9 @@ export class App {
 
   // patch lastElement to represent node attributes, with diffing lastNode
   patch(lastElement, node, lastNode) {
+    //if (!lastElement) {
+    //  throw['bad element'];
+    //}
     // thunk
     let lastThunk;
     if (lastNode && lastNode instanceof Thunk) {
@@ -578,7 +581,7 @@ export class App {
             }
             childElements = lastElement.childNodes;
             // patch
-            const result = this.patch(
+            this.patch(
               childElements[i],
               child,
               lastNode.children[i],
@@ -595,14 +598,15 @@ export class App {
         }
       } else {
         // not keyed
-        const result = this.patch(
-          childElements[i], 
-          child,
-          lastNode && lastNode.children ? lastNode.children[i] : null,
-        );
-        const elem = result[0];
         if (!childElements[i]) {
+          const elem = child.toElement(this);
           lastElement.appendChild(elem);
+        } else {
+          this.patch(
+            childElements[i], 
+            child,
+            lastNode && lastNode.children ? lastNode.children[i] : null,
+          );
         }
       }
     }
