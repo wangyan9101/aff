@@ -99,6 +99,7 @@ export class App {
           refInfos = ref;
         }
         delete obj['$ref'];
+        delete obj['$use'];
       } else {
         throw['bad ref', ref];
       }
