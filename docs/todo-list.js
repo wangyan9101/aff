@@ -240,6 +240,7 @@ function Item(state, info, hovering) {
       background-color: ${hovering ? '#EEE' : 'transparent'};
       border-radius: 4px;
       padding: 8px;
+      position: relative;
     `,
     on('mouseenter', () => {
       state.updateHovering(info.id);
@@ -249,7 +250,7 @@ function Item(state, info, hovering) {
     }),
 
     // 一般状态下，显示一个 checkbox 和任务内容
-    !info.status || info.status == 'finish-removing' ? [
+    info.status != 'editing' ? [
       checkbox({
         checked: info.done,
       }, on('click', () => {
@@ -274,7 +275,7 @@ function Item(state, info, hovering) {
         }
       }), css`
         border: 0;
-        width: 80%;
+        width: 75%;
         background-color: #EFE;
         border-radius: 5px;
         padding: 0 8px;
@@ -286,6 +287,10 @@ function Item(state, info, hovering) {
       width: 100%;
       color: #88F;
       text-align: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      padding: 8px;
     `) : null,
 
     // 删除动画
