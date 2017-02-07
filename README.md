@@ -42,7 +42,7 @@ import {
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
-} from '../index'
+} from 'affjs'
 
 // 读保存在 local storage 里的状态
 const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
@@ -504,7 +504,7 @@ module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        exclude: /node_modules(?!\/affjs)/,
+        exclude: /node_modules/,
         loader: 'babel-loader',
       },
       { test: /\.css$/, loader: "style-loader!css-loader" },
@@ -557,6 +557,14 @@ new App(
 ```
 
 如果编译无误，打开 http://localhost:5000/ 可看到 "Hello, world!" 字样，即说明环境正常。
+
+现在可以试试前一节的任务列表实例。先装上路由库 navigo：
+
+```bash
+npm install --save-dev navigo
+```
+
+再将 main.js 的内容替换成任务列表示例代码，重新编译刷新后，就可以看到效果了。
 
 <h2 id="app">App 类</h2>
 

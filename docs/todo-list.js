@@ -7,7 +7,7 @@ import {
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
-} from '../index'
+} from 'affjs'
 
 // 读保存在 local storage 里的状态
 const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
