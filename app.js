@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Updater } from './state'
+import { Updater, StateWrapper } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -195,6 +195,26 @@ export class App {
             const updatePath = bindings[name].slice(0);
             obj[key] = function(...args) {
               app.update(...updatePath, ...updateArgs, ...args);
+            }
+            break
+          }
+        }
+        if (!found) {
+          throw[`no state named ${name}`];
+        }
+
+      // setup state wrapper
+      } else if (subState instanceof StateWrapper) {
+        const name = subState.name;
+        // search update path
+        let found = false;
+        for (let i = scopes.length - 1; i >= 0; i--) {
+          const bindings = scopes[i];
+          if (name in bindings) { // found
+            found = true;
+            const updatePath = bindings[name].slice(0);
+            obj[key] = function(...args) {
+              subState.func(app.get(updatePath))(...args);
             }
             break
           }

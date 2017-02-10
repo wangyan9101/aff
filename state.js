@@ -25,3 +25,12 @@ export function Updater(args) {
 export function updater(...args) {
   return new Updater(args);
 }
+
+export function StateWrapper(name, func) {
+  this.name = name;
+  this.func = func;
+}
+
+export function withState(name, func) {
+  return new StateWrapper(name, func);
+}
