@@ -137,7 +137,7 @@ export class App {
       const name = refInfos[key];
       // search in scopes
       let found = false;
-      for (let i = 0; i < scopes.length; i++) {
+      for (let i = scopes.length - 1; i >= 0; i--) {
         const bindings = scopes[i];
         if (name in bindings) { // found
           found = true;
@@ -188,7 +188,7 @@ export class App {
         const updateArgs = subState.args.slice(1);
         // search update path
         let found = false;
-        for (let i = 0; i < scopes.length; i++) {
+        for (let i = scopes.length - 1; i >= 0; i--) {
           const bindings = scopes[i];
           if (name in bindings) { // found
             found = true;

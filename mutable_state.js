@@ -17,7 +17,7 @@ export class MutableState extends State {
     this.state = this.updateState([], this.state, ...arg);
   }
 
-  updateState(basePath, object, ...args) {
+  updateState(statePath, object, ...args) {
     let obj = object;
     if (args.length === 0) {
       return obj;
@@ -37,7 +37,7 @@ export class MutableState extends State {
         // re-setup arrays conservatively
         forceSetup = true;
       }
-      this.setupState(ret, basePath, forceSetup);
+      this.setupState(ret, statePath, forceSetup);
       if (typeof ret === 'object' && ret !== null && !ret.hasOwnProperty('__aff_tick')) {
         this.setupPatchTick(ret);
         ret.__aff_tick = this.patchTick + 1;
@@ -53,7 +53,7 @@ export class MutableState extends State {
           obj.__aff_tick = this.patchTick + 1;
         }
         const updateKey = (key, ...args) => {
-          const path = basePath.slice(0);
+          const path = statePath.slice(0);
           path.push(key);
           const value = this.updateState(path, ...args);
           obj[key] = value;
@@ -214,7 +214,7 @@ export class MutableState extends State {
     return false;
   }
 
-  setupState(state, basePath ,forceSetup) {
+  setupState(state, statePath ,forceSetup) {
     if (typeof state != 'object') {
       return
     } else if (state === null) {
@@ -245,19 +245,23 @@ export class MutableState extends State {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: basePath.slice(0),
+        value: statePath.slice(0),
       });
 
     } else {
-      if (!(state.$path.reduce((acc, cur, i) => 
-        acc && cur == basePath[i], true))) {
-        throw['cannot change state object path', basePath.slice(0), state.$path];
+      // no need to setup accessors, check path
+      if (this.app.get(statePath) !== state) {
+        // setting new state
+        if (!(state.$path.reduce((acc, cur, i) => 
+          acc && cur == statePath[i], true))) {
+          throw['cannot change state object path', statePath.slice(0), state.$path];
+        }
       }
     }
 
     // recursively
     for (const key in state) {
-      const subPath = basePath.slice(0);
+      const subPath = statePath.slice(0);
       subPath.push(key);
       this.setupState(state[key], subPath, forceSetup);
     }
