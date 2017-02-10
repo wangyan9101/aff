@@ -3,7 +3,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip,
+  App, css, t, on, updater, key, $, skip, withState,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -24,7 +24,9 @@ const initState = {
 
   NewTodo: {
     // 更新 todos 状态的函数
-    updateTodos: updater('todos'),
+    addTodo: withState('todos', todos => (id, infos) => {
+      todos.$update(id, infos);
+    }),
   },
 
   MaintainFiltered: {
@@ -47,10 +49,13 @@ const initState = {
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
       updateHovering: updater('hovering'),
-      updateTodos: updater('todos'),
+      delTodo: withState('todos', todos => id => {
+        todos.$update($del(id));
+      }),
 
       ItemControl: {
-        updateTodos: updater('todos'),
+        // 这个组件没有初始状态，但也留着这个备用
+        // 在需要增加初始状态的时候，可以直接添加
       },
     },
   },
@@ -119,8 +124,8 @@ function NewTodo(state) {
     }));
     // 模拟异步新建操作
     setTimeout(() => {
-      // updateTodos 是在状态树定义的更新函数
-      state.updateTodos(id, {
+      // addTodo 是在状态树定义的更新函数
+      state.addTodo(id, {
         id: id,
         time: new Date().getTime(),
         content: content,
@@ -300,7 +305,7 @@ function Item(state, info, hovering) {
       },
       // 动画完成后，删除条目
       on('animationend', () => {
-        state.updateTodos($del(info.id));
+        state.delTodo(info.id);
       }),
     ] : null,
 
