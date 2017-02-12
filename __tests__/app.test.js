@@ -1,6 +1,6 @@
 import {App} from '../app'
 import {div, none, input, style} from '../tags'
-import { t, consoleLogUpdates, on } from '../index'
+import { t, on } from '../index'
 import { $inc } from '../operations'
 import { $, css } from '../tagged'
 
@@ -10,7 +10,6 @@ test('app', () => {
   root.appendChild(element);
 
   let app = new App(
-    consoleLogUpdates,
     element,
     (state) => {
       return div($`#test`, [
