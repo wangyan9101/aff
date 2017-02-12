@@ -1,4 +1,4 @@
-import { App, div, t, updater } from 'affjs'
+import { App, div, t, updater, ref } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
@@ -10,7 +10,9 @@ const app = new App(
     rgb: '',
 
     MaintainRGB: {
-      $ref: ['r', 'g', 'b'],
+      r: ref('r'),
+      g: ref('g'),
+      b: ref('b'),
       update: updater('rgb'),
     },
   },

@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Updater } from './state'
+import { Updater, Reference } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -71,56 +71,20 @@ export class App {
       return
     }
 
-    // parse $ref
-    let refInfos;
-    let ref;
-    if ('$ref' in obj) {
-      ref = obj['$ref'];
-    } else if ('$use' in obj) {
-      ref = obj['$use'];
-    }
-    if (ref) {
-      if (typeof ref === 'object' && ref !== null) {
-        if (Array.isArray(ref)) {
-          refInfos = {};
-          for (let i = 0; i < ref.length; i++) {
-            const key = ref[i];
-            if (key in obj) {
-              throw['ref key conflict', key];
-            }
-            refInfos[key] = key;
-          }
-        } else {
-          for (const key in ref) {
-            if (key in obj) {
-              throw['ref key conflict', key];
-            }
-          }
-          refInfos = ref;
-        }
-        delete obj['$ref'];
-        delete obj['$use'];
-      } else {
-        throw['bad ref', ref];
-      }
-    }
-
     const app = this;
     function setGetter(obj, key, from) {
       const parentPathOfFrom = from.slice(0);
       parentPathOfFrom.pop();
-      if (!(key in obj)) {
-        Object.defineProperty(obj, key, {
-          configurable: false,
-          enumerable: true,
-          get: function() {
-            return app.get(from);
-          },
-          set: function(v) {
-            app.update(...from, v);
-          },
-        });
-      }
+      Object.defineProperty(obj, key, {
+        configurable: false,
+        enumerable: true,
+        get: function() {
+          return app.get(from);
+        },
+        set: function(v) {
+          app.update(...from, v);
+        },
+      });
       if (!obj.__aff_ref_keys) {
         Object.defineProperty(obj, '__aff_ref_keys', {
           configurable: false,
@@ -132,37 +96,43 @@ export class App {
       obj.__aff_ref_keys[key] = from;
     }
 
-    // setup
-    for (const key in refInfos) {
-      const name = refInfos[key];
+    // setup references
+    for (let key in obj) {
+      const subState = obj[key];
+      if (!(subState instanceof Reference)) {
+        continue
+      }
+      const name = subState.name;
       // search in scopes
       let found = false;
       for (let i = scopes.length - 1; i >= 0; i--) {
         const bindings = scopes[i];
-        if (name in bindings) { // found
-          found = true;
-          let stopPath = bindings[name].slice(0);
-          // check loop
-          let sameLen = 0;
-          for (let idx = 0; idx < stopPath.length && idx < path.length; idx++) {
-            if (stopPath[idx] == path[idx]) {
-              sameLen++
-            } else {
-              break
-            }
-          }
-          if (sameLen == stopPath.length) {
-            throw['loop in $ref', path, stopPath];
-          } 
-          // setup getter and setter
-          stopPath.pop();
-          const stopLen = stopPath.length;
-          let setupPath = path.slice(0);
-          while (setupPath.length > stopLen) {
-            setGetter(this.get(setupPath), key, bindings[name]);
-            setupPath.pop();
+        if (!(name in bindings)) {
+          continue
+        }
+        found = true;
+        let stopPath = bindings[name].slice(0);
+        // check loop
+        let sameLen = 0;
+        for (let idx = 0; idx < stopPath.length && idx < path.length; idx++) {
+          if (stopPath[idx] == path[idx]) {
+            sameLen++
+          } else {
+            break
           }
         }
+        if (sameLen == stopPath.length) {
+          throw['loop in reference', path, stopPath];
+        } 
+        // setup getter and setter
+        stopPath.pop();
+        const stopLen = stopPath.length;
+        let setupPath = path.slice(0);
+        while (setupPath.length > stopLen) {
+          setGetter(this.get(setupPath), key, bindings[name]);
+          setupPath.pop();
+        }
+        break // stop searching
       }
       if (!found) {
         throw[`no state named ${name}`];

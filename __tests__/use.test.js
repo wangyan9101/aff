@@ -1,16 +1,15 @@
-import { App, div, $, t, p } from '../index'
+import { App, div, $, t, p, ref } from '../index'
 
 test('ref', () => {
   let init_state = {
     foo: 'FOO',
     bar: 'BAR',
     baz: {
-      $ref: ['foo', 'bar'],
+      foo: ref('foo'),
+      bar: ref('bar'),
       baz: {
-        $ref: {
-          FOO: 'foo',
-          BAR: 'bar',
-        },
+        FOO: ref('foo'),
+        BAR: ref('bar'),
       },
     },
   };
@@ -83,39 +82,6 @@ test('ref', () => {
   expect(root.querySelector('#d').textContent).toBe('bar');
 });
 
-test('ref conflict', () => {
-  expect(() => {
-    new App({
-      foo: 'foo',
-      bar: {
-        $ref: ['foo'],
-        foo: 42,
-      },
-    });
-  }).toThrowError('ref key conflict,foo');
-  expect(() => {
-    new App({
-      foo: 'foo',
-      bar: {
-        $ref: {
-          foo: 'foo',
-        },
-        foo: 42,
-      },
-    });
-  }).toThrowError('ref key conflict,foo');
-});
-
-test('bad ref', () => {
-  expect(() => {
-    new App({
-      foo: {
-        $ref: 42,
-      },
-    });
-  }).toThrowError('bad ref,42');
-});
-
 test('passthrough ref', () => {
   let app = new App({
     foo: 'FOO',
@@ -124,7 +90,8 @@ test('passthrough ref', () => {
         foo2: 'foo',
         bar3: {
           bar4: {
-            $ref: ['foo', 'foo2'],
+            foo: ref('foo'),
+            foo2: ref('foo2'),
           },
         },
       },
@@ -141,38 +108,38 @@ test('passthrough ref', () => {
 test('no state', () => {
   expect(() => {
     let app = new App({
-      $ref: ['foo'],
+      foo: ref('foo'),
     });
   }).toThrowError('no state named foo');
   expect(() => {
     let app = new App({
       bar: {
-        $ref: ['foo'],
+        foo: ref('foo'),
       },
     });
   }).toThrowError('no state named foo');
 });
 
-test('loop in $ref', () => {
+test('loop in reference', () => {
   expect(() => {
     let app = new App({
       foo: {
-        $ref: ['foo'],
+        foo: ref('foo'),
       },
     })
-  }).toThrowError('loop in $ref,foo,foo');
+  }).toThrowError('loop in reference,foo,foo');
 });
 
-test('loop in $ref', () => {
+test('loop in reference', () => {
   expect(() => {
     let app = new App({
       foo: {
         foo: {
-          $ref: ['foo'],
+          foo: ref('foo'),
         },
       },
     })
-  }).toThrowError('loop in $ref,foo,foo,foo');
+  }).toThrowError('loop in reference,foo,foo,foo');
 });
 
 test('loop in ref', () => {
@@ -180,23 +147,23 @@ test('loop in ref', () => {
     const app = new App(
       {
         foo: {
-          $ref: ['bar'],
+          bar: ref('bar'),
         },
         bar: {
-          $ref: ['foo'],
+          foo: ref('foo'),
         },
       },
     );
-  }).toThrowError('loop in $ref,foo,bar,foo');
+  }).toThrowError('loop in reference,foo,bar,foo');
 });
 
-test('update in $ref', () => {
+test('update in reference', () => {
   let app = new App({
     foo: 'FOO',
     c1: {
-      $ref: ['foo'],
+      foo: ref('foo'),
       c2: {
-        $ref: ['foo'],
+        foo: ref('foo'),
       },
     },
   });
@@ -208,7 +175,7 @@ test('update in $ref', () => {
   expect(app.state.c1.c2.foo).toBe('foo');
 });
 
-test('tick in $ref', () => {
+test('tick in reference', () => {
   let root = document.createElement('div');
   let element = document.createElement('div');
   root.appendChild(element);
@@ -222,7 +189,9 @@ test('tick in $ref', () => {
           c: {
             z: 'baz',
             d: {
-              $ref: ['x', 'y', 'z'],
+              x: ref('x'),
+              y: ref('y'),
+              z: ref('z'),
             }
           },
         },
@@ -244,7 +213,7 @@ test('refs in array', () => {
     foo: 'FOO',
     bar: [
       {
-        $use: ['foo'],
+        foo: ref('foo'),
       },
     ],
   });
@@ -260,7 +229,7 @@ test('array update', () => {
     {
       array: [1, 2, 3],
       List: {
-        $use: ['array'],
+        array: ref('array'),
       },
     },
     (state) => {

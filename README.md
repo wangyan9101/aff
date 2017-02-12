@@ -38,7 +38,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip,
+  App, css, t, on, updater, key, $, skip, ref,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -66,19 +66,19 @@ const initState = {
 
   MaintainFiltered: {
     // 引用 todos 和 filter 状态
-    $ref: ['todos', 'filter'],
+    todos: ref('todos'),
+    filter: ref('filter'),
     updateFiltered: updater('filtered'),
   },
 
   Filter: {
-    $ref: ['filter', 'todos'],
+    todos: ref('todos'),
+    filter: ref('filter'),
   },
 
   List: {
-    $ref: {
-      todos: 'todos',
-      ids: 'filtered',
-    },
+    todos: ref('todos'),
+    ids: ref('filtered'),
     hovering: '',
 
     // 嵌套的组件，对应有一个嵌套的状态
@@ -1516,7 +1516,7 @@ Element 如果需要多一个状态，那就要改动多处代码，逐层增加
 框架对这种情况，提供了一个解决办法。先看最终的代码：
 
 ```js
-import { App, div, t } from 'affjs'
+import { App, div, t, ref } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
@@ -1526,7 +1526,7 @@ const app = new App(
       Wrapper: {
         InnerWrapper: {
           Element: {
-            $ref: ['foo'],
+            foo: ref('foo'),
           },
         },
       },
@@ -1563,50 +1563,21 @@ function Element(state) {
 在传递的时候，直接传递相应的子状态就可以了。
 组件树和状态树的结构相同，就可以有这个便利。
 
-另外，Element 子状态里面有一个 $ref 成员，这是框架提供的特殊机制。
+另外，Element 组件的状态的 foo 成员，定义为 `ref('foo')`，代表它是一个引用。
 它的意思是，向上寻找一个名为 foo 的状态，并逐层传递到这个状态对象里。
 也就是说，OutterWrapper、Wrapper、InnerWrapper、Element 对应的这些状态对象，都会有一个 foo 属性，而且属性值和最外层的 foo 相同。
-$ref 指定的状态，是逐层传递的。
 这就避免了手工逐层传递。
 
-如果 Element 需要多一个状态，只需要在 $ref 里增加相应的属性名即可。
+如果 Element 需要多一个状态，只需要增加相应的引用即可。
 中间所有的组件的代码都不需要改动。
 删除一个状态同理。
 
-$ref 的定义也可以是一个对象，对象属性名对应设置的属性名，属性值对应需要查找的属性名：
-
-```js
-const init_state = {
-  foo: 'FOO',
-  OutterWrapper: {
-    bar: 'BAR', 
-    Wrapper: {
-      InnerWrapper: {
-        Element: {
-          $ref: {
-            FOO: 'foo',
-            BAR: 'bar',
-          },
-        }
-      }
-    },
-  }
-};
-
-// ...
-
-const Element = (state) => div(state.FOO, state.BAR);
-
-```
-
-这样 Element 组件里用到的就是 FOO 和 BAR，而不是 foo 和 bar 了。
-
-$ref 只会向上查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
+引用会从最内层，向最外层查找，直到根状态。如果到根状态都没有找到，就会抛出异常。
 查找是初始化 App 的时候做的，不是在读取状态的时候。
 所以从一开始就要在初始状态里定义好相关的状态。
 
-$ref 的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
-因为解析 $ref 标记开销比较大，如果更新一个大对象，就算不包含 $ref 标记，也要进行解析的话，对性能影响比较大。
+引用的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
+因为解析引用开销比较大，如果更新一个大对象，就算不包含引用标记，也要进行解析的话，对性能影响比较大。
 
 
 <h2 id="default-and-derived-state">默认状态及衍生状态</h2>
@@ -1647,7 +1618,7 @@ const init_state = {
 但上面的方法只适合计算量少的，如果计算量很大，应该用下面的方法：
 
 ```js
-import { App, div, t } from 'affjs'
+import { App, div, t, ref } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
@@ -1659,7 +1630,9 @@ const app = new App(
     rgb: '',
 
     MaintainRGB: {
-      $ref: ['r', 'g', 'b'],
+      r: ref('r'),
+      g: ref('g'),
+      b: ref('b'),
     },
   },
 
@@ -1705,7 +1678,7 @@ MaintainRGB 的 state 参数不可以包含 rgb 参数，因为这个组件本�
 示例：
 
 ```js
-import { App, div, t, updater } from 'affjs'
+import { App, div, t, updater, ref } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
@@ -1717,7 +1690,9 @@ const app = new App(
     rgb: '',
 
     MaintainRGB: {
-      $ref: ['r', 'g', 'b'],
+      r: ref('r'),
+      g: ref('g'),
+      b: ref('b'),
       update: updater('rgb'),
     },
   },
@@ -1742,7 +1717,7 @@ function MaintainRGB(state) {
 
 MaintainRGB 的状态增加了一个 update 属性，它的属性值是 `updater('rgb')`，表示调用 update 即可更新名为 rgb 的状态。
 
-updater 函数的第一个参数是要更新的状态的名字，查找的规则和 $ref 标志类似。updater 的其他函数，将直接传递给最终的 App.update 函数。
+updater 函数的第一个参数是要更新的状态的名字，查找的规则和解析引用类似。updater 的其他函数，将直接传递给最终的 App.update 函数。
 
 在初始的 MaintainRGB 状态里增加 update 函数之后，MaintainRGB 组件的第二个参数就可以去掉了。
 在 MaintainRGB 组件里需要更新 rgb 的时候，调用 state.update 即可。

@@ -27,3 +27,10 @@ export function updater(name, func) {
   return new Updater(name, func);
 }
 
+export function Reference(name) {
+  this.name = name;
+}
+
+export function ref(name) {
+  return new Reference(name);
+}

@@ -1,12 +1,12 @@
 import {
-  App, t, on, css, $, updater,
+  App, t, on, css, $, updater, ref,
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $splice, $filter, $merge,
   DebugPanel,
 } from '../../index'
 
-const saved = JSON.parse(window.localStorage.getItem('todomvc'));
+const saved = JSON.parse(window.localStorage.getItem('todomvc')) || {};
 
 const init_state = {
   todos: saved.todos || [],
@@ -17,7 +17,8 @@ const init_state = {
   },
 
   TodoList: {
-    $ref: ['todos', 'filter'],
+    todos: ref('todos'),
+    filter: ref('filter'),
 
     Todo: {
       updateTodos: updater('todos'),
@@ -25,7 +26,8 @@ const init_state = {
   },
 
   Footer: {
-    $ref: ['todos', 'filter'],
+    todos: ref('todos'),
+    filter: ref('filter'),
     updateTodos: updater('todos'),
   },
 };

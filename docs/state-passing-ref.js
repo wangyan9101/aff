@@ -1,4 +1,4 @@
-import { App, div, t } from 'affjs'
+import { App, div, t, ref } from 'affjs'
 
 const app = new App(
   document.getElementById('app'),
@@ -8,7 +8,7 @@ const app = new App(
       Wrapper: {
         InnerWrapper: {
           Element: {
-            $ref: ['foo'],
+            foo: ref('foo'),
           },
         },
       },

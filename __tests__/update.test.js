@@ -1,4 +1,5 @@
 import {
+  ref,
   $map, $inc, $dec, $any, $filter, $reduce, $delete, 
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
@@ -148,7 +149,7 @@ test('ref key tick update', () => {
   const app = new App({
     foo: 'FOO',
     bar: {
-      $ref: ['foo'],
+      foo: ref('foo'),
     },
   });
   app._state.argsChanged(app.state.bar, app.state.bar);

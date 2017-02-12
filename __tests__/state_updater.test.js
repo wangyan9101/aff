@@ -1,4 +1,4 @@
-import { App, updater, $del, $func } from '../index'
+import { App, updater, $del, $func, ref } from '../index'
 
 test('updater', () => {
   const app = new App(
@@ -30,7 +30,7 @@ test('state path change', () => {
       baz: 'baz',
     },
     C1: {
-      $ref: ['foo'],
+      foo: ref('foo'),
       C2: {
         updateFoo: updater('foo'),
       },

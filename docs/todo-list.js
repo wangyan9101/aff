@@ -3,7 +3,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip,
+  App, css, t, on, updater, key, $, skip, ref,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -31,19 +31,19 @@ const initState = {
 
   MaintainFiltered: {
     // 引用 todos 和 filter 状态
-    $ref: ['todos', 'filter'],
+    todos: ref('todos'),
+    filter: ref('filter'),
     updateFiltered: updater('filtered'),
   },
 
   Filter: {
-    $ref: ['filter', 'todos'],
+    todos: ref('todos'),
+    filter: ref('filter'),
   },
 
   List: {
-    $ref: {
-      todos: 'todos',
-      ids: 'filtered',
-    },
+    todos: ref('todos'),
+    ids: ref('filtered'),
     hovering: '',
 
     // 嵌套的组件，对应有一个嵌套的状态
