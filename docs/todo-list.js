@@ -24,7 +24,7 @@ const initState = {
 
   NewTodo: {
     // 更新 todos 状态的函数
-    addTodo: updater('todos', (_, update, id, infos) => {
+    addTodo: updater('todos', (update, id, infos) => {
       update(id, infos);
     }),
   },
@@ -49,7 +49,7 @@ const initState = {
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
       updateHovering: updater('hovering'),
-      delTodo: updater('todos', (_, update, id) => {
+      delTodo: updater('todos', (update, id) => {
         update($del(id));
       }),
 

@@ -196,7 +196,6 @@ export class App {
             if (func) { 
               obj[key] = function(...args) {
                 func(
-                  app.get(updatePath), 
                   (...updateArgs) => app.update(...updatePath, ...updateArgs),
                   ...args,
                 );

@@ -1,4 +1,4 @@
-import { App, updater, $del } from '../index'
+import { App, updater, $del, $func } from '../index'
 
 test('updater', () => {
   const app = new App(
@@ -44,8 +44,8 @@ test('updater with func', () => {
   const app = new App(
     {
       foo: 1,
-      addFoo: updater('foo', (current, update, n) => {
-        update(current + n);
+      addFoo: updater('foo', (update, n) => {
+        update($func(cur => cur + n));
       }),
     },
   );
