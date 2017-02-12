@@ -38,7 +38,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip, withState,
+  App, css, t, on, updater, key, $, skip,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -59,8 +59,8 @@ const initState = {
 
   NewTodo: {
     // 更新 todos 状态的函数
-    addTodo: withState('todos', todos => (id, infos) => {
-      todos.$update(id, infos);
+    addTodo: updater('todos', (_, update, id, infos) => {
+      update(id, infos);
     }),
   },
 
@@ -84,8 +84,8 @@ const initState = {
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
       updateHovering: updater('hovering'),
-      delTodo: withState('todos', todos => id => {
-        todos.$update($del(id));
+      delTodo: updater('todos', (_, update, id) => {
+        update($del(id));
       }),
 
       ItemControl: {
@@ -1694,8 +1694,6 @@ MaintainRGB 这个组件并没有视觉上的作用，而是用于观察 r、g�
 
 <h2 id="updater">状态树中的更新函数</h2>
 
-<h3>updater</h3>
-
 在上一节里，MaintainRGB 组件的第二个参数是一个更新函数。
 这个函数用于更新 rgb 状态。
 因为 MaintainRGB 的 state 参数只包含 r, g, b，不包含 rgb，所以需要传递额外的函数用于更新。
@@ -1749,9 +1747,7 @@ updater 函数的第一个参数是要更新的状态的名字，查找的规则
 在初始的 MaintainRGB 状态里增加 update 函数之后，MaintainRGB 组件的第二个参数就可以去掉了。
 在 MaintainRGB 组件里需要更新 rgb 的时候，调用 state.update 即可。
 
-<h3>withState</h3>
-
-TODO
+TODO 带函数参数的 updater
 
 <h2 id="reusable">代码复用</h2>
 

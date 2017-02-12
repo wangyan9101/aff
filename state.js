@@ -18,19 +18,12 @@ export function readOnly(obj) {
   return obj;
 }
 
-export function Updater(args) {
-  this.args = args;
-}
-
-export function updater(...args) {
-  return new Updater(args);
-}
-
-export function StateWrapper(name, func) {
+export function Updater(name, func) {
   this.name = name;
   this.func = func;
 }
 
-export function withState(name, func) {
-  return new StateWrapper(name, func);
+export function updater(name, func) {
+  return new Updater(name, func);
 }
+

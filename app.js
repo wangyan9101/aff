@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Updater, StateWrapper } from './state'
+import { Updater } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -184,28 +184,8 @@ export class App {
 
       // setup updater
       if (subState instanceof Updater) {
-        const name = subState.args[0];
-        const updateArgs = subState.args.slice(1);
-        // search update path
-        let found = false;
-        for (let i = scopes.length - 1; i >= 0; i--) {
-          const bindings = scopes[i];
-          if (name in bindings) { // found
-            found = true;
-            const updatePath = bindings[name].slice(0);
-            obj[key] = function(...args) {
-              app.update(...updatePath, ...updateArgs, ...args);
-            }
-            break
-          }
-        }
-        if (!found) {
-          throw[`no state named ${name}`];
-        }
-
-      // setup state wrapper
-      } else if (subState instanceof StateWrapper) {
         const name = subState.name;
+        const func = subState.func;
         // search update path
         let found = false;
         for (let i = scopes.length - 1; i >= 0; i--) {
@@ -213,8 +193,18 @@ export class App {
           if (name in bindings) { // found
             found = true;
             const updatePath = bindings[name].slice(0);
-            obj[key] = function(...args) {
-              subState.func(app.get(updatePath))(...args);
+            if (func) { 
+              obj[key] = function(...args) {
+                func(
+                  app.get(updatePath), 
+                  (...updateArgs) => app.update(...updatePath, ...updateArgs),
+                  ...args,
+                );
+              }
+            } else {
+              obj[key] = function(...args) {
+                app.update(...updatePath, ...args);
+              }
             }
             break
           }

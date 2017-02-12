@@ -3,7 +3,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip, withState,
+  App, css, t, on, updater, key, $, skip,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -24,8 +24,8 @@ const initState = {
 
   NewTodo: {
     // 更新 todos 状态的函数
-    addTodo: withState('todos', todos => (id, infos) => {
-      todos.$update(id, infos);
+    addTodo: updater('todos', (_, update, id, infos) => {
+      update(id, infos);
     }),
   },
 
@@ -49,8 +49,8 @@ const initState = {
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
       updateHovering: updater('hovering'),
-      delTodo: withState('todos', todos => id => {
-        todos.$update($del(id));
+      delTodo: updater('todos', (_, update, id) => {
+        update($del(id));
       }),
 
       ItemControl: {
