@@ -20,7 +20,7 @@
 * [路由](#routing)
 * [调试面板](#debug-panel)
 * [异步竞态问题](#async-race)
-* [其他代码示例](#examples)
+* [代码示例：todomvc 和 dbmon](#todomvc-and-dbmon)
 
 <h2 id="demo">代码示例</h2>
 
@@ -2021,7 +2021,7 @@ app.update('baz', 'b', 'baZ');
 三是避免使用列表下标作为更新路径，用元素的唯一标识。这样一个列表就需要一个 {} 和 []，各自保存元素状态和元素顺序。
 
 
-<h2 id="examples">其他代码示例</h2>
+<h2 id="todomvc-and-dbmon">其他代码示例</h2>
 
 [todomvc](http://todomvc.com/) 和 [dbmon](http://mathieuancelin.github.io/js-repaint-perfs/) 是各类前端框架实现得比较多的例子。
 在 examples 目录下也有用本框架实现它们的示例代码：

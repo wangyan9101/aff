@@ -20,7 +20,7 @@
 * [路由](#routing)
 * [调试面板](#debug-panel)
 * [异步竞态问题](#async-race)
-* [其他代码示例](#examples)
+* [代码示例：todomvc 和 dbmon](#todomvc-and-dbmon)
 
 {{template "demo.md"}}
 {{template "installation.md"}}
@@ -38,4 +38,4 @@
 {{template "routing.md"}}
 {{template "debug-panel.md"}}
 {{template "async-race.md"}}
-{{template "examples.md"}}
+{{template "todomvc-and-dbmon.md"}}
