@@ -1,4 +1,4 @@
-<h2 id="todomvc-and-dbmon">其他代码示例</h2>
+<h2 id="todomvc-and-dbmon">代码示例：todomvc 和 dbmon</h2>
 
 [todomvc](http://todomvc.com/) 和 [dbmon](http://mathieuancelin.github.io/js-repaint-perfs/) 是各类前端框架实现得比较多的例子。
 在 examples 目录下也有用本框架实现它们的示例代码：
