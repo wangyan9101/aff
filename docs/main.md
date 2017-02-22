@@ -4,6 +4,7 @@
 
 ## 目录
 
+* [概述](#summary)
 * [代码示例](#demo)
 * [环境安装与配置](#installation)
 * [App 类](#app)
@@ -22,6 +23,7 @@
 * [异步竞态问题](#async-race)
 * [代码示例：todomvc 和 dbmon](#todomvc-and-dbmon)
 
+{{template "summary.md"}}
 {{template "demo.md"}}
 {{template "installation.md"}}
 {{template "app.md"}}
