@@ -1,4 +1,4 @@
-import {e, t, checkbox, App, on} from '../index'
+import {e, t, h, checkbox, App, on} from '../index'
 import {div, DIV, Div, P} from '../tags'
 import {$, css} from '../tagged'
 import './__helpers'
@@ -280,4 +280,9 @@ test('event unset', () => {
 test('null arg', () => {
   let node = div(null);
   expect(node.children).toBe(null);
+});
+
+test('tag helper', () => {
+  const div = h.div();
+  expect(div).toMatchObject(e('div'));
 });

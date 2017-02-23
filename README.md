@@ -682,7 +682,7 @@ Div();
 DIV();
 ```
 
-如果需要框架预定义之外的标签名，可以用 e 函数：
+如果需要框架预定义之外的标签名，或者不想每次使用都 import 标签函数，可以用 e 函数：
 
 ```js
 import { e } from 'affjs'
@@ -691,6 +691,17 @@ e('div');
 ```
 
 作用和前面的是一样的，只不过标签名字作为第一个参数传入。
+
+还可以使用 h 对象，这个对象包含了预定义的标签函数：
+
+```js
+import { h } from 'affjs'
+
+h.div(); // 相当于 div() 或 e('div')
+h.p;     // 相当于 p() 或 e('p')
+h.Label; // 相当于 label() 或 e('label')
+h.INPUT; // 相当于 input() 或 e('input')
+```
 
 <h3>id 和 class</h3>
 

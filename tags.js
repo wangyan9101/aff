@@ -26,6 +26,8 @@ const clear = e('div', css`
 module.exports = {
   ...helpers,
 
+  h: helpers,
+
   none: none,
   None: none,
   NONE: none,
