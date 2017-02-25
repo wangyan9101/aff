@@ -25,7 +25,7 @@ export class MutableState extends State {
       let ret;
       if (typeof args[0] === 'object' && args[0] !== null && args[0].__is_op) {
         ret = args[0].apply(obj, this);
-        if (ret === obj) {
+        if (typeof ret === 'object' && ret !== null && ret === obj) {
           this.setupPatchTick(ret);
           ret.__aff_tick = this.patchTick + 1;
         }

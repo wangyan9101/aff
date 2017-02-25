@@ -193,3 +193,12 @@ test('merge', () => {
   }));
   expect(app.state.Foo.Bar.Baz).toBe(1);
 });
+
+test('setup patch tick on non-object bug', () => {
+  const app = new App(
+      {
+        foo: 1,
+      },
+  );
+  app.update('foo', $func(v => v));
+});
