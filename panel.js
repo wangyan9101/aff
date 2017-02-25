@@ -233,6 +233,7 @@ function StateNode(appState, path = [], debugState) {
       const ret = [];
       const keys = Object.keys(appState);
       keys.sort((a, b) => a > b);
+      const isArray = Array.isArray(appState);
 
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
@@ -268,7 +269,7 @@ function StateNode(appState, path = [], debugState) {
           `,
           bindPointingPath,
           // key
-          td(key, css`
+          isArray ? null : td(key, css`
             background-color: #EEFFEE;
             padding: 0 10px;
             vertical-align: top;
