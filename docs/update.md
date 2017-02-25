@@ -188,3 +188,25 @@ app.updateMulti(
 所以在使用 $merge 时需要注意，对象都是看作表达路径的。
 如果更新操作是替换成另一个对象，需要用 `$func(_ => newObject)` 包装起来，避免将对象解构成路径。
 
+另外，框架还提供了一个 op 对象，上面所有的操作符可以通过它来引用：
+
+```js
+import { App, op } from 'affjs'
+
+const app = new App({
+  foo: {
+    bar: 'bar',
+    baz: 'baz',
+    qux: 1,
+  },
+});
+
+app.update(op.merge({
+  foo: {
+    bar: 'BAR',
+    baz: 'BAZ',
+    qux: op.inc,
+  },
+}));
+
+```
