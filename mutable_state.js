@@ -200,11 +200,11 @@ export class MutableState extends State {
     }
 
     // function
-    else if (argType === 'function') {
-      if (arg.name !== lastArg.name) {
-        return true;
-      }
-    }
+    //else if (argType === 'function') {
+    //  if (arg.name !== lastArg.name) {
+    //    return true;
+    //  }
+    //}
 
     // compare
     else if (arg !== lastArg) {
