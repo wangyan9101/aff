@@ -239,6 +239,9 @@ function StateNode(appState, path = [], debugState) {
         if (appState[key] === debugState) { // skip debug state
           continue
         }
+        if (key.charAt(0) >= 'A' && key.charAt(0) <= 'Z') { // skip component state
+          continue
+        }
         let valueNode;
         if (typeof appState[key] === 'object') {
           let subpath = path.slice(0);
