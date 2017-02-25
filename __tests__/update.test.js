@@ -1,5 +1,5 @@
 import {
-  ref,
+  ref, op,
   $map, $inc, $dec, $any, $filter, $reduce, $delete, 
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
@@ -175,7 +175,7 @@ test('merge', () => {
   console.log(app.state);
   expect(app.state.foo.bar.baz).toBe('baz');
 
-  app.update($merge({
+  app.update(op.merge({
     FOO: {
       BAR: {
         BAZ: 'baz',
@@ -200,7 +200,7 @@ test('setup patch tick on non-object bug', () => {
         foo: 1,
       },
   );
-  app.update('foo', $func(v => v));
+  app.update('foo', op.func(v => v));
 });
 
 test('$updateMulti', () => {

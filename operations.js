@@ -136,9 +136,7 @@ function $any(k) {
   return true;
 }
 
-// export
-
-module.exports = {
+const allOperations = {
   $func,
   $delete,
   $del,
@@ -147,4 +145,17 @@ module.exports = {
   ...arrayOps,
   $merge,
   $any,
+}
+
+const op = {};
+
+for (const key in allOperations) {
+  op[key.slice(1)] = allOperations[key];
+}
+
+// export
+
+module.exports = {
+  ...allOperations,
+  op,
 };
