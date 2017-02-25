@@ -202,3 +202,20 @@ test('setup patch tick on non-object bug', () => {
   );
   app.update('foo', $func(v => v));
 });
+
+test('$updateMulti', () => {
+  const app = new App(
+      {
+        foo: {
+          bar: 1,
+          baz: 2,
+        },
+      },
+  );
+  app.state.foo.$updateMulti(
+      ['bar', 2],
+      ['baz', 3],
+  );
+  expect(app.state.foo.bar).toBe(2);
+  expect(app.state.foo.baz).toBe(3);
+});

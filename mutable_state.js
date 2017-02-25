@@ -240,6 +240,15 @@ export class MutableState extends State {
           app.update(...state.$path, ...args);
         },
       });
+      Object.defineProperty(state, '$updateMulti', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: function(...args) {
+          const expanded = args.map(arg => [...state.$path, ...arg]);
+          app.updateMulti(...expanded);
+        },
+      });
       Object.defineProperty(state, '$path', {
         configurable: false,
         enumerable: false,
