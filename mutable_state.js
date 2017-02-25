@@ -238,7 +238,6 @@ export class MutableState extends State {
         writable: true,
         value: function(...args) {
           app.update(...state.$path, ...args);
-          return app.get(state.$path);
         },
       });
       Object.defineProperty(state, '$path', {
