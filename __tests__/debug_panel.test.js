@@ -10,6 +10,7 @@ test('debug panel', () => {
     element,
     {
       n: 0,
+      FOO: 'foo',
     },
     (state, app) => div(
       DebugPanel(app, {
