@@ -74,8 +74,8 @@ const initState = {
 
   NewTodo: {
     // 更新 todos 状态的函数
-    addTodo: updater('todos', (update, id, infos) => {
-      update(id, infos);
+    addTodo: updater('todos', (update, todo) => {
+      update(todo.id, todo);
     }),
   },
 
@@ -175,7 +175,7 @@ function NewTodo(state) {
     // 模拟异步新建操作
     setTimeout(() => {
       // addTodo 是在状态树定义的更新函数
-      state.addTodo(id, {
+      state.addTodo({
         id: id,
         time: new Date().getTime(),
         content: content,
