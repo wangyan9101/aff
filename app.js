@@ -72,30 +72,6 @@ export class App {
     }
 
     const app = this;
-    function setGetter(obj, key, from) {
-      const parentPathOfFrom = from.slice(0);
-      parentPathOfFrom.pop();
-      Object.defineProperty(obj, key, {
-        configurable: false,
-        enumerable: true,
-        get: function() {
-          return app.get(from);
-        },
-        set: function(v) {
-          app.update(...from, v);
-        },
-      });
-      if (!obj.__aff_ref_keys) {
-        Object.defineProperty(obj, '__aff_ref_keys', {
-          configurable: false,
-          writable: true,
-          enumerable: false,
-          value: {},
-        });
-      }
-      obj.__aff_ref_keys[key] = from;
-    }
-
     // setup references
     for (let key in obj) {
       const subState = obj[key];
@@ -129,7 +105,29 @@ export class App {
         const stopLen = stopPath.length;
         let setupPath = path.slice(0);
         while (setupPath.length > stopLen) {
-          setGetter(this.get(setupPath), key, bindings[name]);
+          const obj = this.get(setupPath);
+          const from = bindings[name];
+          const parentPathOfFrom = from.slice(0);
+          parentPathOfFrom.pop();
+          Object.defineProperty(obj, key, {
+            configurable: false,
+            enumerable: true,
+            get: function() {
+              return app.get(from);
+            },
+            set: function(v) {
+              app.update(...from, v);
+            },
+          });
+          if (!obj.__aff_ref_keys) {
+            Object.defineProperty(obj, '__aff_ref_keys', {
+              configurable: false,
+              writable: true,
+              enumerable: false,
+              value: {},
+            });
+          }
+          obj.__aff_ref_keys[key] = from;
           setupPath.pop();
         }
         break // stop searching
