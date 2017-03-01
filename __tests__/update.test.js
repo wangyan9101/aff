@@ -172,7 +172,6 @@ test('merge', () => {
       },
     },
   }));
-  console.log(app.state);
   expect(app.state.foo.bar.baz).toBe('baz');
 
   app.update(op.merge({

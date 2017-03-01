@@ -72,121 +72,131 @@ export class App {
     }
 
     const app = this;
-    // setup references
-    for (let key in obj) {
+    const keys = Object.getOwnPropertyNames(obj);
+    const bindings = {};
+    const updaterKeys = [];
+    const subStateKeys = [];
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+
+      const p = path.slice(0);
+      p.push(key);
+      bindings[key] = p;
+
       const subState = obj[key];
-      if (!(subState instanceof Reference)) {
-        continue
+      if (subState instanceof Reference) {
+        const name = subState.name;
+        // search in scopes
+        let found = false;
+        for (let i = scopes.length - 1; i >= 0; i--) {
+          const bindings = scopes[i];
+          if (!(name in bindings)) {
+            continue
+          }
+          found = true;
+          let stopPath = bindings[name].slice(0);
+          // check loop
+          let sameLen = 0;
+          for (let idx = 0; idx < stopPath.length && idx < path.length; idx++) {
+            if (stopPath[idx] == path[idx]) {
+              sameLen++
+            } else {
+              break
+            }
+          }
+          if (sameLen == stopPath.length) {
+            throw['loop in reference', path, stopPath];
+          } 
+          // setup getter and setter
+          stopPath.pop();
+          const stopLen = stopPath.length;
+          let setupPath = path.slice(0);
+          while (setupPath.length > stopLen) {
+            const obj = this.get(setupPath);
+            const from = bindings[name];
+            const parentPathOfFrom = from.slice(0);
+            parentPathOfFrom.pop();
+            Object.defineProperty(obj, key, {
+              configurable: false,
+              enumerable: true,
+              get: function() {
+                return app.get(from);
+              },
+              set: function(v) {
+                app.update(...from, v);
+              },
+            });
+            if (!obj.__aff_ref_keys) {
+              Object.defineProperty(obj, '__aff_ref_keys', {
+                configurable: false,
+                writable: true,
+                enumerable: false,
+                value: {},
+              });
+            }
+            obj.__aff_ref_keys[key] = from;
+            setupPath.pop();
+          }
+          break // stop searching
+        }
+        if (!found) {
+          throw[`no state named ${name}`];
+        }
+      } 
+
+      else if (subState instanceof Updater) {
+        updaterKeys.push(key);
       }
+
+      else {
+        subStateKeys.push(key);
+      }
+
+    }
+
+    scopes = scopes.slice(0); // copy
+    scopes.push(bindings);
+
+    for (let i = 0; i < updaterKeys.length; i++) {
+      const key = updaterKeys[i];
+      const subState = obj[key];
       const name = subState.name;
-      // search in scopes
+      const func = subState.func;
+      // search update path
       let found = false;
       for (let i = scopes.length - 1; i >= 0; i--) {
         const bindings = scopes[i];
-        if (!(name in bindings)) {
-          continue
-        }
-        found = true;
-        let stopPath = bindings[name].slice(0);
-        // check loop
-        let sameLen = 0;
-        for (let idx = 0; idx < stopPath.length && idx < path.length; idx++) {
-          if (stopPath[idx] == path[idx]) {
-            sameLen++
+        if (name in bindings) { // found
+          found = true;
+          const updatePath = bindings[name].slice(0);
+          if (func) { 
+            obj[key] = function(...args) {
+              func(
+                (...updateArgs) => app.update(...updatePath, ...updateArgs),
+                ...args,
+              );
+            }
           } else {
-            break
+            obj[key] = function(...args) {
+              app.update(...updatePath, ...args);
+            }
           }
+          break
         }
-        if (sameLen == stopPath.length) {
-          throw['loop in reference', path, stopPath];
-        } 
-        // setup getter and setter
-        stopPath.pop();
-        const stopLen = stopPath.length;
-        let setupPath = path.slice(0);
-        while (setupPath.length > stopLen) {
-          const obj = this.get(setupPath);
-          const from = bindings[name];
-          const parentPathOfFrom = from.slice(0);
-          parentPathOfFrom.pop();
-          Object.defineProperty(obj, key, {
-            configurable: false,
-            enumerable: true,
-            get: function() {
-              return app.get(from);
-            },
-            set: function(v) {
-              app.update(...from, v);
-            },
-          });
-          if (!obj.__aff_ref_keys) {
-            Object.defineProperty(obj, '__aff_ref_keys', {
-              configurable: false,
-              writable: true,
-              enumerable: false,
-              value: {},
-            });
-          }
-          obj.__aff_ref_keys[key] = from;
-          setupPath.pop();
-        }
-        break // stop searching
       }
       if (!found) {
         throw[`no state named ${name}`];
       }
     }
 
-    // collect bindings
-    const bindings = {};
-    for (const key in obj) {
-      const p = path.slice(0);
-      p.push(key);
-      bindings[key] = p;
-    }
-    scopes = scopes.slice(0); // copy
-    scopes.push(bindings);
-
-    for (let key in obj) {
+    for (let i = 0; i < subStateKeys.length; i++) {
+      const key = subStateKeys[i];
       const subState = obj[key];
-
-      // setup updater
-      if (subState instanceof Updater) {
-        const name = subState.name;
-        const func = subState.func;
-        // search update path
-        let found = false;
-        for (let i = scopes.length - 1; i >= 0; i--) {
-          const bindings = scopes[i];
-          if (name in bindings) { // found
-            found = true;
-            const updatePath = bindings[name].slice(0);
-            if (func) { 
-              obj[key] = function(...args) {
-                func(
-                  (...updateArgs) => app.update(...updatePath, ...updateArgs),
-                  ...args,
-                );
-              }
-            } else {
-              obj[key] = function(...args) {
-                app.update(...updatePath, ...args);
-              }
-            }
-            break
-          }
-        }
-        if (!found) {
-          throw[`no state named ${name}`];
-        }
-
-      // setup sub state
-      } else {
-        let p = path.slice(0);
-        p.push(key);
-        this.setupState(subState, p, scopes);
-      }
+      let p = path.slice(0);
+      p.push(key);
+      this.setupState(subState, p, scopes);
     }
+
   }
 
   addEvent(ev) {

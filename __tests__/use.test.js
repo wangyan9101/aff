@@ -142,21 +142,6 @@ test('loop in reference', () => {
   }).toThrowError('loop in reference,foo,foo,foo');
 });
 
-test('loop in ref', () => {
-  expect(() => {
-    const app = new App(
-      {
-        foo: {
-          bar: ref('bar'),
-        },
-        bar: {
-          foo: ref('foo'),
-        },
-      },
-    );
-  }).toThrowError('loop in reference,foo,bar,foo');
-});
-
 test('update in reference', () => {
   let app = new App({
     foo: 'FOO',
