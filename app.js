@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Updater, Reference, ReadOnlyReference, WriteOnlyReference } from './state'
+import { Reference, ReadOnlyReference, WriteOnlyReference } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -74,7 +74,6 @@ export class App {
     const app = this;
     const keys = Object.getOwnPropertyNames(obj);
     const bindings = {};
-    const updaterKeys = [];
     const subStateKeys = [];
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -121,6 +120,15 @@ export class App {
                 app.update(...from, v);
               },
             });
+            if (!obj.__aff_wo_ref_keys) {
+              Object.defineProperty(obj, '__aff_wo_ref_keys', {
+                configurable: false,
+                writable: true,
+                enumerable: false,
+                value: {},
+              });
+            }
+            obj.__aff_wo_ref_keys[key] = true;
           } else {
             stopPath.pop();
             const stopLen = stopPath.length;
@@ -159,10 +167,6 @@ export class App {
         }
       } 
 
-      else if (subState instanceof Updater) {
-        updaterKeys.push(key);
-      }
-
       else {
         subStateKeys.push(key);
       }
@@ -171,38 +175,6 @@ export class App {
 
     scopes = scopes.slice(0); // copy
     scopes.push(bindings);
-
-    for (let i = 0; i < updaterKeys.length; i++) {
-      const key = updaterKeys[i];
-      const subState = obj[key];
-      const name = subState.name;
-      const func = subState.func;
-      // search update path
-      let found = false;
-      for (let i = scopes.length - 1; i >= 0; i--) {
-        const bindings = scopes[i];
-        if (name in bindings) { // found
-          found = true;
-          const updatePath = bindings[name].slice(0);
-          if (func) { 
-            obj[key] = function(...args) {
-              func(
-                (...updateArgs) => app.update(...updatePath, ...updateArgs),
-                ...args,
-              );
-            }
-          } else {
-            obj[key] = function(...args) {
-              app.update(...updatePath, ...args);
-            }
-          }
-          break
-        }
-      }
-      if (!found) {
-        throw[`no state named ${name}`];
-      }
-    }
 
     for (let i = 0; i < subStateKeys.length; i++) {
       const key = subStateKeys[i];
@@ -281,7 +253,7 @@ export class App {
         this.node = result[1];
       }
       while (this.updated) {
-        if (this.updateCount > 4096) { // infinite loop
+        if (this.updateCount > 128) { // infinite loop
           throw['infinite loop in updating', args];
         }
         // if state is updated when patching, patch again

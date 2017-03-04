@@ -52,6 +52,7 @@ test('write only state', () => {
   expect(n).toBe(1);
   expect(app.state.Element.foo.bar).toBe(5)
   app.state.foo.$update('bar', 6);
+  expect(n).toBe(1);
   expect(app.state.Element.foo.bar).toBe(6);
   app.state.Element.foo.$update('bar', 7);
   expect(app.state.Element.foo.bar).toBe(7);

@@ -16,7 +16,6 @@
 * [状态对象的 $update 方法](#state-object-update)
 * [组件状态的传递](#state-passing)
 * [默认状态及衍生状态](#default-and-derived-state)
-* [状态树中的更新函数](#updater)
 * [代码复用](#reusable)
 * [路由](#routing)
 * [调试面板](#debug-panel)
@@ -35,7 +34,6 @@
 {{template "state-object-update.md"}}
 {{template "state-passing.md"}}
 {{template "default-and-derived-state.md"}}
-{{template "updater.md"}}
 {{template "reusable.md"}}
 {{template "routing.md"}}
 {{template "debug-panel.md"}}

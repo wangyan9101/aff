@@ -3,7 +3,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip, ref,
+  App, css, t, on, wo, key, $, skip, ref,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -23,17 +23,14 @@ const initState = {
   // 下面都是传递给组件的状态，属性名和组件名一样
 
   NewTodo: {
-    // 更新 todos 状态的函数
-    addTodo: updater('todos', (update, todo) => {
-      update(todo.id, todo);
-    }),
+    todos: wo('todos'),
   },
 
   MaintainFiltered: {
     // 引用 todos 和 filter 状态
     todos: ref('todos'),
     filter: ref('filter'),
-    updateFiltered: updater('filtered'),
+    filtered: wo('filtered'),
   },
 
   Filter: {
@@ -48,10 +45,8 @@ const initState = {
 
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
-      updateHovering: updater('hovering'),
-      delTodo: updater('todos', (update, id) => {
-        update($del(id));
-      }),
+      hovering: wo('hovering'),
+      todos: wo('todos'),
 
       ItemControl: {
         // 这个组件没有初始状态，但也留着这个备用
@@ -125,7 +120,7 @@ function NewTodo(state) {
     // 模拟异步新建操作
     setTimeout(() => {
       // addTodo 是在状态树定义的更新函数
-      state.addTodo({
+      state.todos.$update(id, {
         id: id,
         time: new Date().getTime(),
         content: content,
@@ -205,7 +200,7 @@ function MaintainFiltered(state) {
     return state.todos[b].time - state.todos[a].time;
   })
   // 更新状态
-  state.updateFiltered(filtered);
+  state.filtered = filtered;
   // 这个是功能性组件，没有视觉元素，所以返回 null
   return null;
 }
@@ -248,10 +243,10 @@ function Item(state, info, hovering) {
       position: relative;
     `,
     on('mouseenter', () => {
-      state.updateHovering(info.id);
+      state.hovering = info.id;
     }),
     on('mouseleave', () => {
-      state.updateHovering('');
+      state.hovering = '';
     }),
 
     // 一般状态下，显示一个 checkbox 和任务内容
@@ -305,7 +300,7 @@ function Item(state, info, hovering) {
       },
       // 动画完成后，删除条目
       on('animationend', () => {
-        state.delTodo(info.id);
+        state.todos.$update($del(info.id));
       }),
     ] : null,
 

@@ -18,15 +18,6 @@ export function readOnly(obj) {
   return obj;
 }
 
-export function Updater(name, func) {
-  this.name = name;
-  this.func = func;
-}
-
-export function updater(name, func) {
-  return new Updater(name, func);
-}
-
 export class Reference {
   constructor(name) {
     this.name = name;

@@ -193,6 +193,9 @@ export class MutableState extends State {
         return true;
       }
       for (const key in arg) {
+        if (arg.__aff_wo_ref_keys && arg.__aff_wo_ref_keys[key]) {
+          continue
+        }
         if (this.argsChanged(arg[key], lastArg[key])) {
           return true;
         }

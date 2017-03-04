@@ -16,7 +16,6 @@
 * [状态对象的 $update 方法](#state-object-update)
 * [组件状态的传递](#state-passing)
 * [默认状态及衍生状态](#default-and-derived-state)
-* [状态树中的更新函数](#updater)
 * [代码复用](#reusable)
 * [路由](#routing)
 * [调试面板](#debug-panel)
@@ -53,7 +52,7 @@ import 'animate.css'
 import Navigo from 'navigo'
 
 import {
-  App, css, t, on, updater, key, $, skip, ref,
+  App, css, t, on, wo, key, $, skip, ref,
   div, p, input, button, span, a, none, checkbox,
   $merge, $func, $del,
   DebugPanel,
@@ -73,17 +72,14 @@ const initState = {
   // 下面都是传递给组件的状态，属性名和组件名一样
 
   NewTodo: {
-    // 更新 todos 状态的函数
-    addTodo: updater('todos', (update, todo) => {
-      update(todo.id, todo);
-    }),
+    todos: wo('todos'),
   },
 
   MaintainFiltered: {
     // 引用 todos 和 filter 状态
     todos: ref('todos'),
     filter: ref('filter'),
-    updateFiltered: updater('filtered'),
+    filtered: wo('filtered'),
   },
 
   Filter: {
@@ -98,10 +94,8 @@ const initState = {
 
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
-      updateHovering: updater('hovering'),
-      delTodo: updater('todos', (update, id) => {
-        update($del(id));
-      }),
+      hovering: wo('hovering'),
+      todos: wo('todos'),
 
       ItemControl: {
         // 这个组件没有初始状态，但也留着这个备用
@@ -175,7 +169,7 @@ function NewTodo(state) {
     // 模拟异步新建操作
     setTimeout(() => {
       // addTodo 是在状态树定义的更新函数
-      state.addTodo({
+      state.todos.$update(id, {
         id: id,
         time: new Date().getTime(),
         content: content,
@@ -255,7 +249,7 @@ function MaintainFiltered(state) {
     return state.todos[b].time - state.todos[a].time;
   })
   // 更新状态
-  state.updateFiltered(filtered);
+  state.filtered = filtered;
   // 这个是功能性组件，没有视觉元素，所以返回 null
   return null;
 }
@@ -298,10 +292,10 @@ function Item(state, info, hovering) {
       position: relative;
     `,
     on('mouseenter', () => {
-      state.updateHovering(info.id);
+      state.hovering = info.id;
     }),
     on('mouseleave', () => {
-      state.updateHovering('');
+      state.hovering = '';
     }),
 
     // 一般状态下，显示一个 checkbox 和任务内容
@@ -355,7 +349,7 @@ function Item(state, info, hovering) {
       },
       // 动画完成后，删除条目
       on('animationend', () => {
-        state.delTodo(info.id);
+        state.todos.$update($del(info.id));
       }),
     ] : null,
 
@@ -1712,117 +1706,6 @@ MaintainRGB 这个组件并没有视觉上的作用，而是用于观察 r、g�
 
 用这种模式可以实现很复杂的关联计算，衍生的状态本身也可以被其他衍生状态观察，而这些都是定义好，就不需要操心的了，框架会自动计算好。
 
-
-<h2 id="updater">状态树中的更新函数</h2>
-
-在上一节里，MaintainRGB 组件的第二个参数是一个更新函数。
-这个函数用于更新 rgb 状态。
-因为 MaintainRGB 的 state 参数只包含 r, g, b，不包含 rgb，所以需要传递额外的函数用于更新。
-
-MaintainRGB 的 state 参数不可以包含 rgb 参数，因为这个组件本身会改变 rgb，改变 rgb 又会触发它的重新计算，导致死循环，框架会抛出异常。
-
-对于这种常用的场景，框架提供了一个方便的机制，用于定义更新函数。
-
-示例：
-
-```js
-import { App, div, t, updater, ref } from 'affjs'
-
-const app = new App(
-  document.getElementById('app'),
-
-  {
-    r: 20,
-    g: 30,
-    b: 40,
-    rgb: '',
-
-    MaintainRGB: {
-      r: ref('r'),
-      g: ref('g'),
-      b: ref('b'),
-      update: updater('rgb'),
-    },
-  },
-
-  Main,
-);
-
-function Main(state) {
-  return div(
-    t(MaintainRGB, state.MaintainRGB),
-
-    div(state.rgb),
-  );
-}
-
-function MaintainRGB(state) {
-  state.update(`rgb(${state.r}, ${state.g}, ${state.b})`);
-  return null;
-}
-
-```
-
-MaintainRGB 的状态增加了一个 update 属性，它的属性值是 `updater('rgb')`，表示调用 update 即可更新名为 rgb 的状态。
-
-updater 函数的第一个参数是要更新的状态的名字，查找的规则和解析引用类似。updater 的其他函数，将直接传递给最终的 App.update 函数。
-
-在初始的 MaintainRGB 状态里增加 update 函数之后，MaintainRGB 组件的第二个参数就可以去掉了。
-在 MaintainRGB 组件里需要更新 rgb 的时候，调用 state.update 即可。
-
-updater 函数还可以有第二个参数，这个参数是一个函数。
-在调用 updater 返回的函数时，将参数再传递给这个参数函数，相当于再做一次包装：
-
-```js
-import { App, div, t, updater, ref } from 'affjs'
-
-const app = new App(
-  document.getElementById('app'),
-
-  {
-    r: 40,
-    g: 50,
-    b: 60,
-    rgb: '',
-
-    MaintainRGB: {
-      r: ref('r'),
-      g: ref('g'),
-      b: ref('b'),
-      update: updater('rgb', (updateRGB, r, g, b) => {
-        updateRGB(`rgb(${r}, ${g}, ${b})`);
-      }),
-    },
-  },
-
-  Main,
-);
-
-function Main(state) {
-  return div(
-    t(MaintainRGB, state.MaintainRGB),
-
-    div(state.rgb),
-  );
-}
-
-function MaintainRGB(state) {
-  state.update(state.r, state.g, state.b);
-  return null;
-}
-
-```
-
-MaintainRGB 的 update 函数，现在的参数变成了 r, g, b 三个。
-这是在 updater 的第二个参数里定义的。
-传递给 updater 函数的第二个函数参数，它的第一个参数是更新 rgb 状态的函数，其余参数代表返回的函数的参数列表。
-
-也就是说，调用 MaintainRGB.update 的时候，并不是直接更新 rgb 状态，而只是将参数传递给这个函数，让开发者决定何时调用，以何参数调用。
-
-这个机制的作用是，对 $update 方法的参数做一些调整，例如上面是构造 'rgb(40, 50, 60)' 这个字符串，然后再更新为 rgb 状态的值。
-单单用 updater 是表达不了这个逻辑的，只能在组件代码里构造字符串。
-
-当然，滥用这个机制，在初始状态树里定义过于复杂的 updater，也是不好的。
 
 <h2 id="reusable">代码复用</h2>
 
