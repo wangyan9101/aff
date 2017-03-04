@@ -1,6 +1,6 @@
 {
   "name": "affjs",
-  "version": "0.0.116",
+  "version": "0.0.117",
   "description": "minimal, pure js frontend framework",
   "scripts": {
     "test": "jest --coverage",
@@ -10,17 +10,17 @@
   "keywords": [],
   "author": "reus",
   "devDependencies": {
-    "babel-core": "^6.22.1",
-    "babel-loader": "^6.2.8",
-    "babel-plugin-transform-object-rest-spread": "^6.22.0",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-latest": "^6.22.0",
-    "coveralls": "^2.11.15",
+    "coveralls": "^2.11.16",
     "gulp": "^3.9.1",
     "gulp-webpack": "^1.5.0",
     "jest": "^18.0.0",
-    "jsdom": "^9.8.3",
+    "jsdom": "^9.11.0",
     "webpack": "^1.13.3",
-    "webpack-dev-server": "^1.16.2"
+    "webpack-dev-server": "^1.16.3"
   },
   "main": "lib/affjs.js",
   "license": "Apache",
