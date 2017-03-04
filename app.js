@@ -110,6 +110,17 @@ export class App {
           // setup getter and setter
           if (subState instanceof WriteOnlyReference) {
             // write only reference, do not set through
+            const from = bindings[name];
+            Object.defineProperty(obj, key, {
+              configurable: false,
+              enumerable: true,
+              get: function() {
+                return app.get(from);
+              },
+              set: function(v) {
+                app.update(...from, v);
+              },
+            });
           } else {
             stopPath.pop();
             const stopLen = stopPath.length;

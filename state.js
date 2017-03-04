@@ -37,16 +37,6 @@ export function ref(name) {
   return new Reference(name);
 }
 
-export class ReadOnlyReference extends Reference {
-  constructor(name) {
-    super(name);
-  }
-}
-
-export function ro(name) {
-  return new ReadOnlyReference(name);
-}
-
 export class  WriteOnlyReference extends Reference {
   constructor(name) {
     super(name);
