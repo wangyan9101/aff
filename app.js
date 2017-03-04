@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Updater, Reference } from './state'
+import { Updater, Reference, ReadOnlyReference, WriteOnlyReference } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -108,34 +108,38 @@ export class App {
             throw['loop in reference', path, stopPath];
           } 
           // setup getter and setter
-          stopPath.pop();
-          const stopLen = stopPath.length;
-          let setupPath = path.slice(0);
-          while (setupPath.length > stopLen) {
-            const obj = this.get(setupPath);
-            const from = bindings[name];
-            const parentPathOfFrom = from.slice(0);
-            parentPathOfFrom.pop();
-            Object.defineProperty(obj, key, {
-              configurable: false,
-              enumerable: true,
-              get: function() {
-                return app.get(from);
-              },
-              set: function(v) {
-                app.update(...from, v);
-              },
-            });
-            if (!obj.__aff_ref_keys) {
-              Object.defineProperty(obj, '__aff_ref_keys', {
+          if (subState instanceof WriteOnlyReference) {
+            // write only reference, do not set through
+          } else {
+            stopPath.pop();
+            const stopLen = stopPath.length;
+            let setupPath = path.slice(0);
+            while (setupPath.length > stopLen) {
+              const obj = this.get(setupPath);
+              const from = bindings[name];
+              const parentPathOfFrom = from.slice(0);
+              parentPathOfFrom.pop();
+              Object.defineProperty(obj, key, {
                 configurable: false,
-                writable: true,
-                enumerable: false,
-                value: {},
+                enumerable: true,
+                get: function() {
+                  return app.get(from);
+                },
+                set: function(v) {
+                  app.update(...from, v);
+                },
               });
+              if (!obj.__aff_ref_keys) {
+                Object.defineProperty(obj, '__aff_ref_keys', {
+                  configurable: false,
+                  writable: true,
+                  enumerable: false,
+                  value: {},
+                });
+              }
+              obj.__aff_ref_keys[key] = from;
+              setupPath.pop();
             }
-            obj.__aff_ref_keys[key] = from;
-            setupPath.pop();
           }
           break // stop searching
         }
