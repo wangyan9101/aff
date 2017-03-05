@@ -3,7 +3,7 @@ import { allTags } from './all_tags'
 import { css } from './tagged'
 import { CommentNode } from './nodes'
 
-const helpers = allTags.reduce((helpers, tag) => {
+let helpers = allTags.reduce((helpers, tag) => {
   helpers[tag] = function(...args) {
     return e(tag, ...args);
   };
@@ -23,11 +23,7 @@ const clear = e('div', css`
   clear: both;
 `);
 
-module.exports = {
-  ...helpers,
-
-  h: helpers,
-
+helpers = {...helpers,
   none: none,
   None: none,
   NONE: none,
@@ -39,4 +35,9 @@ module.exports = {
   checkbox: checkbox,
   Checkbox: checkbox,
   CHECKBOX: checkbox,
+};
+
+module.exports = {
+  ...helpers,
+  h: helpers,
 };
