@@ -1,4 +1,4 @@
-import { MutableState, App, h, t, wo, op } from '../index'
+import { MutableState, App, h, t, weakRef, op } from '../index'
 
 test('args change', () => {
   let state = new MutableState();
@@ -28,7 +28,7 @@ test('function arg', () => {
         },
         ids: ['foo', 'bar', 'baz'],
         Foo: {
-          dict: wo('dict'),
+          dict: weakRef('dict'),
           fn: () => {},
         },
       },

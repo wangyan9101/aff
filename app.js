@@ -1,7 +1,7 @@
 import { allTags } from './all_tags'
 import { Events } from './event'
 import { MutableState } from './mutable_state'
-import { Reference, ReadOnlyReference, WriteOnlyReference } from './state'
+import { Reference, WeakReference } from './state'
 import { Node, ElementNode, CommentNode, TextNode, Thunk } from './nodes'
 import { elementSetEvent } from './event'
 
@@ -107,8 +107,7 @@ export class App {
             throw['loop in reference', path, stopPath];
           } 
           // setup getter and setter
-          if (subState instanceof WriteOnlyReference) {
-            // write only reference, do not set through
+          if (subState instanceof WeakReference) {
             const from = bindings[name];
             Object.defineProperty(obj, key, {
               configurable: false,

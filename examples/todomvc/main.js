@@ -1,5 +1,5 @@
 import {
-  App, t, on, css, $, wo, ref,
+  App, t, on, css, $, weakRef, ref,
   section, header, footer, h1, p, a, div, span,
   input, ul, li, none, button, strong, label, checkbox,
   $any, $push, $splice, $filter, $merge,
@@ -13,7 +13,7 @@ const init_state = {
   filter: saved.filter || 'All',
 
   Header: {
-    todos: wo('todos'),
+    todos: weakRef('todos'),
   },
 
   TodoList: {
@@ -21,7 +21,7 @@ const init_state = {
     filter: ref('filter'),
 
     Todo: {
-      todos: wo('todos'),
+      todos: weakRef('todos'),
     },
   },
 

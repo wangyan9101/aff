@@ -2,7 +2,7 @@ import 'normalize.css'
 import 'animate.css'
 import Navigo from 'navigo'
 
-import { App, css, t, on, wo, key, $, ref, h, op, DebugPanel } from 'affjs'
+import { App, css, t, on, key, $, ref, weakRef, h, op, DebugPanel } from 'affjs'
 
 // 读保存在 local storage 里的状态
 const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
@@ -18,14 +18,14 @@ const initState = {
   // 下面都是传递给组件的状态，属性名和组件名一样
 
   NewTodo: {
-    todos: wo('todos'),
+    todos: weakRef('todos'),
   },
 
   MaintainFiltered: {
     // 引用 todos 和 filter 状态
     todos: ref('todos'),
     filter: ref('filter'),
-    filtered: wo('filtered'),
+    filtered: weakRef('filtered'),
   },
 
   Filter: {
@@ -40,8 +40,8 @@ const initState = {
 
     // 嵌套的组件，对应有一个嵌套的状态
     Item: {
-      hovering: wo('hovering'),
-      todos: wo('todos'),
+      hovering: weakRef('hovering'),
+      todos: weakRef('todos'),
 
       ItemControl: {
         // 这个组件没有初始状态，但也留着这个备用

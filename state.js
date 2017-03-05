@@ -28,12 +28,12 @@ export function ref(name) {
   return new Reference(name);
 }
 
-export class  WriteOnlyReference extends Reference {
+export class WeakReference extends Reference {
   constructor(name) {
     super(name);
   }
 }
 
-export function wo(name) {
-  return new WriteOnlyReference(name);
+export function weakRef(name) {
+  return new WeakReference(name);
 }

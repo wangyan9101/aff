@@ -1,4 +1,4 @@
-import { State, App, wo, h, t } from '../index'
+import { State, App, weakRef, h, t } from '../index'
 
 test('cover', () => {
   let state = new State();
@@ -39,7 +39,7 @@ test('write only state', () => {
           bar: 5,
         },
         Element: {
-          foo: wo('foo'),
+          foo: weakRef('foo'),
         },
       },
       (state) => h.div(
