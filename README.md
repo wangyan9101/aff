@@ -51,12 +51,7 @@ import 'normalize.css'
 import 'animate.css'
 import Navigo from 'navigo'
 
-import {
-  App, css, t, on, wo, key, $, skip, ref,
-  div, p, input, button, span, a, none, checkbox,
-  $merge, $func, $del,
-  DebugPanel,
-} from 'affjs'
+import { App, css, t, on, wo, key, $, ref, h, op, DebugPanel } from 'affjs'
 
 // 读保存在 local storage 里的状态
 const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
@@ -113,8 +108,8 @@ const initState = {
 
 // 根组件，传入的 state 就是上面定义的对象
 function Main(state, app) {
-  // div 标签，用 div 函数表示，标签的各种属性和子标签，用函数参数表示
-  return div(
+  // div 标签，用 h.div 函数表示，标签的各种属性和子标签，用函数参数表示
+  return h.div(
     // 表示样式，使用 es6 的模板字符串，加上 css 这个模板标签函数来表示
     css`
       width: 40vw;
@@ -127,7 +122,7 @@ function Main(state, app) {
     `,
 
     // 一个子标签
-    p('TodoList', css`
+    h.p('TodoList', css`
       font-size: 16px;
       line-height: 16px;
       font-weight: bold;
@@ -163,7 +158,7 @@ function NewTodo(state) {
     const id = Math.random().toString().substr(2);
     const content = state.userInput;
     // 更新组件状态，使用状态的 $update 函数，合并一个对象
-    state.$update($merge({
+    state.$update(op.merge({
       updating: true, // 过渡状态
     }));
     // 模拟异步新建操作
@@ -175,16 +170,16 @@ function NewTodo(state) {
         content: content,
         done: false,
       });
-      state.$update($merge({
+      state.$update(op.merge({
         updating: false,
         userInput: '', // 清空输入
       }));
     }, 300);
   }
 
-  return div(
+  return h.div(
 
-    input(
+    h.input(
       // 标签的属性，用一个 object 表示
       {
         value: state.userInput || '',
@@ -209,7 +204,7 @@ function NewTodo(state) {
     ),
 
     // 一个按钮，点击时新建任务
-    button(
+    h.button(
       state.updating ? '...' : 'Add',
       on('click', addTodo),
       css`
@@ -256,7 +251,7 @@ function MaintainFiltered(state) {
 
 // 任务列表
 function List(state) {
-  return div(
+  return h.div(
     css`
       margin: 8px;
     `,
@@ -282,7 +277,7 @@ function Item(state, info, hovering) {
     }, 1000);
   }
 
-  return div(
+  return h.div(
     $`.animated .slideInRight`,
     css`
       text-align: left;
@@ -300,12 +295,12 @@ function Item(state, info, hovering) {
 
     // 一般状态下，显示一个 checkbox 和任务内容
     info.status != 'editing' ? [
-      checkbox({
+      h.checkbox({
         checked: info.done,
       }, on('click', () => {
-        info.$update('done', $func(v => !v));
+        info.$update('done', op.func(v => !v));
       })),
-      span(info.content, css`
+      h.span(info.content, css`
         margin-left: 8px;
         color: ${info.done ? '#AAA' : 'inherit'};
         text-decoration: ${info.done ? 'line-through' : 'none'};
@@ -314,7 +309,7 @@ function Item(state, info, hovering) {
 
     // 编辑时，显示输入框
     info.status == 'editing' ? [
-      input({
+      h.input({
         value: info.content,
       }, on('keyup: update content', function() {
         info.$update('content', this.element.value);
@@ -332,7 +327,7 @@ function Item(state, info, hovering) {
     ] : null,
 
     // 保存或删除过程中，显示提示状态
-    info.status == 'saving' || info.status == 'removing' ? div(info.status, css`
+    info.status == 'saving' || info.status == 'removing' ? h.div(info.status, css`
       width: 100%;
       color: #88F;
       text-align: center;
@@ -349,7 +344,7 @@ function Item(state, info, hovering) {
       },
       // 动画完成后，删除条目
       on('animationend', () => {
-        state.todos.$update($del(info.id));
+        state.todos.$update(op.del(info.id));
       }),
     ] : null,
 
@@ -374,14 +369,14 @@ function ItemControl(state, info, saveContent) {
     color: #666;
   `;
 
-  return span(
+  return h.span(
     css`
       float: right;
     `,
 
     // 一般情况下，显示删除和编辑按钮
     !info.status ? [
-      button(buttonStyle, 'Remove', on('click', () => {
+      h.button(buttonStyle, 'Remove', on('click', () => {
         // 模拟异步操作
         info.$update('status', 'removing');
         setTimeout(() => {
@@ -389,14 +384,14 @@ function ItemControl(state, info, saveContent) {
           info.$update('status', 'finish-removing');
         }, 1000);
       })),
-      button(buttonStyle, 'Edit', on('click', () => {
+      h.button(buttonStyle, 'Edit', on('click', () => {
         info.$update('status', 'editing');
       })),
     ] : null,
 
     // 编辑状态时，显示保存按钮
     info.status == 'editing' ? [
-      button(buttonStyle, 'Done', on('click', () => {
+      h.button(buttonStyle, 'Done', on('click', () => {
         saveContent();
       })),
     ] : null,
@@ -406,7 +401,7 @@ function ItemControl(state, info, saveContent) {
 
 // 过滤条件选择组件
 function Filter(state) {
-  return div(
+  return h.div(
     css`
       margin: 8px;
     `,
@@ -418,7 +413,7 @@ function Filter(state) {
       { name: 'all', filter: _ => true, },
       { name: 'todo', filter: i => !i.done },
       { name: 'done', filter: i => i.done },
-    ].map(info => div(
+    ].map(info => h.div(
       info.name, 
       // 显示符合该过滤条件的条目数量
       () => {
