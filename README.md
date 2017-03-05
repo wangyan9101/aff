@@ -1548,6 +1548,8 @@ function Element(state) {
 
 Element 需要 foo 状态，所以要从 Main -> OutterWrapper -> Wrapper -> InnerWrapper -> Element 这样逐层传递。
 
+<h3>引用父状态</h3>
+
 Element 如果需要多一个状态，那就要改动多处代码，逐层增加。减少一个状态也是一样，需要改动多处。相当不便。
 
 框架对这种情况，提供了一个解决办法。先看最终的代码：
@@ -1616,6 +1618,8 @@ function Element(state) {
 引用的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
 因为解析引用开销比较大，如果更新一个大对象，就算不包含引用标记，也要进行解析的话，对性能影响比较大。
 
+<h3>引用状态的直接赋值</h3>
+
 包含引用属性的对象，直接对该属性赋值，可以改变引用指向的状态：
 
 ```js
@@ -1638,6 +1642,92 @@ console.log(app.state.foo);
 ```
 
 因为 Sub.foo 指向的是一个字符串，是没有 $update 方法的，所以唯一更新它指向的状态的方式，也是直接赋值。
+
+<h3>弱引用状态</h3>
+
+引用一个状态，就代表引用指向的状态发生变化时，当前状态所关联的组件，也会重新渲染。
+但有的时候，组件需要读或者写某个父状态，但又不需要观察它的变化，就要用到“弱引用”这个机制。
+
+定义弱引用和定义引用类似，但函数使用的是 weakRef：
+
+```js
+import { App, weakRef, t, h, on } from 'affjs'
+
+const app = new App(
+    document.getElementById('app'),
+    {
+      foo: 'foo',
+      Element: {
+        foo: weakRef('foo'),
+      },
+    },
+    Main,
+);
+
+function Main(state) {
+  return h.div(
+      t(Element, state.Element),
+
+      h.button('change foo', on('click', () => {
+        state.$update('foo', 'FOO');
+      })),
+
+      h.span(state.foo),
+  );
+}
+
+function Element(state) {
+  return h.span(state.foo);
+}
+
+```
+
+Element 组件引用了 foo 状态，但这是一个弱引用。
+所以 Element 组件会渲染出 'foo'，点击按钮后，foo 状态更新为 'FOO'，但 Element 组件不会更新，因为它不会观察一个弱引用的状态。
+
+当然，如果有其他方式触发 Element 组件的重渲染，它仍会渲染出当前的 foo 状态。
+
+再来看一个这个机制的应用例子：
+
+```js
+import { App, h, t, on, weakRef, op } from 'affjs'
+
+const app = new App(
+    document.getElementById('app'),
+    {
+      list: [1, 2, 3, 4, 5, 6, 7, 8],
+      Elem: {
+        list: weakRef('list'),
+      },
+    },
+    Main,
+);
+
+function Main(state) {
+  return h.ul(
+      state.list.map((v, i) => t(Elem, state.Elem, v, i)),
+  );
+}
+
+function Elem(state, v, i) {
+  return h.li(
+      h.span(v),
+      h.button('X', on('click', () => {
+        state.list.$update(op.splice(i, 1));
+      })),
+  );
+}
+
+```
+
+Elem 组件有一个删除按钮，可以删除列表里对应的元素。
+
+显然 Elem 组件需要引用 list 状态，才能对它进行 splice 操作。
+但是如果将 list 状态作为引用传入 Elem 组件，那每次 list 发生变化时，都要重新渲染所有 Elem 组件。这是很不经济的。
+
+弱引用就能发挥作用了，Elem 组件可以读写 list 状态，但 list 状态变化时，不会触发不必要的组件重渲染。
+
+和强引用一样，可以对弱引用直接赋值，以更新指向的状态。
 
 <h2 id="default-and-derived-state">默认状态及衍生状态</h2>
 
