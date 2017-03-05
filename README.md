@@ -1621,6 +1621,28 @@ function Element(state) {
 引用的解析也只会在 App 初始化时做一次，后面 update 进状态树的不会解析。
 因为解析引用开销比较大，如果更新一个大对象，就算不包含引用标记，也要进行解析的话，对性能影响比较大。
 
+包含引用属性的对象，直接对该属性赋值，可以改变引用指向的状态：
+
+```js
+import { App, ref } from 'affjs'
+
+const app = new App(
+    {
+      foo: 'foo',
+      Sub: {
+        foo: ref('foo'),
+      },
+    },
+);
+
+// 直接对 Sub.foo 赋值
+app.state.Sub.foo = 'FOO';
+// 更新的是外层的 foo 状态
+console.log(app.state.foo);
+
+```
+
+因为 Sub.foo 指向的是一个字符串，是没有 $update 方法的，所以唯一更新它指向的状态的方式，也是直接赋值。
 
 <h2 id="default-and-derived-state">默认状态及衍生状态</h2>
 
