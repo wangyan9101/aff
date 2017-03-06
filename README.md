@@ -1729,6 +1729,83 @@ Elem 组件有一个删除按钮，可以删除列表里对应的元素。
 
 和强引用一样，可以对弱引用直接赋值，以更新指向的状态。
 
+<h3>列表元素的传递</h3>
+
+渲染一个列表是很常见的场景，框架提供了一个模式来处理。例如渲染一个用户列表：
+
+```js
+import { App, h, t, op, cached, wrap, css, on } from 'affjs'
+
+const state = {
+  users: {
+    1: {
+      name: 'Foo',
+    },
+    2: {
+      name: 'Bar',
+    },
+    3: {
+      name: 'Baz',
+    },
+  },
+  userIds: [1, 2, 3],
+
+  User: cached(function(userId) {
+    const user = this.users[userId];
+    return wrap(user, {
+
+      tag: () => {
+        user.$update('tagged', op.func(tagged => !tagged));
+      },
+    });
+  }),
+};
+
+function Main(state) {
+  return h.div(
+      state.userIds.map(id => t(User, state.User(id))),
+  );
+}
+
+function User(state) {
+  return h.div(
+      h.span(state.name),
+      on('click', () => {
+        state.tag();
+      }),
+      css`
+        color: ${state.tagged ? 'blue' : 'black'};
+        user-select: none;
+        cursor: pointer;
+      `,
+  );
+}
+
+const app = new App(
+    document.getElementById('app'),
+    state,
+    Main,
+);
+
+```
+
+和上一节的 Elem 状态不同，上面定义的 User 状态是 cached(function(userId) { ... })。
+使用的时候，用的是 t(User, state.User(id))，说明 cached 返回的是一个函数，而且这个函数的参数，和传入 cached 的函数，是一样的。
+
+实际上，去掉 cached()，这样传递状态的方法，可能更好理解。就是遍历用户 id，并将 id 传入 User 函数，得到对应的用户信息，作为组件的参数。
+
+cached 的作用是，将 User 函数的结果缓存起来，下一次传入相同的 id，就返回上一次调用的结果，而不需要重新调用。
+因为 User 每次调用都是返回一个新的状态对象，所以会导致不必要的重渲染，用 cached 就可以避免。
+
+User 函数首先通过 this.users[userId] 获得用户信息。函数中的 this，指向的是 User 属性所在的对象，这和 js 对象的函数类型的属性的绑定规则是一致的。
+
+User 函数返回的是 wrap(user, { tag: ... })，代表 User 组件的状态，除了用户信息之外，还包括一个 tag 方法，用于改变 tagged 这个状态的值。
+
+wrap 实际是创建了一个以 user 为原型的对象，并融合第二个参数的各个属性。
+所以传入 User 组件的状态对象，会包含 user 的各个属性及方法（例如 $update 方法），以及扩展的 tag 方法。
+
+如果 User 组件不需要 tag 等扩展的方法，可以直接返回 user 变量，不加 wrap。
+
 <h2 id="default-and-derived-state">默认状态及衍生状态</h2>
 
 设置默认状态，最简单的方法是写在初始状态里：

@@ -37,3 +37,21 @@ export class WeakReference extends Reference {
 export function weakRef(name) {
   return new WeakReference(name);
 }
+
+export function cached(fn) {
+  const results = {};
+  return function(arg) {
+    if (!(arg in results)) {
+      results[arg] = fn.call(this, arg);
+    }
+    return results[arg];
+  }
+};
+
+export function wrap(obj, props) {
+  const wrapped = Object.create(obj);
+  for (let key in props) {
+    wrapped[key] = props[key];
+  }
+  return wrapped;
+}
