@@ -53,25 +53,18 @@ import Navigo from 'navigo'
 
 import { App, css, t, on, key, $, ref, weakRef, h, op, DebugPanel } from 'affjs'
 
-// 读保存在 local storage 里的状态
+// 全局状态
 const saved = JSON.parse(window.localStorage.getItem('todos-data')) || {};
-// 初始状态树
 const initState = {
-  // 任务信息
   todos: saved.todos || {},
-  // 过滤器
   filter: saved.filter || 'all',
-  // 过滤后的任务ID列表
   filtered: [],
-
-  // 下面都是传递给组件的状态，属性名和组件名一样
 
   NewTodo: {
     todos: weakRef('todos'),
   },
 
   MaintainFiltered: {
-    // 引用 todos 和 filter 状态
     todos: ref('todos'),
     filter: ref('filter'),
     filtered: weakRef('filtered'),
@@ -87,14 +80,11 @@ const initState = {
     ids: ref('filtered'),
     hovering: '',
 
-    // 嵌套的组件，对应有一个嵌套的状态
     Item: {
       hovering: weakRef('hovering'),
       todos: weakRef('todos'),
 
       ItemControl: {
-        // 这个组件没有初始状态，但也留着这个备用
-        // 在需要增加初始状态的时候，可以直接添加
       },
     },
   },
@@ -106,7 +96,7 @@ const initState = {
 
 };
 
-// 根组件，传入的 state 就是上面定义的对象
+// 根组件
 function Main(state, app) {
   // div 标签，用 h.div 函数表示，标签的各种属性和子标签，用函数参数表示
   return h.div(
@@ -135,13 +125,11 @@ function Main(state, app) {
 
     t(MaintainFiltered, state.MaintainFiltered),
 
-    // 因为组件本身就是一个函数，所以可以直接调用，而不需要 t 函数包装
-    // 但是就会失去渲染优化，每次渲染根组件，都会重新渲染 Filter 组件
-    Filter(state.Filter),
+    t(Filter, state.Filter),
 
     t(List, state.List),
 
-    // 调试面板，DebugPanel 返回的不是组件，而是参数列表
+    // 调试面板
     DebugPanel(app, state.DebugPanel),
 
   );
@@ -150,7 +138,6 @@ function Main(state, app) {
 // 新建任务组件
 function NewTodo(state) {
 
-  // 新建任务，因为有两个地方要用到，所以写成函数
   function addTodo() {
     if (!state.userInput) {
       return
@@ -163,7 +150,6 @@ function NewTodo(state) {
     }));
     // 模拟异步新建操作
     setTimeout(() => {
-      // addTodo 是在状态树定义的更新函数
       state.todos.$update(id, {
         id: id,
         time: new Date().getTime(),
@@ -172,7 +158,7 @@ function NewTodo(state) {
       });
       state.$update(op.merge({
         updating: false,
-        userInput: '', // 清空输入
+        userInput: '',
       }));
     }, 300);
   }
@@ -260,7 +246,6 @@ function List(state) {
       key`item-${id}`,
       state.Item,
       state.todos[id], 
-      // hovering
       id == state.hovering,
     )),
   );
@@ -268,9 +253,7 @@ function List(state) {
 
 // 任务组件
 function Item(state, info, hovering) { 
-  // 更新任务内容的函数
   const saveContent = () => {
-    // 模拟异步保存操作
     info.$update('status', 'saving');
     setTimeout(() => {
       info.$update('status', '');
