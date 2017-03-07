@@ -1,4 +1,5 @@
-import { MutableState, App, h, t, weakRef, op } from '../index'
+import { App, h, t, weakRef, op } from '../index'
+import { MutableState } from '../mutable_state'
 
 test('args change', () => {
   let state = new MutableState();

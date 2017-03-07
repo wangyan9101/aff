@@ -1,4 +1,5 @@
-import { State, App, weakRef, h, t, cached, op, wrap } from '../index'
+import { App, weakRef, h, t, cached, op, wrap } from '../index'
+import { State } from '../state'
 
 test('cover', () => {
   let state = new State();

@@ -1,9 +1,10 @@
-import {t, e, setAfterThunkCallFunc, css, skip, CommentNode} from '../index'
+import {t, e, setAfterThunkCallFunc, css, skip} from '../index'
 import {div, p, none} from '../tags'
 import {App} from '../app'
 import {$inc} from '../operations'
 import { $ } from '../tagged'
 import { on } from '../index'
+import { CommentNode } from '../nodes'
 
 test('thunk this', () => {
   let _this;
