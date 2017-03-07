@@ -4,6 +4,7 @@ import {
   $push, $func, $unshift, $splice, $fill, $sort,
   $pop, $shift, $reverse,
   $merge,
+  h, t,
 } from '../index'
 import { App } from '../app'
 import './__helpers'
@@ -217,4 +218,34 @@ test('$updateMulti', () => {
   );
   expect(app.state.foo.bar).toBe(2);
   expect(app.state.foo.baz).toBe(3);
+});
+
+test('$updateMulti and rerender', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  let nCalled = 0;
+  const app = new App(
+    {
+      foo: 'foo',
+    },
+    element,
+    (state) => h.div(
+      t('Foo', (state) => {
+        nCalled++;
+        return null;
+      }, state.foo),
+    ),
+  );
+  expect(nCalled).toBe(1);
+  app.updateMulti(
+      ['foo', 'FOO'],
+      ['foo', 'Foo'],
+  );
+  expect(nCalled).toBe(2);
+  app.state.$updateMulti(
+      ['foo', 'foo'],
+      ['foo', 'fOO'],
+  );
+  expect(nCalled).toBe(3);
 });
