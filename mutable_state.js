@@ -50,7 +50,6 @@ export class MutableState extends State {
       if (typeof obj === 'object' && obj !== null) {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setupPatchTick(obj);
-          obj.__aff_tick = this.patchTick + 1;
         }
         const updateKey = (key, ...args) => {
           const path = statePath.slice(0);
