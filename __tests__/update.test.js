@@ -249,3 +249,24 @@ test('$updateMulti and rerender', () => {
   );
   expect(nCalled).toBe(3);
 });
+
+test('wrong infinite loop', () => {
+  const root = document.createElement('div');
+  const element = document.createElement('div');
+  root.appendChild(element);
+  const app = new App(
+      element,
+      {
+        foo: 'foo',
+        Sub: {
+          foo: ref('foo'),
+        },
+      },
+      (state) => h.div(
+        t('Sub', (state) => {
+          state.$update('foo', 'foo');
+          return null;
+        }, state.Sub),
+      ),
+  );
+});

@@ -51,12 +51,17 @@ export class MutableState extends State {
         if (!obj.hasOwnProperty('__aff_tick')) {
           this.setupPatchTick(obj);
         }
+        let updated = false;
         const updateKey = (key, ...args) => {
+          const oldValue = obj[key];
           const path = statePath.slice(0);
           path.push(key);
           const value = this.updateState(path, ...args);
           obj[key] = value;
-          if (typeof value !== 'object') {
+          if (oldValue != value) {
+            updated = true;
+          }
+          if (typeof value !== 'object' && updated) {
             obj.__aff_sub_tick[key] = this.patchTick + 1;
           }
         }
@@ -84,7 +89,9 @@ export class MutableState extends State {
         if (match) {
           updateKey(key, undefined, ...args.slice(1));
         }
-        obj.__aff_tick = this.patchTick + 1;
+        if (updated) {
+          obj.__aff_tick = this.patchTick + 1;
+        }
         return obj;
       } else {
         throw['bad update path', obj, args];
@@ -101,7 +108,6 @@ export class MutableState extends State {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: this.patchTick + 1,
     });
     Object.defineProperty(obj, '__aff_sub_tick', {
       configurable: false,
