@@ -37,7 +37,4 @@ helpers = {...helpers,
   CHECKBOX: checkbox,
 };
 
-module.exports = {
-  ...helpers,
-  h: helpers,
-};
+export let h = helpers;

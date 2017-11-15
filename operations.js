@@ -1,6 +1,6 @@
-// operations 
+// operations
 
-let $func = (fn) => ({
+export let $func = (fn) => ({
   __is_op: true,
   op: 'func',
   args: [fn],
@@ -9,7 +9,7 @@ let $func = (fn) => ({
   },
 });
 
-let $delete = (prop) => ({
+export let $delete = (prop) => ({
   __is_op: true,
   op: 'delete',
   args: [prop],
@@ -19,11 +19,11 @@ let $delete = (prop) => ({
   },
 });
 
-let $del = $delete;
+export let $del = $delete;
 
 // numbers
 
-let $inc = {
+export let $inc = {
   __is_op: true,
   op: 'inc',
   apply(obj) {
@@ -31,7 +31,7 @@ let $inc = {
   },
 };
 
-let $dec = {
+export let $dec = {
   __is_op: true,
   op: 'dec',
   apply(obj) {
@@ -100,9 +100,22 @@ let arrayOps = {};
   })(...info);
 });
 
+export let {
+  $push,
+  $unshift,
+  $splice,
+  $fill,
+  $sort,
+  $filter,
+  $map,
+  $pop,
+  $shift,
+  $reverse,
+} = arrayOps;
+
 // objects
 
-function $merge(spec) {
+export function $merge(spec) {
   return {
     __is_op: true,
     op: 'merge',
@@ -132,30 +145,6 @@ function _merge(obj, spec) {
 
 // predictions
 
-function $any(k) {
+export function $any(k) {
   return true;
 }
-
-const allOperations = {
-  $func,
-  $delete,
-  $del,
-  $inc,
-  $dec,
-  ...arrayOps,
-  $merge,
-  $any,
-}
-
-const op = {};
-
-for (const key in allOperations) {
-  op[key.slice(1)] = allOperations[key];
-}
-
-// export
-
-module.exports = {
-  ...allOperations,
-  op,
-};

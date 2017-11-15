@@ -44,8 +44,8 @@ export class App {
       }
     }
     if (
-      this.element !== undefined 
-      && this.nodeFunc !== undefined 
+      this.element !== undefined
+      && this.nodeFunc !== undefined
       && this._state !== undefined
     ) {
       this.update();
@@ -105,7 +105,7 @@ export class App {
           }
           if (sameLen == stopPath.length) {
             throw['loop in reference', path, stopPath];
-          } 
+          }
           // setup getter and setter
           if (subState instanceof WeakReference) {
             const from = bindings[name];
@@ -164,7 +164,7 @@ export class App {
         if (!found) {
           throw[`no state named ${name}`];
         }
-      } 
+      }
 
       else {
         subStateKeys.push(key);
@@ -244,9 +244,9 @@ export class App {
         this.element = elem;
       } else {
         const result = this.patch(
-          this.element, 
-          this.nodeFunc(this.state, this), 
-          this.node,
+          this.element,
+          this.nodeFunc(this.state, this),
+          this.node
         );
         this.element = result[0];
         this.node = result[1];
@@ -261,7 +261,7 @@ export class App {
         const result = this.patch(
           this.element,
           this.nodeFunc(this.state, this),
-          this.node,
+          this.node
         );
         this.element = result[0];
         this.node = result[1];
@@ -398,9 +398,9 @@ export class App {
     for (let i = 0; i < childLen; i++) {
       const child = node.children[i];
       if (
-        child.key 
-        && lastNode.children 
-        && lastNode.children[i] 
+        child.key
+        && lastNode.children
+        && lastNode.children[i]
         && lastNode.children[i].key != child.key
       ) { // keyed
         // search for same key
@@ -419,7 +419,7 @@ export class App {
             this.patch(
               childElements[i],
               child,
-              lastNode.children[i],
+              lastNode.children[i]
             );
             break
           }
@@ -438,9 +438,9 @@ export class App {
           lastElement.appendChild(elem);
         } else {
           this.patch(
-            childElements[i], 
+            childElements[i],
             child,
-            lastNode.children[i],
+            lastNode.children[i]
           );
         }
       }
@@ -572,7 +572,7 @@ export class App {
           lastElement.style[key] = node.style[key];
         }
       }
-    } 
+    }
     // diff object
     else if (styleType === 'object') {
       if (node.style !== null) {
@@ -601,7 +601,7 @@ export class App {
           }
         }
       }
-    } 
+    }
     // string, compare
     else if (styleType === 'string') {
       if (node.style !== lastNode.style) {

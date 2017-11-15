@@ -3,9 +3,10 @@ import { t } from './nodes'
 import { css, $, key } from './tagged'
 import { on } from './event'
 import { $func, $push, $merge, $splice } from './operations'
-import { 
-  div, p, none, table, tr, td, span, pre, clear, button,
-} from './tags'
+import { h } from './tags'
+let {
+  div, p, none, table, tr, td, span, pre, clear, button
+} = h;
 import { readOnly } from './state'
 
 let logSerial = 0;
@@ -154,8 +155,8 @@ export function DebugPanel(app, initState) {
       overflow: auto;
     `,
 
-    div(debugState.selectedTab, css` 
-      text-align: center; 
+    div(debugState.selectedTab, css`
+      text-align: center;
       border-bottom: 1px solid #CCC;
       font-weight: bold;
       margin-bottom: 3px;
@@ -257,7 +258,7 @@ function StateNode(appState, path = [], debugState) {
             let pointingPath = path.slice(0);
             pointingPath.push(key);
             debugState.$update('pointingPath', pointingPath);
-          }), 
+          }),
           on('mouseleave', () => {
             debugState.$update('pointingPath', false);
           }),
@@ -360,11 +361,11 @@ function UpdateLogEntry(log) {
             return '.';
           } else if (i == log.args.length - 1) {
             return '=>';
-          } 
+          }
           return '';
         },
       ),
-      formatArg(arg), 
+      formatArg(arg),
     )),
 
     clear,
